@@ -24,7 +24,11 @@ if check_password():
     @st.cache_data
     def load_data():
         df = pd.read_excel("DMS_Active_Spare_Parts.xlsx", sheet_name="new_srv_workhours")
-        df = df[df['new_product_idname'].dropna().astype(str).str.strip() != ""]
+        # Primero eliminamos los valores nulos (NaN) para que no rompa el índice
+        df = df.dropna(subset=['new_product_idname'])
+        
+        # Ahora filtramos las celdas que se hayan quedado solo con espacios en blanco
+        df = df[df['new_product_idname'].astype(str).str.strip() != ""]
         
         # MAPEO CON TU NUEVA COLUMNA DE NOMBRES INCLUIDA
         df = df.rename(columns={
