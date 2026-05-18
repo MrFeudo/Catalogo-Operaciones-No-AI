@@ -23,7 +23,7 @@ if check_password():
     # 2. CARGA DEL EXCEL
     @st.cache_data
     def load_data():
-        df = pd.read_excel("alpha_workhours.xlsx", sheet_name="new_srv_workhours")
+        df = pd.read_excel("DMS_Active_Spare_Parts.xlsx", sheet_name="new_srv_workhours")
         
         # MAPEO CON TU NUEVA COLUMNA DE NOMBRES INCLUIDA
         df = df.rename(columns={
