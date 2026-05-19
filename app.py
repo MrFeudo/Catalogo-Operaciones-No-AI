@@ -25,13 +25,17 @@ if check_password():
     def load_data():
         df = pd.read_excel("DMS_Active_Spare_Parts.xlsx", sheet_name="new_srv_workhours")
         
-        # EXCEPCIÓN: Filtramos para dejar las que tienen nombre de pieza O las que son operaciones universales (999999)
-        # Nota: Convertimos new_stationname a string para que compare bien aunque el Excel lo lea como número o texto
-        condicion_nombre = df['new_product_idname'].dropna().astype(str).str.strip() != ""
-        condicion_universal = df['new_stationname'].astype(str).str.strip() == "999999"
+        # 1. Aseguramos que no haya fallos de formato pasando las columnas a texto limpio
+        df['new_product_idname'] = df['new_product_idname'].astype(str).str.strip()
+        df['new_stationname'] = df['new_stationname'].astype(str).str.strip()
         
-        # Aplicamos el filtro combinando ambas condiciones con el símbolo "|" (que significa "Ó")
-        df = df[condicion_nombre | condicion_universal]
+        # 2. Definimos las dos condiciones de forma segura sobre el mismo tamaño de tabla
+        # (Buscamos las que NO estén vacías, o que no sean nulas en texto, Ó que sean el código universal)
+        condicion_nombre = (df['new_product_idname'] != "") & (df['new_product_idname'] != "nan")
+        condicion_universal = df['new_stationname'] == "999999"
+        
+        # 3. Filtramos la tabla combinando ambas condiciones
+        df = df[condicion_nombre | condicion_universal].copy()
         
         # MAPEO CON TU NUEVA COLUMNA DE NOMBRES INCLUIDA
         df = df.rename(columns={
@@ -53,12 +57,15 @@ if check_password():
             'Notas / Exclusiones'
         ]
         
-        # Por si acaso alguna fila no tiene datos, rellenamos los vacíos con texto limpio
+        # Rellenamos los vacíos reales con texto vacío para que no aparezcan "nan" visualmente
         df = df.fillna("")
+        df = df.replace("nan", "")
         
         # Filtramos para mostrar solo las columnas que existan realmente en el Excel
         columnas_presentes = [col for col in columnas_finales if col in df.columns]
-        return df[columnas_presentes]
+        
+        # Reseteamos el índice para que la tabla quede perfecta
+        return df[columnas_presentes].reset_index(drop=True)
 
     try:
         data = load_data()
