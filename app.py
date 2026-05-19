@@ -21,7 +21,7 @@ def check_password():
 
 if check_password():
 # 2. CARGA DEL EXCEL
-    @st.cache_data
+    @st.cache_data(ttl=600)
     def load_data():
         df = pd.read_excel("DMS_Active_Spare_Parts.xlsx", sheet_name="new_srv_workhours")
         
