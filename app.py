@@ -29,13 +29,14 @@ if check_password():
         df['new_product_idname'] = df['new_product_idname'].astype(str).str.strip()
         df['new_stationname'] = df['new_stationname'].astype(str).str.strip()
         
-        # 2. Definimos las dos condiciones de forma segura sobre el mismo tamaño de tabla
-        # (Buscamos las que NO estén vacías, o que no sean nulas en texto, Ó que sean el código universal)
-        condicion_nombre = (df['new_product_idname'] != "") & (df['new_product_idname'] != "nan")
-        condicion_universal = df['new_stationname'] == "999999"
+        # 2. Definimos las condiciones exactas:
+        # Tiene nombre real (ni vacío, ni la palabra "nan")
+        tiene_nombre = (df['new_product_idname'] != "") & (df['new_product_idname'] != "nan")
+        # O es la excepción universal exacta
+        es_universal = df['new_stationname'] == "999999"
         
-        # 3. Filtramos la tabla combinando ambas condiciones
-        df = df[condicion_nombre | condicion_universal].copy()
+        # 3. Filtramos: Solo entra si tiene nombre válido O si es la estación universal
+        df = df[tiene_nombre | es_universal].copy()
         
         # MAPEO CON TU NUEVA COLUMNA DE NOMBRES INCLUIDA
         df = df.rename(columns={
