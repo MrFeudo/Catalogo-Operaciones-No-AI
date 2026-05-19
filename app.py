@@ -110,9 +110,6 @@ if check_password():
             
         if buscar_operacion:
             df_filtrado = df_filtrado[df_filtrado['Operación Técnica'].astype(str).str.contains(buscar_operacion, case=False, na=False)]
-            
-        if buscar_operacion:
-            df_filtrado = df_filtrado[df_filtrado['Operación Técnica'].astype(str).str.contains(buscar_operacion, case=False, na=False)]
 
         # 5. RESULTADOS
         st.markdown(f"### 📋 Resultados encontrados: {len(df_filtrado)} operaciones")
