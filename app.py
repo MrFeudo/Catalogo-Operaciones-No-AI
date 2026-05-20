@@ -106,6 +106,11 @@ if check_password():
         @st.cache_data
         def load_data_prices():
             df = pd.read_excel("DMS_Active_Spare_Parts.xlsx", sheet_name="Parts price")
+            
+            # Limpiamos posibles espacios invisibles en los nombres de las columnas del Excel
+            df.columns = df.columns.astype(str).str.strip()
+            
+            # Forzamos el renombrado asegurando el reemplazo directo
             df = df.rename(columns={
                 'new_partscode': 'Código de Recambio',
                 'new_product_idname': 'Descripción de la Pieza',
@@ -115,15 +120,23 @@ if check_password():
                 'new_businessunit_idname': 'Mercado / Organización',
                 'statecodename': 'Estado'
             })
+            
+            # Volvemos a limpiar los nombres de las columnas ya mapeadas por si acaso
+            df.columns = df.columns.astype(str).str.strip()
+            
             columnas_finales_precios = [
                 'Código de Recambio', 'Descripción de la Pieza', 
                 'Precio Venta', 'Moneda', 'Tipo de Tarifa', 
                 'Mercado / Organización', 'Estado'
             ]
+            
             df = df.fillna("")
             df = df.replace("nan", "")
-            return df[[c for c in columnas_finales_precios if c in df.columns]].reset_index(drop=True)
-
+            
+            # Filtramos solo por las columnas que se hayan logrado renombrar bien
+            columnas_visibles = [col for col in columnas_finales_precios if col in df.columns]
+            return df[columnas_visibles].reset_index(drop=True)
+            
         try:
             prices_data = load_data_prices()
             st.title("💰 Maestro de Tarifas y Precios de Recambios")
