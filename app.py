@@ -144,13 +144,14 @@ if check_password():
         def load_data_prices():
             df = pd.read_excel("DMS_Active_Spare_Parts.xlsx", sheet_name="Parts price")
             
-            # 1. Aseguramos que la columna de mercado original se procesa como texto limpio
-            df['new_businessunit_idname'] = df['new_businessunit_idname'].astype(str).str.strip()
+            # 1. Convertimos a texto y rellenamos vacíos para evitar errores
+            df['new_businessunit_idname'] = df['new_businessunit_idname'].astype(str).fillna('')
             
-            # 2. FILTRO INTERNO OBLIGATORIO: Forzamos a que solo se quede con "Spain OJ"
-            df = df[df['new_businessunit_idname'] = "Spain OJ"].copy()
+            # 2. FILTRO SEGURO Y FLEXIBLE: Busca cualquier fila que CONTENGA "Spain" u "OJ" 
+            # ignorando espacios invisibles, mayúsculas o minúsculas.
+            df = df[df['new_businessunit_idname'].str.contains("Spain|OJ", case=False, na=False)].copy()
             
-            # 3. Mapeamos las columnas REALES que tiene tu pestaña "Parts price"
+            # 3. Mapeamos las columnas reales
             df = df.rename(columns={
                 'new_partscode': 'Código de Recambio',
                 'new_product_idname': 'Descripción de la Pieza',
@@ -170,7 +171,6 @@ if check_password():
             df = df.fillna("")
             df = df.replace("nan", "")
             
-            # Filtramos solo las columnas presentes para que Pandas no rompa la app
             columnas_presentes = [col for col in columnas_precios if col in df.columns]
             return df[columnas_presentes].reset_index(drop=True)
         
