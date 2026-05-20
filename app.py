@@ -126,7 +126,7 @@ if check_password():
             if buscar_operacion:
                 df_filtrado = df_filtrado[df_filtrado['Operación Técnica'].astype(str).str.contains(buscar_operacion, case=False, na=False)]
 
-            st.markdown(f"### 📋 Resultados encontrados: {len(df_filtrado)} operations")
+            st.markdown(f"### 📋 Resultados encontrados: {len(df_filtrado)} operaciones")
             if not df_filtrado.empty:
                 st.dataframe(df_filtrado, use_container_width=True, hide_index=True)
             else:
@@ -136,23 +136,26 @@ if check_password():
             st.error(f"Error al procesar la base de datos de tiempos: {e}")
 
     # =========================================================================
-    # PANTALLA 2: PRECIOS DE RECAMBIOS (Mapeo corregido con las columnas reales del Excel)
+    # PANTALLA 2: PRECIOS DE RECAMBIOS (Forzado estricto Spain OJ fuera de Caché)
     # =========================================================================
     elif opcion_menu == "💰 Precios de Recambios":
         
-       @st.cache_data(ttl=600)
+        @st.cache_data(ttl=600)
         def load_data_prices():
+            # La caché solo lee el archivo en bruto para mantener la velocidad
             df = pd.read_excel("DMS_Active_Spare_Parts.xlsx", sheet_name="Parts price")
+            return df
+
+        try:
+            # 1. Obtenemos los datos brutos del Excel
+            raw_prices = load_data_prices()
             
-            # 1. Convertimos a texto y rellenamos vacíos para evitar errores
-            df['new_businessunit_idname'] = df['new_businessunit_idname'].astype(str).fillna('')
+            # 2. FILTRADO INMEDIATO EN VIVO: Forzamos la limpieza y corte por España
+            raw_prices['new_businessunit_idname'] = raw_prices['new_businessunit_idname'].astype(str).str.strip()
+            df_spain = raw_prices[raw_prices['new_businessunit_idname'] == "Spain OJ"].copy()
             
-            # 2. FILTRO SEGURO Y FLEXIBLE: Busca cualquier fila que CONTENGA "Spain" u "OJ" 
-            # ignorando espacios invisibles, mayúsculas o minúsculas.
-            df = df[df['new_businessunit_idname'].str.contains("Spain|OJ", case=False, na=False)].copy()
-            
-            # 3. Mapeamos las columnas reales
-            df = df.rename(columns={
+            # 3. Mapeamos y renombramos las columnas del subconjunto de España
+            df_spain = df_spain.rename(columns={
                 'new_partscode': 'Código de Recambio',
                 'new_product_idname': 'Descripción de la Pieza',
                 'new_price': 'Precio Venta',
@@ -162,21 +165,19 @@ if check_password():
                 'statecodename': 'Estado'
             })
             
-            columnas_precios = [
+            columnas_finales_precios = [
                 'Código de Recambio', 'Descripción de la Pieza', 
                 'Precio Venta', 'Moneda', 'Tipo de Tarifa', 
                 'Mercado / Organización', 'Estado'
             ]
             
-            df = df.fillna("")
-            df = df.replace("nan", "")
+            df_spain = df_spain.fillna("")
+            df_spain = df_spain.replace("nan", "")
             
-            columnas_presentes = [col for col in columnas_precios if col in df.columns]
-            return df[columnas_presentes].reset_index(drop=True)
-        
-        try:
-            prices_data = load_data_prices()
+            columnas_visibles = [col for col in columnas_finales_precios if col in df_spain.columns]
+            df_final_mercado = df_spain[columnas_visibles].reset_index(drop=True)
             
+            # --- INTERFAZ GRÁFICA DE PRECIOS ---
             col_logo, col_titulo = st.columns([1.5, 5])
             with col_logo:
                 try: st.image("logo_empresa.png", width=220)
@@ -188,22 +189,24 @@ if check_password():
                 
             st.markdown("---")
             
-            # Buscador directo sin selectores intermedios
+            # Entrada de texto del buscador
             buscar_recambio = st.text_input("🔍 Introduce el Código de recambio o la Descripción de la pieza:", "").strip()
             
-            df_precios = prices_data.copy()
+            # El buscador actúa sobre los datos ya blindados de España
             if buscar_recambio:
-                df_precios = df_precios[
-                    df_precios['Código de Recambio'].astype(str).str.contains(buscar_recambio, case=False) |
-                    df_precios['Descripción de la Pieza'].astype(str).str.contains(buscar_recambio, case=False) |
-                    df_precios['Descripción Inglesa'].astype(str).str.contains(buscar_recambio, case=False)
+                df_tabla_render = df_final_mercado[
+                    df_final_mercado['Código de Recambio'].astype(str).str.contains(buscar_recambio, case=False) |
+                    df_final_mercado['Descripción de la Pieza'].astype(str).str.contains(buscar_recambio, case=False)
                 ]
-                
-            st.markdown(f"### 📦 {len(df_precios)} referencias precargadas automáticas para España")
-            if not df_precios.empty:
-                st.dataframe(df_precios, use_container_width=True, hide_index=True)
             else:
-                st.warning("⚠️ No se encontraron recambios que coincidan con la búsqueda.")
+                df_tabla_render = df_final_mercado
+
+            # Impresión de la tabla en la interfaz
+            st.markdown(f"### 📦 {len(df_tabla_render)} referencias localizadas para España")
+            if not df_tabla_render.empty:
+                st.dataframe(df_tabla_render, use_container_width=True, hide_index=True)
+            else:
+                st.warning("⚠️ No se encontraron recambios con los criterios introducidos.")
                 
         except Exception as e:
             st.error(f"Error al procesar el maestro de precios: {e}")
