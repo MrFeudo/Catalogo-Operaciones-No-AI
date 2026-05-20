@@ -13,7 +13,6 @@ except Exception:
 
 st.sidebar.markdown("---")
 
-# Menú interactivo lateral
 st.sidebar.markdown("### 🗺️ Menú de Navegación")
 opcion_menu = st.sidebar.radio(
     "Selecciona una herramienta:",
@@ -91,7 +90,7 @@ if check_password():
                 
             st.markdown("---")
 
-            # Interfaz de Filtros Fila 1
+            # Interfaz de Filtros Tila 1
             col1, col2, col3 = st.columns([1, 1.5, 1.5])
             with col1:
                 modelos_disponibles = ["Todos"] + list(data['Modelo'].dropna().unique())
@@ -137,7 +136,7 @@ if check_password():
             st.error(f"Error al procesar la base de datos de tiempos: {e}")
 
     # =========================================================================
-    # PANTALLA 2: SECCIÓN DE PRECIOS (Optimizada para España OJ)
+    # PANTALLA 2: PRECIOS DE RECAMBIOS (Filtro interno y estricto Spain OJ)
     # =========================================================================
     elif opcion_menu == "💰 Precios de Recambios":
         
@@ -145,11 +144,11 @@ if check_password():
         def load_data_prices():
             df = pd.read_excel("DMS_Active_Spare_Parts.xlsx", sheet_name="Parts price")
             
-            # 1. FILTRO SEGURO: Solo cargamos el mercado de España OJ
+            # 1. FILTRO INTERNO OBLIGATORIO: Forzamos a que solo exista Spain OJ
             df['new_businessunit_idname'] = df['new_businessunit_idname'].astype(str).str.strip()
             df = df[df['new_businessunit_idname'] == "Spain OJ"].copy()
             
-            # 2. Traducimos y mapeamos las columnas de valor real de tu hoja
+            # 2. Mapeamos las columnas correctas eliminando ruidos del DMS
             df = df.rename(columns={
                 'new_partscode': 'Código de Recambio',
                 'new_product_idname': 'Descripción de la Pieza',
@@ -179,34 +178,25 @@ if check_password():
                     
             with col_titulo:
                 st.title("Maestro de Tarifas y Precios de Recambios")
-                st.write("Consulta oficial de PVPs y tarifas de distribución para la red Spain OJ.")
+                st.write("Consulta oficializada de precios y tarifas vigentes de la red Spain OJ.")
                 
             st.markdown("---")
             
-            # Buscador en pantalla de precios
-            c1, c2 = st.columns([2, 1])
-            with c1:
-                buscar_recambio = st.text_input("🔍 Buscar por Código de recambio o Descripción de pieza:", "").strip()
-            with c2:
-                # Extrae los tipos de tarifa reales que aplican en España (ej: Wholesale Price, Sales Guide...)
-                tarifas_disponibles = ["Todas"] + list(prices_data['Tipo de Tarifa'].dropna().unique())
-                tarifa_seleccionada = st.selectbox("Filtrar por Tipo de Tarifa:", tarifas_disponibles)
+            # Buscador directo e intuitivo: solo el texto de búsqueda, sin menús desplegables
+            buscar_recambio = st.text_input("🔍 Introduce el Código de recambio o la Descripción de la pieza:", "").strip()
             
-            # Lógica de filtrado en cascada
             df_precios = prices_data.copy()
             if buscar_recambio:
                 df_precios = df_precios[
                     df_precios['Código de Recambio'].astype(str).str.contains(buscar_recambio, case=False) |
                     df_precios['Descripción de la Pieza'].astype(str).str.contains(buscar_recambio, case=False)
                 ]
-            if tarifa_seleccionada != "Todas":
-                df_precios = df_precios[df_precios['Tipo de Tarifa'] == tarifa_seleccionada]
                 
-            st.markdown(f"### 📦 {len(df_precios)} referencias localizadas para España")
+            st.markdown(f"### 📦 {len(df_precios)} referencias cargadas para España")
             if not df_precios.empty:
                 st.dataframe(df_precios, use_container_width=True, hide_index=True)
             else:
-                st.warning("⚠️ No se encontraron recambios en España con los criterios introducidos.")
+                st.warning("⚠️ No se encontraron recambios que coincidan con la búsqueda.")
                 
         except Exception as e:
             st.error(f"Error al procesar el maestro de precios: {e}")
