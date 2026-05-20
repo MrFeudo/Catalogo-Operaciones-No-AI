@@ -140,43 +140,37 @@ if check_password():
     # =========================================================================
     elif opcion_menu == "💰 Precios de Recambios":
         
-        @st.cache_data(ttl=600)
+       @st.cache_data(ttl=600)
         def load_data_prices():
             df = pd.read_excel("DMS_Active_Spare_Parts.xlsx", sheet_name="Parts price")
             
-            # Limpiamos los espacios de la columna real de mercado
-            df['Attributed Sales Org.'] = df['Attributed Sales Org.'].astype(str).str.strip()
+            # 1. Aseguramos que la columna de mercado original se procesa como texto limpio
+            df['new_businessunit_idname'] = df['new_businessunit_idname'].astype(str).str.strip()
             
-            # FILTRO INTERNO OBLIGATORIO: Forzamos a que solo cargue registros de España
-            df = df[df['Attributed Sales Org.'] == "Spain OJ"].copy()
+            # 2. FILTRO INTERNO OBLIGATORIO: Forzamos a que solo se quede con "Spain OJ"
+            df = df[df['new_businessunit_idname'] == "Spain OJ"].copy()
             
-            # Mapeamos usando las cabeceras exactas que tu Excel tiene impresas
+            # 3. Mapeamos las columnas REALES que tiene tu pestaña "Parts price"
             df = df.rename(columns={
-                'Spare Parts No.': 'Código de Recambio',
-                'Spare Parts': 'Descripción de la Pieza',
-                'English Description (Spare Parts) (Product)': 'Descripción Inglesa',
-                'Currency': 'Moneda',
-                'Attributed Sales Org.': 'Mercado / Organización'
+                'new_partscode': 'Código de Recambio',
+                'new_product_idname': 'Descripción de la Pieza',
+                'new_price': 'Precio Venta',
+                'transactioncurrencyidname': 'Moneda',
+                'new_pricetypename': 'Tipo de Tarifa',
+                'new_businessunit_idname': 'Mercado / Organización',
+                'statecodename': 'Estado'
             })
             
-            # Buscamos si existe alguna columna que tenga la palabra "price" o "precio" de forma dinámica por si varía el nombre exacto
-            col_precio_real = None
-            for c in df.columns:
-                if 'price' in str(c).lower() or 'precio' in str(c).lower():
-                    col_precio_real = c
-                    break
-            
-            if col_precio_real:
-                df = df.rename(columns={col_precio_real: 'Precio Venta'})
-            
             columnas_precios = [
-                'Código de Recambio', 'Descripción de la Pieza', 'Descripción Inglesa',
-                'Precio Venta', 'Moneda', 'Mercado / Organización'
+                'Código de Recambio', 'Descripción de la Pieza', 
+                'Precio Venta', 'Moneda', 'Tipo de Tarifa', 
+                'Mercado / Organización', 'Estado'
             ]
             
             df = df.fillna("")
             df = df.replace("nan", "")
             
+            # Filtramos solo las columnas presentes para que Pandas no rompa la app
             columnas_presentes = [col for col in columnas_precios if col in df.columns]
             return df[columnas_presentes].reset_index(drop=True)
         
