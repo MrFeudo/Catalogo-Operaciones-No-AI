@@ -126,7 +126,7 @@ if check_password():
             if buscar_operacion:
                 df_filtrado = df_filtrado[df_filtrado['Operación Técnica'].astype(str).str.contains(buscar_operacion, case=False, na=False)]
 
-            st.markdown(f"### 📋 Resultados encontrados: {len(df_filtrado)} operaciones")
+            st.markdown(f"### 📋 Resultados encontrados: {len(df_filtrado)} operations")
             if not df_filtrado.empty:
                 st.dataframe(df_filtrado, use_container_width=True, hide_index=True)
             else:
@@ -136,7 +136,7 @@ if check_password():
             st.error(f"Error al procesar la base de datos de tiempos: {e}")
 
     # =========================================================================
-    # PANTALLA 2: PRECIOS DE RECAMBIOS (Corrección de mapeo y Filtro obligatorio)
+    # PANTALLA 2: PRECIOS DE RECAMBIOS (Mapeo corregido con las columnas reales del Excel)
     # =========================================================================
     elif opcion_menu == "💰 Precios de Recambios":
         
@@ -144,33 +144,39 @@ if check_password():
         def load_data_prices():
             df = pd.read_excel("DMS_Active_Spare_Parts.xlsx", sheet_name="Parts price")
             
-            # Aseguramos que la columna de mercado existe y está limpia
-            df['new_businessunit_idname'] = df['new_businessunit_idname'].astype(str).str.strip()
+            # Limpiamos los espacios de la columna real de mercado
+            df['Attributed Sales Org.'] = df['Attributed Sales Org.'].astype(str).str.strip()
             
-            # FILTRO INTERNO ESTRICTO: Solo guardamos lo que pertenezca a España OJ
-            df = df[df['new_businessunit_idname'] == "Spain OJ"].copy()
+            # FILTRO INTERNO OBLIGATORIO: Forzamos a que solo cargue registros de España
+            df = df[df['Attributed Sales Org.'] == "Spain OJ"].copy()
             
-            # Mapeamos incluyendo las columnas requeridas para evitar la rotura de Pandas
+            # Mapeamos usando las cabeceras exactas que tu Excel tiene impresas
             df = df.rename(columns={
-                'new_partscode': 'Código de Recambio',
-                'new_product_idname': 'Descripción de la Pieza',
-                'new_price': 'Precio Venta',
-                'transactioncurrencyidname': 'Moneda',
-                'new_pricetypename': 'Tipo de Tarifa',
-                'new_businessunit_idname': 'Mercado / Organización',
-                'statecodename': 'Estado'
+                'Spare Parts No.': 'Código de Recambio',
+                'Spare Parts': 'Descripción de la Pieza',
+                'English Description (Spare Parts) (Product)': 'Descripción Inglesa',
+                'Currency': 'Moneda',
+                'Attributed Sales Org.': 'Mercado / Organización'
             })
             
+            # Buscamos si existe alguna columna que tenga la palabra "price" o "precio" de forma dinámica por si varía el nombre exacto
+            col_precio_real = None
+            for c in df.columns:
+                if 'price' in str(c).lower() or 'precio' in str(c).lower():
+                    col_precio_real = c
+                    break
+            
+            if col_precio_real:
+                df = df.rename(columns={col_precio_real: 'Precio Venta'})
+            
             columnas_precios = [
-                'Código de Recambio', 'Descripción de la Pieza', 
-                'Precio Venta', 'Moneda', 'Tipo de Tarifa', 
-                'Mercado / Organización', 'Estado'
+                'Código de Recambio', 'Descripción de la Pieza', 'Descripción Inglesa',
+                'Precio Venta', 'Moneda', 'Mercado / Organización'
             ]
             
             df = df.fillna("")
             df = df.replace("nan", "")
             
-            # Verificamos qué columnas pasaron con éxito el mapeo
             columnas_presentes = [col for col in columnas_precios if col in df.columns]
             return df[columnas_presentes].reset_index(drop=True)
         
@@ -188,17 +194,18 @@ if check_password():
                 
             st.markdown("---")
             
-            # Buscador directo sin selectores molestos
+            # Buscador directo sin selectores intermedios
             buscar_recambio = st.text_input("🔍 Introduce el Código de recambio o la Descripción de la pieza:", "").strip()
             
             df_precios = prices_data.copy()
             if buscar_recambio:
                 df_precios = df_precios[
                     df_precios['Código de Recambio'].astype(str).str.contains(buscar_recambio, case=False) |
-                    df_precios['Descripción de la Pieza'].astype(str).str.contains(buscar_recambio, case=False)
+                    df_precios['Descripción de la Pieza'].astype(str).str.contains(buscar_recambio, case=False) |
+                    df_precios['Descripción Inglesa'].astype(str).str.contains(buscar_recambio, case=False)
                 ]
                 
-            st.markdown(f"### 📦 {len(df_precios)} referencias precargadas automáticas")
+            st.markdown(f"### 📦 {len(df_precios)} referencias precargadas automáticas para España")
             if not df_precios.empty:
                 st.dataframe(df_precios, use_container_width=True, hide_index=True)
             else:
