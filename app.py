@@ -126,4 +126,106 @@ if check_password():
             if buscar_operacion:
                 df_filtrado = df_filtrado[df_filtrado['Operación Técnica'].astype(str).str.contains(buscar_operacion, case=False, na=False)]
 
-            st.markdown(f"### 📋 Resultados encontrados: {len(df_filtrado)}
+            st.markdown(f"### 📋 Resultados encontrados: {len(df_filtrado)} operaciones")
+            if not df_filtrado.empty:
+                st.dataframe(df_filtrado, use_container_width=True, hide_index=True)
+            else:
+                st.warning("⚠️ No se encontraron operaciones con los criterios seleccionados.")
+                
+        except Exception as e:
+            st.error(f"Error al procesar la base de datos de tiempos: {e}")
+
+    # =========================================================================
+    # PANTALLA 2: PRECIOS DE RECAMBIOS (Estrategia Replicada por Selector)
+    # =========================================================================
+    elif opcion_menu == "💰 Precios de Recambios":
+        
+        @st.cache_data(ttl=600)
+        def load_data_prices():
+            df = pd.read_excel("DMS_Active_Spare_Parts.xlsx", sheet_name="Parts price")
+            
+            # Mapeo y traducción directa de las columnas
+            df = df.rename(columns={
+                'new_partscode': 'Código de Recambio',
+                'new_product_idname': 'Descripción de la Pieza',
+                'new_price': 'Precio Venta',
+                'transactioncurrencyidname': 'Moneda',
+                'new_pricetypename': 'Tipo de Tarifa',
+                'new_businessunit_idname': 'Mercado / Organización',
+                'statecodename': 'Estado'
+            })
+            
+            columnas_finales_precios = [
+                'Código de Recambio', 'Descripción de la Pieza', 
+                'Precio Venta', 'Moneda', 'Tipo de Tarifa', 
+                'Mercado / Organización', 'Estado'
+            ]
+            
+            df = df.fillna("")
+            df = df.replace("nan", "")
+            
+            columnas_visibles = [col for col in columnas_finales_precios if col in df.columns]
+            return df[columnas_visibles].reset_index(drop=True)
+
+        try:
+            # 1. Cargamos el maestro de precios completo de la caché
+            prices_data = load_data_prices()
+            
+            # --- INTERFAZ GRÁFICA ---
+            col_logo, col_titulo = st.columns([1.5, 5])
+            with col_logo:
+                try: st.image("logo_empresa.png", width=220)
+                except Exception: pass
+                    
+            with col_titulo:
+                st.title("Maestro de Tarifas y Precios de Recambios")
+                st.write("Consulta oficializada de precios y tarifas de distribución vigentes.")
+                
+            st.markdown("---")
+            
+            # 2. FILTROS VISUALES (Replicando la Pantalla 1)
+            col_busc, col_org_p, col_tar = st.columns([2, 1, 1])
+            
+            with col_busc:
+                buscar_recambio = st.text_input("🔍 Buscar por Código de recambio o Descripción de pieza:", "").strip()
+                
+            with col_org_p:
+                # Extraemos los mercados reales del Excel dinámicamente
+                mercados_disponibles = ["Todos"] + list(prices_data['Mercado / Organización'].astype(str).unique())
+                # Buscamos si "Spain OJ" existe en la lista para ponerlo por defecto, si no, "Todos"
+                indice_defecto = mercados_disponibles.index("Spain OJ") if "Spain OJ" in mercados_disponibles else 0
+                
+                mercado_seleccionado = st.selectbox(
+                    "Filtrar por Organización / Mercado:", 
+                    mercados_disponibles, 
+                    index=indice_defecto
+                )
+                
+            with col_tar:
+                tarifas_disponibles = ["Todas"] + list(prices_data['Tipo de Tarifa'].astype(str).unique())
+                tarifa_seleccionada = st.selectbox("Filtrar por Tipo de Tarifa:", tarifas_disponibles)
+
+            # 3. LÓGICA DE FILTRADO SECUENCIAL
+            df_final_precios = prices_data.copy()
+            
+            if mercado_seleccionado != "Todos":
+                df_final_precios = df_final_precios[df_final_precios['Mercado / Organización'] == mercado_seleccionado]
+                
+            if tarifa_seleccionada != "Todas":
+                df_final_precios = df_final_precios[df_final_precios['Tipo de Tarifa'] == tarifa_seleccionada]
+                
+            if buscar_recambio:
+                df_final_precios = df_final_precios[
+                    df_final_precios['Código de Recambio'].astype(str).str.contains(buscar_recambio, case=False) |
+                    df_final_precios['Descripción de la Pieza'].astype(str).str.contains(buscar_recambio, case=False)
+                ]
+
+            # 4. RENDERIZADO DE RESULTADOS
+            st.markdown(f"### 📦 {len(df_final_precios)} referencias de recambios localizadas")
+            if not df_final_precios.empty:
+                st.dataframe(df_final_precios, use_container_width=True, hide_index=True)
+            else:
+                st.warning("⚠️ No se encontraron recambios con los criterios de filtrado seleccionados.")
+                
+        except Exception as e:
+            st.error(f"Error al procesar el maestro de precios: {e}")
