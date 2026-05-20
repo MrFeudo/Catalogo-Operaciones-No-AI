@@ -59,7 +59,7 @@ if check_password():
                 'new_name': 'Operación Técnica',
                 'new_standardhour': 'Tiempo Estándar (UT/Horas)',
                 'new_remark': 'Notas / Exclusiones',
-                'Organization': 'Mercado / Organización',  # <-- Corregido aquí
+                'organization': 'Mercado / Organización',  # <-- Corregido aquí
                 'statecodename': 'Estado'
             })
             
@@ -214,4 +214,23 @@ if check_password():
             df_final_precios = prices_data.copy()
             
             if mercado_seleccionado != "Todos":
-                df_final_precios = df_final_precios[df_final_precios['Mercado / Organización'].astype(str).str.strip()]
+                df_final_precios = df_final_precios[df_final_precios['Mercado / Organización'].astype(str).str.strip() == mercado_seleccionado]
+                
+            if tarifa_seleccionada != "Todas":
+                df_final_precios = df_final_precios[df_final_precios['Tipo de Tarifa'].astype(str).str.strip() == tarifa_seleccionada]
+                
+            if buscar_recambio:
+                df_final_precios = df_final_precios[
+                    df_final_precios['Código de Recambio'].astype(str).str.contains(buscar_recambio, case=False) |
+                    df_final_precios['Descripción de la Pieza'].astype(str).str.contains(buscar_recambio, case=False)
+                ]
+
+            # --- TABLA DE PRECIOS ---
+            st.markdown(f"### 📦 {len(df_final_precios)} referencias de recambios localizadas")
+            if not df_final_precios.empty:
+                st.dataframe(df_final_precios, use_container_width=True, hide_index=True)
+            else:
+                st.warning("⚠️ No se encontraron recambios con los criterios seleccionados.")
+                
+        except Exception as e:
+            st.error(f"Error al procesar el maestro de precios: {e}")
