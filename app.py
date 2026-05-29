@@ -35,7 +35,8 @@ IDIOMAS = {
         "warn_precios": "⚠️ No se encontraron recambios con los criterios seleccionados.",
         "err_precios": "Error al procesar el maestro de precios: {}",
         "todos": "Todos",
-        "todas": "Todas"
+        "todas": "Todas",
+        "filtro_modelo": "Filtrar por Modelo:"
     },
     "English": {
         "menu_titulo": "### 🗺️ Navigation Menu",
@@ -65,7 +66,8 @@ IDIOMAS = {
         "warn_precios": "⚠️ No spare parts found matching the selected criteria.",
         "err_precios": "Error processing master price list: {}",
         "todos": "All",
-        "todas": "All"
+        "todas": "All",
+        "filtro_modelo": "Filter by Model:"
     },
     "Chinese (中文)": {
         "menu_titulo": "### 🗺️ 导航菜单",
@@ -95,7 +97,8 @@ IDIOMAS = {
         "warn_precios": "⚠️ 未找到符合选择条件的零配件。",
         "err_precios": "处理价格总表时出错: {}",
         "todos": "全部",
-        "todas": "全部"
+        "todas": "全部",
+        "filtro_modelo": "按车型过滤:"
     }
 }
 
