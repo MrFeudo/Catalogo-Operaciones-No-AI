@@ -256,7 +256,7 @@ if check_password():
         except Exception as e:
             st.error(txt["err_taller"].format(e))
 
-    # =========================================================================
+# =========================================================================
     # PANTALLA 2: PRECIOS DE RECAMBIOS
     # =========================================================================
     elif opcion_menu == txt["menu_precios"]:
@@ -268,7 +268,7 @@ if check_password():
             
             # Mapeamos usando "new_businessunit_idname" que corresponde a esta hoja
             df = df.rename(columns={
-                'Model': 'Modelo',  # <--- NUEVA COLUMNA QUE HAS AÑADIDO
+                'Model': 'Modelo',  # <--- NUEVA COLUMNA DE MODELO
                 'new_partscode': 'Código de Recambio',
                 'new_product_idname': 'Descripción de la Pieza',
                 'new_price': 'Precio Venta',
@@ -279,7 +279,7 @@ if check_password():
             })
             
             columnas_finales_precios = [
-                'Modelo','Código de Recambio', 'Descripción de la Pieza', 
+                'Modelo', 'Código de Recambio', 'Descripción de la Pieza', 
                 'Precio Venta', 'Moneda', 'Tipo de Tarifa', 
                 'Mercado / Organización', 'Estado'
             ]
@@ -290,7 +290,7 @@ if check_password():
             columnas_visibles = [col for col in columnas_finales_precios if col in df.columns]
             return df[columnas_visibles].reset_index(drop=True)
 
-try:
+        try:
             prices_data = load_prices_nueva_version()
             
             st.title(txt["precios_titulo"])
