@@ -298,7 +298,6 @@ try:
             st.markdown("---")
             
             # --- FILTROS DE PRECIOS ---
-            # Pasamos a 4 columnas modificando las proporciones a [2, 1, 1, 1]
             col_busc, col_org_p, col_tar, col_mod = st.columns([2, 1, 1, 1])
             
             with col_busc:
@@ -320,7 +319,6 @@ try:
                 tarifas_disponibles = [txt["todas"]] + [str(t).strip() for t in prices_data['Tipo de Tarifa'].unique() if str(t).strip() != ""]
                 tarifa_seleccionada = st.selectbox(txt["f_tarifa"], tarifas_disponibles)
 
-            # NUEVO: Añadimos el componente visual en la cuarta columna
             with col_mod:
                 modelos_disponibles = [txt["todos"]] + [str(mo).strip() for mo in prices_data['Modelo'].unique() if str(mo).strip() != ""]
                 modelo_seleccionado = st.selectbox(txt["filtro_modelo"], modelos_disponibles)
@@ -328,7 +326,6 @@ try:
             # --- LÓGICA DE FILTRADO ---
             df_final_precios = prices_data.copy()
 
-            # NUEVO: Aplicamos el filtrado por Modelo
             if modelo_seleccionado != txt["todos"]:
                 df_final_precios = df_final_precios[df_final_precios['Modelo'].astype(str).str.strip() == modelo_seleccionado]
                 
@@ -351,5 +348,5 @@ try:
             else:
                 st.warning(txt["warn_precios"])
                 
-            except Exception as e:
-                st.error(txt["err_precios"].format(e))
+        except Exception as e:
+            st.error(txt["err_precios"].format(e))
