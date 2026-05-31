@@ -549,9 +549,10 @@ if check_password():
             genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
             genai.api_version = 'v1' 
         except Exception:
-            st.error("⚠️ Error: Configura 'GEMINI_API_KEY' en los Secrets de Streamlit.")
+            st.error("⚠️ Error: Configura 'GEMINI_API_KEY' en los Secrets.")
             st.stop()
             
+        # Función global para normalizar
         def normalizar(s):
             return ''.join(c for c in unicodedata.normalize('NFD', str(s)) if unicodedata.category(c) != 'Mn').lower()
 
@@ -559,48 +560,52 @@ if check_password():
         
         if pregunta:
             with st.spinner("🤖 Consultando DMS (Análisis Técnico Senior)..."):
-              try:
+                try:
                     # 1. CARGA DE DATOS
                     df_precios = pd.read_csv("DMS_Active_Spare_Parts (1).xlsx - Parts price.csv")
                     df_tiempos = pd.read_csv("DMS_Active_Spare_Parts (1).xlsx - new_srv_workhours.csv")
+                    
+                    # LIMPIEZA: Eliminamos espacios en blanco en los nombres de columnas (Evita errores de Key)
+                    df_precios.columns = df_precios.columns.str.strip()
+                    df_tiempos.columns = df_tiempos.columns.str.strip()
                     
                     # 2. FILTRADO (Solo Spain OJ)
                     df_p = df_precios[df_precios.astype(str).apply(lambda x: x.str.contains("Spain OJ", na=False)).any(axis=1)]
                     df_t = df_tiempos[df_tiempos.astype(str).apply(lambda x: x.str.contains("Spain OJ", na=False)).any(axis=1)]
                     
-                    # 3. CRUCE INTELIGENTE (La clave para que encuentre la relación)
-                    # Unimos por el código de pieza común (ajusta los nombres de columna si es necesario)
+                    # 3. CRUCE INTELIGENTE
                     df_unido = pd.merge(df_p, df_t, left_on='new_partscode', right_on='new_code', how='inner', suffixes=('_p', '_t'))
                     
-                    # 4. BUSQUEDA POR NORMALIZACIÓN (Tildes)
-                    def normalizar(s):
-                        return ''.join(c for c in unicodedata.normalize('NFD', str(s)) if unicodedata.category(c) != 'Mn').lower()
-                    
-                    # Filtramos el DataFrame unido según la consulta
+                    # 4. BUSQUEDA POR NORMALIZACIÓN
                     query_norm = normalizar(pregunta)
                     mask = df_unido.astype(str).apply(lambda x: x.str.contains(query_norm, na=False)).any(axis=1)
                     contexto = df_unido[mask].head(10).to_string()
+                    
+                    if contexto.strip() == "Empty DataFrame":
+                        st.warning("No se encontró información técnica para esa consulta en Spain OJ.")
+                    else:
+                        # 5. LLAMADA A LA IA
+                        model = genai.GenerativeModel('gemini-1.5-flash')
+                        
+                        prompt = f"""
+                        Eres el Ingeniero Jefe de OMODA España. Tu objetivo es la precisión quirúrgica.
+                        
+                        CONTEXTO DE DATOS CRUZADOS (SPAIN OJ):
+                        {contexto}
+                        
+                        CONSULTA: "{pregunta}"
+                        
+                        INSTRUCCIONES CRÍTICAS:
+                        1. IDENTIFICACIÓN: Extrae el 'new_partscode' exacto.
+                        2. PRECIO: Extrae el 'new_price'.
+                        3. TIEMPO (UTs): Si existen datos, DIVIDE ENTRE 100 para dar Horas (Ej: 60 UT = 0.6h).
+                        4. Si el dato no existe, responde: "Registro no encontrado. Verificar catálogo".
+                        5. Sé técnico, directo y sin relleno.
+                        """
+                        
+                        respuesta = model.generate_content(prompt)
+                        st.markdown("### 💬 Informe Técnico:")
+                        st.success(respuesta.text)
 
-                    # 5. LLAMADA A LA IA CON EL CONTEXTO YA CRUZADO
-                    model = genai.GenerativeModel('gemini-1.5-flash')
-                    
-                    prompt = f"""
-                    Eres el Ingeniero Jefe Técnico de OMODA España. 
-                    CONTEXTO TÉCNICO (Datos ya cruzados):
-                    {contexto}
-                    
-                    CONSULTA: "{pregunta}"
-                    
-                    INSTRUCCIONES:
-                    1. Identifica el código de pieza en la columna 'new_partscode'.
-                    2. Extrae el precio de 'new_price'.
-                    3. Si hay UTs en 'new_standardhour', DIVIDE ENTRE 100 para dar Horas.
-                    4. Si no hay datos exactos, sé honesto y no inventes.
-                    """
-                    
-                    respuesta = model.generate_content(prompt)
-                    st.markdown("### 💬 Respuesta Técnica:")
-                    st.write(respuesta.text)
-                    
                 except Exception as e:
-                    st.error(f"❌ Error crítico: {e}")
+                    st.error(f"❌ Error crítico en el proceso: {e}")
