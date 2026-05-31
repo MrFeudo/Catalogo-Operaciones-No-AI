@@ -579,7 +579,7 @@ if check_password():
                     contexto_t = df_t[criterio_t].head(15).to_string()
                     
                     # 5. LLAMADA A LA IA CON PROMPT DE INGENIERÍA
-                    model = genai.GenerativeModel('gemini-1.5-flash')
+                    model = genai.GenerativeModel('gemini-3.5-flash')
                     
                     prompt = f"""
                     Eres el Ingeniero Jefe de Soporte Técnico de OMODA & JAECOO España. Tu capacidad de análisis supera a cualquier técnico de taller. Tu objetivo es la precisión quirúrgica.
