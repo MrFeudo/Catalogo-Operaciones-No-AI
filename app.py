@@ -538,6 +538,7 @@ if check_password():
         # 1. ENLAZAR TU API KEY DESDE LOS SECRETS DE STREAMLIT
         try:
             genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+            genai.api_version = 'v1'
         except Exception:
             st.error("⚠️ Error de configuración: Falta añadir la 'GEMINI_API_KEY' en los Secrets de Streamlit Cloud.")
             st.stop()
@@ -569,7 +570,7 @@ if check_password():
                         contexto_excel = "No se han encontrado registros que coincidan directamente con esas palabras clave en el volcado actual del DMS."
                     
                     # 3. CONFIGURAR EL MODELO DE GEMINI
-                    model = genai.GenerativeModel('gemini-1.5-flash')
+                    model = genai.GenerativeModel('gemini-1.5-flash-latest')
                     
                     instrucciones = (
                         "Eres el asistente de IA oficial de posventa para OMODA & JAECOO España.\n"
