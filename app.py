@@ -544,3 +544,75 @@ if check_password():
                         st.dataframe(nueva_fila, hide_index=True)
                     except Exception as e_archivo:
                         st.error(f"Error al escribir en el archivo Excel. Asegúrate de que no esté abierto: {e_archivo}")
+
+# =========================================================================
+    # PANTALLA 5: ASISTENTE IA GRATUITO (Conexión con Google Gemini)
+    # =========================================================================
+    elif opcion_menu == "🤖 Asistente IA":
+        st.title("🤖 Asistente Virtual de Posventa (Gemini)")
+        st.write("Consulta al asistente inteligente sobre tarifas, referencias o tiempos de taller vinculados al DMS.")
+        st.markdown("---")
+        
+        # 1. ENLAZAR TU API KEY GRATUITA DE GOOGLE
+        # Recuerda pegar tu clave (AQ.Ab8RN6KfXjo-...) en los Secrets de Streamlit Cloud con el nombre GEMINI_API_KEY
+        try:
+            genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+        except Exception:
+            st.error("⚠️ Error de configuración: Falta añadir la 'GEMINI_API_KEY' en los Secrets de Streamlit Cloud.")
+            st.stop()
+            
+        pregunta = st.text_input("Escribe tu consulta técnica (Ej: ¿Cuál es el precio del alternador del OMODA 5? o ¿Existe tempario para la revisión del JAECOO 7?):").strip()
+        
+        if pregunta:
+            # 2. DEFINIR LA URL RAW DE TU GITHUB
+            # IMPORTANTE: Cambia 'TU_USUARIO' y 'TU_REPOSITORIO' por tus datos reales de GitHub.
+            # Fíjate que la URL debe empezar por 'raw.githubusercontent.com' para que pandas descargue el Excel binario correctamente.
+            url_github_excel = "https://raw.githubusercontent.com/TU_USUARIO/TU_REPOSITORIO/main/DMS_Active_Spare_Parts.xlsx"
+            
+            with st.spinner("🤖 Consultando la última actualización del DMS en GitHub..."):
+                try:
+                    # 3. LEER EL EXCEL DINÁMICO DESDE GITHUB
+                    # Leemos la pestaña de precios ("Parts price"). Si tu PowerQuery genera otra pestaña, cambia el nombre aquí.
+                    df_tarifas = pd.read_excel(url_github_excel, sheet_name="Parts price")
+                    
+                    # Filtro inteligente de seguridad en Python:
+                    # Rompemos la pregunta en palabras y buscamos solo filas que coincidan para no saturar a la IA
+                    palabras_clave = [p for p in pregunta.split() if len(p) > 3]
+                    df_filtrado = pd.DataFrame()
+                    
+                    if palabras_clave:
+                        # Buscamos en todo el dataframe convertido a texto
+                        criterio = df_tarifas.astype(str).apply(lambda x: x.str.contains('|'.join(palabras_clave), case=False)).any(axis=1)
+                        df_filtrado = df_tarifas[criterio].head(40) # Filtramos un máximo de 40 filas para que quepa en el contexto gratuito
+                    
+                    # Convertimos el resultado a texto para inyectárselo a la IA
+                    if not df_filtrado.empty:
+                        contexto_excel = df_filtrado.to_string()
+                    else:
+                        contexto_excel = "No se han encontrado registros que coincidan directamente con esas palabras clave en el volcado actual del DMS."
+                    
+                    # 4. CONFIGURAR EL MODELO DE GEMINI
+                    model = genai.GenerativeModel('gemini-pro')
+                    
+                    # Prompt del Sistema: Aquí le marcamos las reglas del negocio de OMODA & JAECOO
+                    instrucciones = (
+                        "Eres el asistente de IA oficial de posventa para OMODA & JAECOO España.\n"
+                        "Tu único objetivo es responder a las dudas de los talleres basándote en los datos de este extracto del DMS empresarial:\n"
+                        f"{contexto_excel}\n\n"
+                        "REGLAS OBLIGATORIAS DE RESPUESTA:\n"
+                        "1. Si los datos del DMS muestran que el recambio, precio o tiempo de mano de obra EXISTE, detalla la información de forma clara (Código de pieza, descripción en inglés/español y tarifa Retail ESP).\n"
+                        "2. Si la operación técnica o la pieza NO CONSTA en el extracto proporcionado, di exactamente lo siguiente:\n"
+                        "'Esta operación o recambio no consta en el catálogo activo del DMS. Por favor, dirígete a la pestaña \"Solicitar Operaciones\" para tramitar su alta inmediata con HQ.'\n"
+                        "3. Responde siempre en español, de manera educada, concisa y ultra-profesional."
+                    )
+                    
+                    # Ejecutamos la consulta enviando el bloque completo
+                    response = model.generate_content(f"{instrucciones}\n\nPregunta del taller: {pregunta}")
+                    
+                    # 5. DIBUJAR LA RESPUESTA EN LA APLICACIÓN
+                    st.markdown("---")
+                    st.markdown("### 💬 Respuesta del Asistente Técnico:")
+                    st.write(response.text)
+                    
+                except Exception as error:
+                    st.error(f"❌ Error al procesar la consulta. Verifica que el archivo en GitHub esté en la ruta correcta y que el nombre de la pestaña sea 'Parts price'. Detalle: {error}")
