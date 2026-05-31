@@ -527,104 +527,145 @@ if check_password():
                     except Exception as e_archivo:
                         st.error(f"Error al escribir en el archivo Excel. Asegúrate de que no esté abierto: {e_archivo}")
 
-  # =========================================================================
-    # PANTALLA 4: ASISTENTE IA GRATUITO (Conexión con Google Gemini)
+# =========================================================================
+    # PANTALLA 4: ASISTENTE IA AVANZADO (Spain OJ + Recambios + Tiempos)
     # =========================================================================
     elif opcion_menu == txt["menu_ia"]:
         st.title("🤖 Asistente Virtual de Posventa (Gemini)")
-        st.write("Consulta al asistente inteligente sobre tarifas, referencias o tiempos de taller vinculados al DMS.")
+        st.write("Consulta tarifas, recambios y tiempos de taller en el DMS.")
         st.markdown("---")
         
+        # 1. CONFIGURACIÓN API
         try:
             genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+            genai.api_version = 'v1' # Forzamos la versión estable para evitar errores 404
         except Exception:
-            st.error("⚠️ Error de configuración: Falta añadir la 'GEMINI_API_KEY' en los Secrets de Streamlit Cloud.")
+            st.error("⚠️ Error: Configura 'GEMINI_API_KEY' en los Secrets de Streamlit.")
             st.stop()
             
-        pregunta = st.text_input("Escribe tu consulta técnica (Ej: ¿Cuál es el precio del alternador del OMODA 5? o ¿Existe tempario para la revisión del JAECOO 7?):").strip()
+        pregunta = st.text_input("¿Qué necesitas consultar? (Ej: Precio y tiempo del alternador del OMODA 5):").strip()
         
         if pregunta:
-            with st.spinner("🤖 Analizando catálogo bilingüe del DMS..."):
+            with st.spinner("🤖 Consultando DMS (Cruzando Recambios y Mano de Obra)..."):
                 try:
-                    # 1. LEER EL EXCEL DESDE GITHUB
-                    df_tarifas = pd.read_excel(URL_GITHUB_EXCEL, sheet_name="Parts price")
-                    df_tarifas.columns = df_tarifas.columns.astype(str).str.strip()
+                    # 2. CARGA DE DATOS
+                    # Asumimos que tienes definido URL_GITHUB_EXCEL en el inicio del script
+                    df_precios = pd.read_excel(URL_GITHUB_EXCEL, sheet_name="Parts price")
+                    df_tiempos = pd.read_excel(URL_GITHUB_EXCEL, sheet_name="new_srv_workhours")
                     
-                    # 2. MAPEO / TRADUCCIÓN AUTOMÁTICA DE PALABRAS TÉCNICAS FRECUENTES (Español -> Inglés)
-                    # Esto asegura que el filtro de Python localice las filas aunque el Excel esté en inglés.
-                    DICCIONARIO_TECNICO = {
-                        "bateria": "battery", "batería": "battery",
-                        "alternador": "alternator",
-                        "freno": "brake", "frenos": "brakes",
-                        "pastilla": "pad", "pastillas": "pads",
-                        "disco": "disc", "discos": "discs",
-                        "paragolpes": "bumper", "parachoques": "bumper",
-                        "faro": "lamp", "faros": "headlamp", "piloto": "light",
-                        "filtro": "filter", "filtros": "filters",
-                        "aceite": "oil",
-                        "bomba": "pump",
-                        "correa": "belt",
-                        "amortiguador": "absorber", "amortiguadores": "shock",
-                        "bujia": "plug", "bujías": "plugs",
-                        "embrague": "clutch",
-                        "radiador": "radiator",
-                        "motor": "engine",
-                        "luna": "glass", "parabrisas": "windshield"
-                    }
+                    # 3. FILTRO DE HIERRO: Spain OJ
+                    # Convertimos a string y buscamos "Spain OJ" en cualquier columna para ser inmunes a errores de nombre de columna
+                    df_p = df_precios[df_precios.astype(str).apply(lambda x: x.str.contains("Spain OJ", case=False, na=False)).any(axis=1)]
+                    df_t = df_tiempos[df_tiempos.astype(str).apply(lambda x: x.str.contains("Spain OJ", case=False, na=False)).any(axis=1)]
                     
-                    # Extraemos las palabras de la pregunta
-                    palabras_usuario = pregunta.lower().split()
-                    palabras_busqueda = []
+                    # 4. DICCIONARIO BILINGÜE
+# Diccionario técnico ampliado (Español -> Inglés)
+DICCIONARIO_TECNICO = {
+    # MOTOR Y MANTENIMIENTO
+    "bateria": "battery", "batería": "battery",
+    "aceite": "oil",
+    "filtro": "filter", "filtros": "filters",
+    "bujia": "plug", "bujías": "plugs",
+    "alternador": "alternator",
+    "radiador": "radiator",
+    "correa": "belt",
+    "bomba": "pump",
+    "motor": "engine",
+    "valvula": "valve",
+    "culata": "cylinder head",
+    
+    # FRENOS Y RUEDAS
+    "freno": "brake", "frenos": "brakes",
+    "pastilla": "pad", "pastillas": "pads",
+    "disco": "disc", "discos": "discs",
+    "llanta": "wheel", "rueda": "wheel",
+    "buje": "hub", "bujes": "hubs",
+    "neumatico": "tyre", "neumáticos": "tyres",
+    
+    # EXTERIOR Y CARROCERÍA
+    "paragolpes": "bumper", "parachoques": "bumper",
+    "puerta": "door",
+    "retrovisor": "rearview mirror", "espejo": "mirror",
+    "faro": "lamp", "faros": "headlamp",
+    "piloto": "light",
+    "luna": "glass", "parabrisas": "windshield",
+    "capo": "hood", "capó": "hood",
+    "aleta": "fender",
+    "rejilla": "grille",
+    "maneta": "handle",
+    "techo": "roof",
+    "aleron": "spoiler",
+    
+    # ELÉCTRICA E INTERIOR
+    "camara": "camera", "cámara": "camera",
+    "arnes": "harness", "cableado": "harness",
+    "elevalunas": "regulator",
+    "pantalla": "display", "monitor": "display",
+    "asiento": "seat",
+    "volante": "steering wheel",
+    "cuadro": "cluster",
+    "altavoz": "speaker",
+    "fusible": "fuse",
+    
+    # SUSPENSIÓN Y DIRECCIÓN
+    "amortiguador": "absorber", "amortiguadores": "shock",
+    "suspension": "suspension",
+    "direccion": "steering",
+    "rotula": "joint",
+    "brazo": "arm",
+    
+    # TRANSMISIÓN
+    "embrague": "clutch",
+    "cambio": "transmission",
+    "palier": "axle",
+    "caja": "gearbox"
+}
                     
-                    for p in palabras_usuario:
-                        cleaned_p = p.replace("?", "").replace("¿", "").replace(" de ", "").strip()
-                        if len(cleaned_p) > 2:
-                            palabras_busqueda.append(cleaned_p)
-                            # Si la palabra tiene traducción técnica, la añadimos al filtro de búsqueda
-                            if cleaned_p in DICCIONARIO_TECNICO:
-                                palabras_busqueda.append(DICCIONARIO_TECNICO[cleaned_p])
+                    # Procesar términos de búsqueda
+                    palabras = [p.replace("?","").replace("¿","") for p in pregunta.lower().split() if len(p) > 2]
+                    busqueda = palabras.copy()
+                    for p in palabras:
+                        if p in DICCIONARIO:
+                            busqueda.append(DICCIONARIO[p])
                     
-                    # Filtrado inteligente en el DataFrame
-                    df_filtrado = pd.DataFrame()
-                    if palabras_busqueda:
-                        # Buscamos si alguna de las palabras (en ES o EN) aparece en las celdas
-                        criterio = df_tarifas.astype(str).apply(
-                            lambda x: x.str.contains('|'.join(palabras_busqueda), case=False, na=False)
-                        ).any(axis=1)
-                        df_filtrado = df_tarifas[criterio].head(50)
+                    # Aplicar filtro de búsqueda a ambos DataFrames
+                    criterio_p = df_p.astype(str).apply(lambda x: x.str.contains('|'.join(busqueda), case=False, na=False)).any(axis=1)
+                    criterio_t = df_t.astype(str).apply(lambda x: x.str.contains('|'.join(busqueda), case=False, na=False)).any(axis=1)
                     
-                    # Seleccionar columnas clave
-                    columnas_interes = ["Model", "new_partscode", "new_product_idname", "wholesale price (domestic)", "transactioncurrencyidname"]
-                    columnas_validas = [c for c in columnas_interes if c in df_filtrado.columns]
+                    # Limitar a las 15 mejores coincidencias para no saturar la IA
+                    contexto_p = df_p[criterio_p].head(15).to_string()
+                    contexto_t = df_t[criterio_t].head(15).to_string()
                     
-                    if not df_filtrado.empty:
-                        contexto_excel = df_filtrado[columnas_validas].to_string()
-                    else:
-                        contexto_excel = "No se han encontrado registros en el Excel para las palabras clave indexadas."
+                    # 5. LLAMADA A LA IA CON CHAIN OF THOUGHT
+                    model = genai.GenerativeModel('gemini-1.5-flash')
                     
-                    # 3. INSTANCIAR EL MODELO (Con el plan B por si el servidor sigue forzando la ruta antigua)
-                    try:
-                        model = genai.GenerativeModel('gemini-3.5-flash')
-                    except Exception:
-                        model = genai.GenerativeModel('gemini-pro')
-                        
-                    instrucciones = (
-                        "Eres el asistente de IA oficial de posventa para OMODA & JAECOO España.\n"
-                        "Los usuarios preguntarán en español, pero el extracto del DMS de la empresa que tienes aquí abajo está en inglés.\n"
-                        "Tu trabajo es cruzar mentalmente los términos (ej: 'batería' = 'battery', 'alternador' = 'alternator') para encontrar la información.\n\n"
-                        f"EXTRACTO DEL DMS DISPONIBLE:\n{contexto_excel}\n\n"
-                        "REGLAS OBLIGATORIAS DE RESPUESTA:\n"
-                        "1. Si localizas el recambio solicitado bajo su nombre en inglés (ej: 'Battery 12V'), traduce los datos clave al español y muestra el Código de pieza ('new_partscode'), descripción y el precio exacto en 'wholesale price (domestic)'.\n"
-                        "2. Si la pieza NO CONSTA de ninguna forma en el extracto proporcionado, responde textualmente:\n"
-                        "'Esta operación o recambio no consta en el catálogo activo del DMS. Por favor, dirígete a la pestaña \"Solicitar Operaciones\" para tramitar su alta inmediata con HQ.'\n"
-                        "3. Sé conciso, educado y responde siempre en español."
-                    )
+                    prompt = f"""
+                    Eres el Consultor Técnico de Posventa Senior para OMODA & JAECOO España.
                     
-                    response = model.generate_content(f"{instrucciones}\n\nPregunta del taller: {pregunta}")
+                    DATOS DE PRECIOS (SPAIN OJ):
+                    {contexto_p}
+                    
+                    DATOS DE TIEMPOS (SPAIN OJ):
+                    {contexto_t}
+                    
+                    SOLICITUD DEL TALLER: "{pregunta}"
+                    
+                    INSTRUCCIONES DE RESPUESTA:
+                    1. TU BASE DE DATOS ES EXCLUSIVAMENTE 'SPAIN OJ'. IGNORES CUALQUIER DATO DE POLONIA, UK O OTROS MERCADOS.
+                    2. ANALIZA LA PREGUNTA: 
+                       - Si busca precio, busca el código en 'DATOS DE PRECIOS'.
+                       - Si busca mano de obra, busca en 'DATOS DE TIEMPOS'.
+                       - Si busca ambos, cruza la información.
+                    3. Si la pieza o operación NO CONSTA en los datos, responde exactamente: 
+                       "Esta operación o recambio no consta actualmente en el DMS para el mercado español. Por favor, tramite su alta en la pestaña de 'Solicitar Operaciones'."
+                    4. Sé conciso y técnico. Responde siempre en español.
+                    """
+                    
+                    respuesta = model.generate_content(prompt)
                     
                     st.markdown("---")
-                    st.markdown("### 💬 Respuesta del Asistente Técnico:")
-                    st.write(response.text)
+                    st.markdown("### 💬 Respuesta del Asistente:")
+                    st.write(respuesta.text)
                     
-                except Exception as error:
-                    st.error(f"❌ Error al procesar la consulta. Detalle del fallo: {error}")
+                except Exception as e:
+                    st.error(f"❌ Error al procesar la consulta: {e}")
