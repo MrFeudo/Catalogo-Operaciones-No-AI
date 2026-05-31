@@ -470,7 +470,7 @@ if check_password():
             "LEPAS L8 PHEV": "T1G PHEV"
         }
         
-        # --- SELECTORES DINÁMICOS (FUERA DEL FORMULARIO PARA ACTUALIZACIÓN INMEDIATA) ---
+        # --- SELECTORES DINÁMICOS ---
         st.subheader(txt["form_sub"])
         
         col_dinamica1, col_dinamica2 = st.columns(2)
@@ -507,7 +507,7 @@ if check_password():
                 else:
                     ahora = datetime.datetime.now()
                     
-                    # Generación limpia de la estructura de datos
+                    # Estructuración limpia de la fila
                     nueva_fila = pd.DataFrame([{
                         "SN": "",
                         "Submitted on": ahora.strftime("%Y-%m-%d %H:%M:%S"),
@@ -523,28 +523,24 @@ if check_password():
                         "DEALER": dealer
                     }])
                     
+                    # RUTA ABSOLUTA ACTUALIZADA CON EL NUEVO NOMBRE DE ARCHIVO
+                    ruta_guardado = "C:/Users/PabloMorenoMartín/OneDrive - O&J Automotive Netherlands B.V/Documentos/Mis cosas/Recambios/Catalogo operaciones/solicitudes_operaciones_MO_HQ.xlsx"
+                    
                     try:
-                        # Intento de volcado en Google Sheets
-                        conn = st.connection("gsheets", type=GSheetsConnection)
-                        df_existente = conn.read(worksheet="Form", ttl=0)
-                        df_actualizado = pd.concat([df_existente, nueva_fila], ignore_index=True)
-                        conn.update(data=df_actualizado, worksheet="Form") 
-                        
-                        st.success(txt["success_sheet"])
+                        # Si el archivo ya existe, leemos y concatenamos la fila nueva abajo
+                        df_local_existente = pd.read_excel(ruta_guardado)
+                        df_local_final = pd.concat([df_local_existente, nueva_fila], ignore_index=True)
+                    except Exception:
+                        # Si es la primera vez o no existe, creamos el archivo desde cero con la fila nueva
+                        df_local_final = nueva_fila
+                    
+                    try:
+                        # Guardamos el archivo Excel localmente
+                        df_local_final.to_excel(ruta_guardado, index=False)
+                        st.success("¡Solicitud guardada con éxito localmente en tu carpeta de OneDrive!")
                         st.balloons()
                         
-                    except Exception:
-                        # MODO CONTINGENCIA SEGURO: Si no hay conexión API, guarda localmente en un Excel secundario
-                        st.warning(txt["warn_contingencia"])
-                        
-                        archivo_local = "solicitudes_contingencia.xlsx"
-                        try:
-                            df_local_existente = pd.read_excel(archivo_local)
-                            df_local_final = pd.concat([df_local_existente, nueva_fila], ignore_index=True)
-                        except Exception:
-                            df_local_final = nueva_fila
-                            
-                        df_local_final.to_excel(archivo_local, index=False)
-                        
-                        # Mostramos el resultado en una tabla limpia en vez de romper la ejecución
+                        # Mostramos un resumen limpio en pantalla de lo enviado
                         st.dataframe(nueva_fila, hide_index=True)
+                    except Exception as e_archivo:
+                        st.error(f"Error al escribir en el archivo Excel. Asegúrate de que no esté abierto: {e_archivo}")
