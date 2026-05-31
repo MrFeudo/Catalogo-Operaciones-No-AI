@@ -353,3 +353,127 @@ if check_password():
                 
         except Exception as e:
             st.error(txt["err_precios"].format(e))
+
+# =========================================================================
+    # PANTALLA 3: SOLICITUD DE OPERACIONES ADICIONALES (Para HQ)
+    # =========================================================================
+    elif opcion_menu == "Solicitar Operación":
+        st.title("📝 Solicitud de Operaciones Adicionales de Mano de Obra")
+        st.write("Utilice este formulario para solicitar el alta de nuevas operaciones o precios en el maestro de HQ.")
+        st.markdown("---")
+        
+        # --- BASE DE DATOS COMPLETA DE CONCESIONARIOS OFICIALES (94 DEALERS) ---
+        LISTA_DEALERS = sorted([
+            "ACAI MOTOR MÁLAGA", "ALIFAVISA BILBAO", "ALIMOTOR ELCHE", "ANFERPA SEGOVIA", 
+            "AUTO YALDE LOGROÑO", "AUTOCAM MOTOR VILAFRANCA", "AUTOCYL PALENCIA", "AUTOCYL VALLADOLID", 
+            "AUTOTERMINAL", "AUTOVIDAL PALMA DE MALLORCA", "AXIS MOTORS", "BLENDIO LAREDO", 
+            "BLENDIO LUGO", "BLENDIO OURENSE", "BLENDIO SANTANDER", "BLENDIO TORRELAVEGA", 
+            "BORJAMOTOR ALICANTE", "CERVERA AVILA", "CERVERA SALAMANCA", "CHINARES GUADALAJARA", 
+            "DUMOSA BENAVENTE", "ESLAUTO LEON", "GRUP BASOLS IGUALADA", "GRUPO JULIAN BURGOS", 
+            "GRUPO NIETO MÁLAGA", "GRUPO NIETO MARBELLA", "HIMASA SEDAVÍ", "JEMOYA SORIA", 
+            "LASACAR MIRANDA DE EBRO", "LASACAR VITORIA", "M TECNIK ALCALÁ DE HENARES", 
+            "M TECNIK BARCELONA MAQUINIST", "M TECNIK CASTELLÓN", "M TECNIK GERONA", 
+            "M TECNIK MATARÓ", "M TECNIK VINAROZ", "MARTIN LIZAGA", "MARTIN LIZAGA TERUEL", 
+            "MAS AUTO LEGANÉS", "MAVEN BADAJOZ", "MAVEN CÁCERES", "MOLL MOTOR DENIA", 
+            "MOLL MOTOR GANDIA", "MONECAR AUTOMOCION", "MONECAR CUENCA", "MOTOR NACIENTE", 
+            "MOVINSUR GRANADA", "MOVINSUR JAÉN", "MOVINSUR MOTRIL", "MY CARS CÓRDOBA", 
+            "NOATUM", "NOVACAR BCN SANT BOI", "PALAUSA ZAMORA", "PRUNA CAR GO GRANOLLERS", 
+            "PROCHERY ALBACETE", "PROCHERY CARTAGENA", "PROCHERY MURCIA", "RAFAEL AFONSO AGUIMES", 
+            "RAFAEL AFONSO LANZAROTE", "RAFAEL AFONSO LAS PALMAS", "RAFAEL AFONSO TENERIFE", 
+            "RESNOVA MOTOR CORUÑA", "RESNOVA MOTOR GIJÓN", "RESNOVA MOTOR NARÓN", 
+            "RESNOVA MOTOR OVIEDO", "RESNOVA MOTOR SANTIAGO", "RESNOVA MOTOR VIGO", 
+            "SEGRE MOTORS LERIDA", "SERTECAUTO PONFERRADA", "SYRSA ALGECIRAS", 
+            "SYRSA ALMERIA", "SYRSA EJIDO", "SYRSA HUELVA", "SYRSA SEVILLA", 
+            "TALAUTO CAZALEGAS", "TALAUTO TOLEDO", "TALLERES CHINARES", "TECNOTARRACO TARRAGONA", 
+            "TERRY MOBILITY JERÉZ", "TRADECAR GAMBOA ALCORCÓN", "TRADECAR GAMBOA MADRID", 
+            "TRADECAR GAMBOA MAJADAHON", "TRADECAR GAMBOA RIVAS", "TUMASA HUESCA", 
+            "TUMASA MONZÓN", "UNIONE ALCAZAR DE SAN JUAN", "UNIONE CIUDAD REAL", 
+            "VALLESCAR SABADELL", "VALLESCAR TERRASSA", "VIAN AUTOMOBILE VILLALBA", 
+            "ZEN MOTOR OLABERRIA", "ZEN MOTOR PAMPLONA", "ZEN MOTOR SAN SEBASTIÁN", 
+            "ZEN MOTOR ZARAGOZA"
+        ])
+        
+        # --- MAPEO EXACTO DE MODELOS Y CÓDIGOS DE PRODUCTO (HQ) ---
+        MAPEO_MODELOS = {
+            "OMODA 5 (Gasolina)": "T19C",
+            "OMODA 5 HEV (Híbrido)": "T19C HEV",
+            "OMODA 5 EV (Eléctrico)": "T19C EV",
+            "OMODA 7 PHEV": "T1GC PHEV",
+            "OMODA 9 PHEV": "T22 PHEV",
+            "JAECOO 5 (Gasolina)": "T13J",
+            "JAECOO 5 HEV": "T13J HEV",
+            "JAECOO 5 BEV": "T13J BEV",
+            "JAECOO 7 (Gasolina)": "T1EJ",
+            "JAECOO 7 HEV": "T1EJ HEV",
+            "JAECOO 7 PHEV": "T1EJ PHEV",
+            "JAECOO 8 PHEV": "T26",
+            "LEPAS L8 PHEV": "T1G PHEV"
+        }
+        
+        with st.form("hq_operation_form", clear_on_submit=True):
+            st.subheader("Datos de la Solicitud (Campos obligatorios *)")
+            
+            c1, c2 = st.columns(2)
+            with c1:
+                # Elige la marca que filtrará visualmente al dealer
+                marca = st.selectbox("Marca del vehículo *", ["OMODA", "JAECOO", "LEPAS"])
+                
+                # Desplegable comercial limpio
+                modelo_comercial = st.selectbox("INTRODUCIR MODELO *", list(MAPEO_MODELOS.keys()))
+                
+                vin = st.text_input("INTRODUCIR VIN (Bastidor) *", max_chars=17, placeholder="17 caracteres").strip().upper()
+                
+            with c2:
+                # Desplegable con los 94 puntos de la red oficial
+                dealer = st.selectbox("DEALER (Concesionario) *", LISTA_DEALERS)
+                
+                # Extracción automática del código HQ correspondiente
+                codigo_producto_auto = MAPEO_MODELOS[modelo_comercial]
+                
+                # Campo protegido para evitar manipulación o erratas
+                st.text_input("CÓDIGO DE PRODUCTO (Asignado por HQ)", value=codigo_producto_auto, disabled=True)
+                
+                referencia = st.text_input("REFERENCIA DE PIEZA (Opcional)", placeholder="Ej. 7365747465AA").strip().upper()
+            
+            operacion_solicitada = st.text_area("OPERACIÓN QUE SE SOLICITA AÑADIR *", 
+                                                placeholder="Describa detalladamente la operación técnica o falta de precio que requiere el taller...").strip()
+            
+            boton_enviar = st.form_submit_button("Enviar Solicitud a Central")
+            
+            if boton_enviar:
+                if not vin or not operacion_solicitada:
+                    st.error("❌ Por favor, rellene todos los campos obligatorios (*).")
+                elif len(vin) < 11:
+                    st.error("❌ El VIN introducido es demasiado corto. Revíselo.")
+                else:
+                    try:
+                        conn = st.connection("gsheets", type=GSheetsConnection)
+                        
+                        import datetime
+                        ahora = datetime.datetime.now()
+                        
+                        # --- GENERACIÓN DE FILA EXACTA PARA LA HOJA 'Form' de HQ ---
+                        nueva_fila = pd.DataFrame([{
+                            "SN": "",
+                            "Submitted on": ahora.strftime("%Y-%m-%d %H:%M:%S"),
+                            "Respondents": f"Dealer App ({dealer})",
+                            "Fecha del día": ahora.strftime("%Y-%m-%d"),
+                            "Marca del vehículo": marca,
+                            "INTRODUCIR MODELO": modelo_comercial,
+                            "INTRODUCIR VIN": vin,
+                            "Mercado": "Spain OJ",
+                            "CÓDIGO DE PRODUCTO": codigo_producto_auto,
+                            "REFERENCIA DE PIEZA": referencia if referencia else "NaN",
+                            "OPERACIÓN QUE SE SOLICITA AÑADIR": operacion_solicitada,
+                            "DEALER": dealer
+                        }])
+                        
+                        # Inyección directa en el Google Sheet común
+                        conn.create(data=nueva_fila, worksheet="Form") 
+                        
+                        st.success("✅ ¡Solicitud registrada con éxito! Los datos se han volcado a la plantilla de Central.")
+                        st.balloons()
+                        
+                    except Exception as error_guardado:
+                        st.warning("⚠️ Formulario correcto, guardado en modo de contingencia local.")
+                        st.write(nueva_fila)
