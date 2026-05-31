@@ -414,7 +414,7 @@ if check_password():
         except Exception as e:
             st.error(txt["err_precios"].format(e))
 
-    # =========================================================================
+# =========================================================================
     # PANTALLA 3: SOLICITUD DE OPERACIONES ADICIONALES (Para HQ)
     # =========================================================================
     elif opcion_menu == txt["menu_solicitar"]:
@@ -470,23 +470,22 @@ if check_password():
             "LEPAS L8 PHEV": "T1G PHEV"
         }
         
-       # --- SELECTORES DINÁMICOS (FUERA DEL FORMULARIO PARA ACTUALIZACIÓN INMEDIATA) ---
+        # --- SELECTORES DINÁMICOS (FUERA DEL FORMULARIO PARA ACTUALIZACIÓN INMEDIATA) ---
         st.subheader(txt["form_sub"])
         
         col_dinamica1, col_dinamica2 = st.columns(2)
         with col_dinamica1:
             marca = st.selectbox(txt["form_marca"], ["OMODA", "JAECOO", "LEPAS"])
             
-            # FILTRO INTELIGENTE: Filtramos el diccionario para que solo muestre los modelos 
-            # cuyo nombre empiece por la marca seleccionada
+            # Filtro inteligente por marca
             modelos_filtrados = [mod for mod in MAPEO_MODELOS.keys() if mod.upper().startswith(marca.upper())]
-            
-            modelo_commercial = st.selectbox(txt["form_modelo"], modelos_filtrados)
+            modelo_comercial = st.selectbox(txt["form_modelo"], modelos_filtrados)
             
         with col_dinamica2:
             dealer = st.selectbox(txt["form_dealer"], LISTA_DEALERS)
-            codigo_producto_auto = MAPEO_MODELOS[modelo_commercial]
+            codigo_producto_auto = MAPEO_MODELOS[modelo_comercial]
             st.text_input(txt["form_hq_code"], value=codigo_producto_auto, disabled=True)
+            
         # --- FORMULARIO DE RECOGIDA DE TEXTOS ---
         with st.form("hq_operation_form", clear_on_submit=True):
             
@@ -506,27 +505,27 @@ if check_password():
                 elif len(vin) < 11:
                     st.error(txt["err_vin_corto"])
                 else:
+                    ahora = datetime.datetime.now()
+                    
+                    # Generación limpia de la estructura de datos
+                    nueva_fila = pd.DataFrame([{
+                        "SN": "",
+                        "Submitted on": ahora.strftime("%Y-%m-%d %H:%M:%S"),
+                        "Respondents": f"Dealer App ({dealer})",
+                        "Fecha del día": ahora.strftime("%Y-%m-%d"),
+                        "Marca del vehículo": marca,
+                        "INTRODUCIR MODELO": modelo_comercial,
+                        "INTRODUCIR VIN": vin,
+                        "Mercado": "Spain OJ",
+                        "CÓDIGO DE PRODUCTO": codigo_producto_auto,
+                        "REFERENCIA DE PIEZA": referencia if referencia else "NaN",
+                        "OPERACIÓN QUE SE SOLICITA AÑADIR": operacion_solicitada,
+                        "DEALER": dealer
+                    }])
+                    
                     try:
+                        # Intento de volcado en Google Sheets
                         conn = st.connection("gsheets", type=GSheetsConnection)
-                        ahora = datetime.datetime.now()
-                        
-                        # --- GENERACIÓN DE FILA EXACTA PARA LA HOJA 'Form' de HQ ---
-                        nueva_fila = pd.DataFrame([{
-                            "SN": "",
-                            "Submitted on": ahora.strftime("%Y-%m-%d %H:%M:%S"),
-                            "Respondents": f"Dealer App ({dealer})",
-                            "Fecha del día": ahora.strftime("%Y-%m-%d"),
-                            "Marca del vehículo": marca,
-                            "INTRODUCIR MODELO": modelo_comercial,
-                            "INTRODUCIR VIN": vin,
-                            "Mercado": "Spain OJ",
-                            "CÓDIGO DE PRODUCTO": codigo_producto_auto,
-                            "REFERENCIA DE PIEZA": referencia if referencia else "NaN",
-                            "OPERACIÓN QUE SE SOLICITA AÑADIR": operacion_solicitada,
-                            "DEALER": dealer
-                        }])
-                        
-                        # Inyección segura: Leer datos existentes, concatenar y subir
                         df_existente = conn.read(worksheet="Form", ttl=0)
                         df_actualizado = pd.concat([df_existente, nueva_fila], ignore_index=True)
                         conn.update(data=df_actualizado, worksheet="Form") 
@@ -534,6 +533,18 @@ if check_password():
                         st.success(txt["success_sheet"])
                         st.balloons()
                         
-                    except Exception as error_guardado:
+                    except Exception:
+                        # MODO CONTINGENCIA SEGURO: Si no hay conexión API, guarda localmente en un Excel secundario
                         st.warning(txt["warn_contingencia"])
-                        st.write(nueva_fila)
+                        
+                        archivo_local = "solicitudes_contingencia.xlsx"
+                        try:
+                            df_local_existente = pd.read_excel(archivo_local)
+                            df_local_final = pd.concat([df_local_existente, nueva_fila], ignore_index=True)
+                        except Exception:
+                            df_local_final = nueva_fila
+                            
+                        df_local_final.to_excel(archivo_local, index=False)
+                        
+                        # Mostramos el resultado en una tabla limpia en vez de romper la ejecución
+                        st.dataframe(nueva_fila, hide_index=True)
