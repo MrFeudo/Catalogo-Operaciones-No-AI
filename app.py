@@ -533,7 +533,7 @@ elif opcion_menu == txt["menu_solicitar"]:
                 )
 
     
-
+"""
 # =========================================================================
     # PANTALLA 4: ASISTENTE IA AVANZADO (Spain OJ + Recambios + Tiempos)
     # =========================================================================
@@ -609,3 +609,4 @@ elif opcion_menu == txt["menu_solicitar"]:
 
                 except Exception as e:
                     st.error(f"❌ Error crítico en el proceso: {e}")
+"""
