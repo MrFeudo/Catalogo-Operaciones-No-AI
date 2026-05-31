@@ -13,6 +13,7 @@ IDIOMAS = {
         "menu_radio": "Selecciona una herramienta:",
         "menu_taller": "📋 Tiempos de Taller",
         "menu_precios": "💰 Precios de Recambios",
+        "menu_solicitar": "📝 Solicitar Operación",
         "pass_titulo": "🔐 Acceso Red de Dealers",
         "pass_input": "Introduce la contraseña de acceso:",
         "pass_boton": "Entrar",
@@ -44,6 +45,7 @@ IDIOMAS = {
         "menu_radio": "Select a tool:",
         "menu_taller": "📋 Workshop Times",
         "menu_precios": "💰 Spare Parts Prices",
+        "menu_solicitar": "📝 Request Operation",
         "pass_titulo": "🔐 Dealer Network Access",
         "pass_input": "Enter access password:",
         "pass_boton": "Login",
@@ -75,6 +77,7 @@ IDIOMAS = {
         "menu_radio": "选择工具:",
         "menu_taller": "📋 车间工时",
         "menu_precios": "💰 零配件价格",
+        "menu_solicitar": "📝 请求操作",
         "pass_titulo": "🔐 经销商网络访问",
         "pass_input": "输入访问密码:",
         "pass_boton": "登录",
@@ -130,7 +133,7 @@ st.sidebar.markdown("---")
 st.sidebar.markdown(txt["menu_titulo"])
 opcion_menu = st.sidebar.radio(
     txt["menu_radio"],
-    [txt["menu_taller"], txt["menu_precios"]]
+    [txt["menu_taller"], txt["menu_precios"], txt["menu_solicitar"]]
 )
 
 # ==========================================
