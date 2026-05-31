@@ -1,8 +1,7 @@
-import streamlit as st
+import streamlit as pd
 import pandas as pd
 import datetime
-from streamlit_gsheets import GSheetsConnection
-import google.generativeai as genai
+import io
 import unicodedata
 
 def normalizar_texto(texto):
@@ -24,7 +23,6 @@ IDIOMAS = {
         "menu_taller": "📋 Tiempos de Taller",
         "menu_precios": "💰 Precios de Recambios",
         "menu_solicitar": "📝 Solicitar Operación",
-        "menu_ia": "🤖 Asistente IA",
         "pass_titulo": "🔐 Acceso Red de Dealers",
         "pass_input": "Introduce la contraseña de acceso:",
         "pass_boton": "Entrar",
@@ -75,7 +73,6 @@ IDIOMAS = {
         "menu_taller": "📋 Workshop Times",
         "menu_precios": "💰 Spare Parts Prices",
         "menu_solicitar": "📝 Request Operation",
-        "menu_ia": "🤖 AI Assistant",
         "pass_titulo": "🔐 Dealer Network Access",
         "pass_input": "Enter access password:",
         "pass_boton": "Login",
@@ -126,7 +123,6 @@ IDIOMAS = {
         "menu_taller": "📋 车间工时",
         "menu_precios": "💰 零配件价格",
         "menu_solicitar": "📝 请求操作",
-        "menu_ia": "🤖 智能助手",
         "pass_titulo": "🔐 经销商网络访问",
         "pass_input": "输入访问密码:",
         "pass_boton": "登录",
@@ -415,198 +411,119 @@ if check_password():
         except Exception as e:
             st.error(txt["err_precios"].format(e))
 
-# =========================================================================
-# PANTALLA 3: SOLICITUD DE OPERACIONES ADICIONALES (Para HQ)
-# =========================================================================
-elif opcion_menu == txt["menu_solicitar"]:
-    st.title(txt["solicitar_titulo"])
-    st.write(txt["solicitar_sub"])
-    st.markdown("---")
-
-    LISTA_DEALERS = sorted([
-        "ACAI MOTOR MÁLAGA", "ALIFAVISA BILBAO", "ALIMOTOR ELCHE", "ANFERPA SEGOVIA", 
-        "AUTO YALDE LOGROÑO", "AUTOCAM MOTOR VILAFRANCA", "AUTOCYL PALENCIA", "AUTOCYL VALLADOLID", 
-        "AUTOTERMINAL", "AUTOVIDAL PALMA DE MALLORCA", "AXIS MOTORS", "BLENDIO LAREDO", 
-        "BLENDIO LUGO", "BLENDIO OURENSE", "BLENDIO SANTANDER", "BLENDIO TORRELAVEGA", 
-        "BORJAMOTOR ALICANTE", "CERVERA AVILA", "CERVERA SALAMANCA", "CHINARES GUADALAJARA", 
-        "DUMOSA BENAVENTE", "ESLAUTO LEON", "GRUP BASOLS IGUALADA", "GRUPO JULIAN BURGOS", 
-        "GRUPO NIETO MÁLAGA", "GRUPO NIETO MARBELLA", "HIMASA SEDAVÍ", "JEMOYA SORIA", 
-        "LASACAR MIRANDA DE EBRO", "LASACAR VITORIA", "M TECNIK ALCALÁ DE HENARES", 
-        "M TECNIK BARCELONA MAQUINIST", "M TECNIK CASTELLÓN", "M TECNIK GERONA", 
-        "M TECNIK MATARÓ", "M TECNIK VINAROZ", "MARTIN LIZAGA", "MARTIN LIZAGA TERUEL", 
-        "MAS AUTO LEGANÉS", "MAVEN BADAJOZ", "MAVEN CÁCERES", "MOLL MOTOR DENIA", 
-        "MOLL MOTOR GANDIA", "MONECAR AUTOMOCION", "MONECAR CUENCA", "MOTOR NACIENTE", 
-        "MOVINSUR GRANADA", "MOVINSUR JAÉN", "MOVINSUR MOTRIL", "MY CARS CÓRDOBA", 
-        "NOATUM", "NOVACAR BCN SANT BOI", "PALAUSA ZAMORA", "PRUNA CAR GO GRANOLLERS", 
-        "PROCHERY ALBACETE", "PROCHERY CARTAGENA", "PROCHERY MURCIA", "RAFAEL AFONSO AGUIMES", 
-        "RAFAEL AFONSO LANZAROTE", "RAFAEL AFONSO LAS PALMAS", "RAFAEL AFONSO TENERIFE", 
-        "RESNOVA MOTOR CORUÑA", "RESNOVA MOTOR GIJÓN", "RESNOVA MOTOR NARÓN", 
-        "RESNOVA MOTOR OVIEDO", "RESNOVA MOTOR SANTIAGO", "RESNOVA MOTOR VIGO", 
-        "SEGRE MOTORS LERIDA", "SERTECAUTO PONFERRADA", "SYRSA ALGECIRAS", 
-        "SYRSA ALMERIA", "SYRSA EJIDO", "SYRSA HUELVA", "SYRSA SEVILLA", 
-        "TALAUTO CAZALEGAS", "TALAUTO TOLEDO", "TALLERES CHINARES", "TECNOTARRACO TARRAGONA", 
-        "TERRY MOBILITY JERÉZ", "TRADECAR GAMBOA ALCORCÓN", "TRADECAR GAMBOA MADRID", 
-        "TRADECAR GAMBOA MAJADAHON", "TRADECAR GAMBOA RIVAS", "TUMASA HUESCA", 
-        "TUMASA MONZÓN", "UNIONE ALCAZAR DE SAN JUAN", "UNIONE CIUDAD REAL", 
-        "VALLESCAR SABADELL", "VALLESCAR TERRASSA", "VIAN AUTOMOBILE VILLALBA", 
-        "ZEN MOTOR OLABERRIA", "ZEN MOTOR PAMPLONA", "ZEN MOTOR SAN SEBASTIÁN", 
-        "ZEN MOTOR ZARAGOZA"
-    ])
-    
-    MAPEO_MODELOS = {
-        "OMODA 5 (Gasolina)": "T19C", "OMODA 5 HEV (Híbrido)": "T19C HEV", "OMODA 5 EV (Eléctrico)": "T19C EV",
-        "OMODA 7 PHEV": "T1GC PHEV", "OMODA 9 PHEV": "T22 PHEV", "JAECOO 5 (Gasolina)": "T13J",
-        "JAECOO 5 HEV": "T13J HEV", "JAECOO 5 BEV": "T13J BEV", "JAECOO 7 (Gasolina)": "T1EJ",
-        "JAECOO 7 HEV": "T1EJ HEV", "JAECOO 7 PHEV": "T1EJ PHEV", "JAECOO 8 PHEV": "T26", "LEPAS L8 PHEV": "T1G PHEV"
-    }
-    
-    st.subheader(txt["form_sub"])
-    col1, col2 = st.columns(2)
-    with col1:
-        marca = st.selectbox(txt["form_marca"], ["OMODA", "JAECOO", "LEPAS"])
-        modelos_filtrados = [mod for mod in MAPEO_MODELOS.keys() if mod.upper().startswith(marca.upper())]
-        modelo_comercial = st.selectbox(txt["form_modelo"], modelos_filtrados)
-    with col2:
-        dealer = st.selectbox(txt["form_dealer"], LISTA_DEALERS)
-        codigo_producto_auto = MAPEO_MODELOS[modelo_comercial]
-        st.text_input(txt["form_hq_code"], value=codigo_producto_auto, disabled=True)
-    
-    with st.form("hq_operation_form", clear_on_submit=True):
-        c1, c2 = st.columns(2)
-        with c1:
-            vin = st.text_input(txt["form_vin"], max_chars=17, placeholder=txt["form_vin_holder"]).strip().upper()
-        with c2:
-            referencia = st.text_input(txt["form_ref"], placeholder=txt["form_ref_holder"]).strip().upper()
-        
-        operacion_solicitada = st.text_area(txt["form_op"], placeholder=txt["form_op_holder"]).strip()
-        boton_enviar = st.form_submit_button(txt["form_btn"])
-        
-        if boton_enviar:
-            if not vin or not operacion_solicitada:
-                st.error(txt["err_campos"])
-            elif len(vin) < 11:
-                st.error(txt["err_vin_corto"])
-            else:
-                ahora = datetime.datetime.now()
-                
-                # Crear diccionario con los datos
-                datos = {
-                    "SN": "",
-                    "Submitted on": ahora.strftime("%Y-%m-%d %H:%M:%S"),
-                    "Respondents": f"Dealer App ({dealer})",
-                    "Fecha del día": ahora.strftime("%Y-%m-%d"),
-                    "Marca del vehículo": marca,
-                    "INTRODUCIR MODELO": modelo_comercial,
-                    "INTRODUCIR VIN": vin,
-                    "Mercado": "Spain OJ",
-                    "CÓDIGO DE PRODUCTO": codigo_producto_auto,
-                    "REFERENCIA DE PIEZA": referencia if referencia else "NaN",
-                    "OPERACIÓN QUE SE SOLICITA AÑADIR": operacion_solicitada,
-                    "DEALER": dealer
-                }
-                
-                # Definir columnas en el orden exacto solicitado
-                columnas_orden = [
-                    "SN", "Submitted on", "Respondents", "Fecha del día", 
-                    "Marca del vehículo", "INTRODUCIR MODELO", "INTRODUCIR VIN", 
-                    "Mercado", "CÓDIGO DE PRODUCTO", "REFERENCIA DE PIEZA", 
-                    "OPERACIÓN QUE SE SOLICITA AÑADIR", "DEALER"
-                ]
-                
-                df_nueva_fila = pd.DataFrame([datos])
-                df_nueva_fila = df_nueva_fila[columnas_orden]
-                
-                # Generar Excel en memoria
-                output = io.BytesIO()
-                with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-                    df_nueva_fila.to_excel(writer, index=False, sheet_name='Solicitud')
-                
-                st.success("✅ Solicitud procesada correctamente.")
-                st.dataframe(df_nueva_fila, hide_index=True)
-                
-                # Botón de descarga
-                st.download_button(
-                    label="📥 Descargar Excel de Solicitud",
-                    data=output.getvalue(),
-                    file_name=f"Solicitud_{vin}_{ahora.strftime('%Y%m%d_%H%M')}.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                )
-
-    
-"""
-# =========================================================================
-    # PANTALLA 4: ASISTENTE IA AVANZADO (Spain OJ + Recambios + Tiempos)
     # =========================================================================
-    elif opcion_menu == txt["menu_ia"]:
-        import unicodedata
-        
-        st.title("🤖 Asistente Virtual de Posventa (Gemini)")
-        st.write("Consulta tarifas, recambios y tiempos de taller en el DMS.")
+    # PANTALLA 3: SOLICITUD DE OPERACIONES ADICIONALES (Para HQ)
+    # =========================================================================
+    elif opcion_menu == txt["menu_solicitar"]:
+        st.title(txt["solicitar_titulo"])
+        st.write(txt["solicitar_sub"])
         st.markdown("---")
+
+        LISTA_DEALERS = sorted([
+            "ACAI MOTOR MÁLAGA", "ALIFAVISA BILBAO", "ALIMOTOR ELCHE", "ANFERPA SEGOVIA", 
+            "AUTO YALDE LOGROÑO", "AUTOCAM MOTOR VILAFRANCA", "AUTOCYL PALENCIA", "AUTOCYL VALLADOLID", 
+            "AUTOTERMINAL", "AUTOVIDAL PALMA DE MALLORCA", "AXIS MOTORS", "BLENDIO LAREDO", 
+            "BLENDIO LUGO", "BLENDIO OURENSE", "BLENDIO SANTANDER", "BLENDIO TORRELAVEGA", 
+            "BORJAMOTOR ALICANTE", "CERVERA AVILA", "CERVERA SALAMANCA", "CHINARES GUADALAJARA", 
+            "DUMOSA BENAVENTE", "ESLAUTO LEON", "GRUP BASOLS IGUALADA", "GRUPO JULIAN BURGOS", 
+            "GRUPO NIETO MÁLAGA", "GRUPO NIETO MARBELLA", "HIMASA SEDAVÍ", "JEMOYA SORIA", 
+            "LASACAR MIRANDA DE EBRO", "LASACAR VITORIA", "M TECNIK ALCALÁ DE HENARES", 
+            "M TECNIK BARCELONA MAQUINIST", "M TECNIK CASTELLÓN", "M TECNIK GERONA", 
+            "M TECNIK MATARÓ", "M TECNIK VINAROZ", "MARTIN LIZAGA", "MARTIN LIZAGA TERUEL", 
+            "MAS AUTO LEGANÉS", "MAVEN BADAJOZ", "MAVEN CÁCERES", "MOLL MOTOR DENIA", 
+            "MOLL MOTOR GANDIA", "MONECAR AUTOMOCION", "MONECAR CUENCA", "MOTOR NACIENTE", 
+            "MOVINSUR GRANADA", "MOVINSUR JAÉN", "MOVINSUR MOTRIL", "MY CARS CÓRDOBA", 
+            "NOATUM", "NOVACAR BCN SANT BOI", "PALAUSA ZAMORA", "PRUNA CAR GO GRANOLLERS", 
+            "PROCHERY ALBACETE", "PROCHERY CARTAGENA", "PROCHERY MURCIA", "RAFAEL AFONSO AGUIMES", 
+            "RAFAEL AFONSO LANZAROTE", "RAFAEL AFONSO LAS PALMAS", "RAFAEL AFONSO TENERIFE", 
+            "RESNOVA MOTOR CORUÑA", "RESNOVA MOTOR GIJÓN", "RESNOVA MOTOR NARÓN", 
+            "RESNOVA MOTOR OVIEDO", "RESNOVA MOTOR SANTIAGO", "RESNOVA MOTOR VIGO", 
+            "SEGRE MOTORS LERIDA", "SERTECAUTO PONFERRADA", "SYRSA ALGECIRAS", 
+            "SYRSA ALMERIA", "SYRSA EJIDO", "SYRSA HUELVA", "SYRSA SEVILLA", 
+            "TALAUTO CAZALEGAS", "TALAUTO TOLEDO", "TALLERES CHINARES", "TECNOTARRACO TARRAGONA", 
+            "TERRY MOBILITY JERÉZ", "TRADECAR GAMBOA ALCORCÓN", "TRADECAR GAMBOA MADRID", 
+            "TRADECAR GAMBOA MAJADAHON", "TRADECAR GAMBOA RIVAS", "TUMASA HUESCA", 
+            "TUMASA MONZÓN", "UNIONE ALCAZAR DE SAN JUAN", "UNIONE CIUDAD REAL", 
+            "VALLESCAR SABADELL", "VALLESCAR TERRASSA", "VIAN AUTOMOBILE VILLALBA", 
+            "ZEN MOTOR OLABERRIA", "ZEN MOTOR PAMPLONA", "ZEN MOTOR SAN SEBASTIÁN", 
+            "ZEN MOTOR ZARAGOZA"
+        ])
         
-        # 1. CONFIGURACIÓN API
-        try:
-            genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-            genai.api_version = 'v1' 
-        except Exception:
-            st.error("⚠️ Error: Configura 'GEMINI_API_KEY' en los Secrets.")
-            st.stop()
+        MAPEO_MODELOS = {
+            "OMODA 5 (Gasolina)": "T19C", "OMODA 5 HEV (Híbrido)": "T19C HEV", "OMODA 5 EV (Eléctrico)": "T19C EV",
+            "OMODA 7 PHEV": "T1GC PHEV", "OMODA 9 PHEV": "T22 PHEV", "JAECOO 5 (Gasolina)": "T13J",
+            "JAECOO 5 HEV": "T13J HEV", "JAECOO 5 BEV": "T13J BEV", "JAECOO 7 (Gasolina)": "T1EJ",
+            "JAECOO 7 HEV": "T1EJ HEV", "JAECOO 7 PHEV": "T1EJ PHEV", "JAECOO 8 PHEV": "T26", "LEPAS L8 PHEV": "T1G PHEV"
+        }
+        
+        st.subheader(txt["form_sub"])
+        col1, col2 = st.columns(2)
+        with col1:
+            marca = st.selectbox(txt["form_marca"], ["OMODA", "JAECOO", "LEPAS"])
+            modelos_filtrados = [mod for mod in MAPEO_MODELOS.keys() if mod.upper().startswith(marca.upper())]
+            modelo_comercial = st.selectbox(txt["form_modelo"], modelos_filtrados)
+        with col2:
+            dealer = st.selectbox(txt["form_dealer"], LISTA_DEALERS)
+            codigo_producto_auto = MAPEO_MODELOS[modelo_comercial]
+            st.text_input(txt["form_hq_code"], value=codigo_producto_auto, disabled=True)
+        
+        with st.form("hq_operation_form", clear_on_submit=True):
+            c1, c2 = st.columns(2)
+            with c1:
+                vin = st.text_input(txt["form_vin"], max_chars=17, placeholder=txt["form_vin_holder"]).strip().upper()
+            with c2:
+                referencia = st.text_input(txt["form_ref"], placeholder=txt["form_ref_holder"]).strip().upper()
             
-        # Función de normalización
-        def normalizar(s):
-            return ''.join(c for c in unicodedata.normalize('NFD', str(s)) if unicodedata.category(c) != 'Mn').lower()
-
-        pregunta = st.text_input("¿Qué necesitas consultar? (Ej: Alternador OMODA 5):").strip()
-        
-        if pregunta:
-            with st.spinner("🤖 Consultando DMS (Análisis Técnico Senior)..."):
-                try:
-                    # 1. CARGA DE DATOS (Usamos read_excel con la URL global)
-                    df_precios = pd.read_excel(URL_GITHUB_EXCEL, sheet_name="Parts price")
-                    df_tiempos = pd.read_excel(URL_GITHUB_EXCEL, sheet_name="new_srv_workhours")
+            operacion_solicitada = st.text_area(txt["form_op"], placeholder=txt["form_op_holder"]).strip()
+            boton_enviar = st.form_submit_button(txt["form_btn"])
+            
+            if boton_enviar:
+                if not vin or not operacion_solicitada:
+                    st.error(txt["err_campos"])
+                elif len(vin) < 11:
+                    st.error(txt["err_vin_corto"])
+                else:
+                    ahora = datetime.datetime.now()
                     
-                    # LIMPIEZA: Eliminamos espacios en blanco en los nombres de columnas
-                    df_precios.columns = df_precios.columns.str.strip()
-                    df_tiempos.columns = df_tiempos.columns.str.strip()
+                    # Crear diccionario con los datos
+                    datos = {
+                        "SN": "",
+                        "Submitted on": ahora.strftime("%Y-%m-%d %H:%M:%S"),
+                        "Respondents": f"Dealer App ({dealer})",
+                        "Fecha del día": ahora.strftime("%Y-%m-%d"),
+                        "Marca del vehículo": marca,
+                        "INTRODUCIR MODELO": modelo_comercial,
+                        "INTRODUCIR VIN": vin,
+                        "Mercado": "Spain OJ",
+                        "CÓDIGO DE PRODUCTO": codigo_producto_auto,
+                        "REFERENCIA DE PIEZA": referencia if referencia else "NaN",
+                        "OPERACIÓN QUE SE SOLICITA AÑADIR": operacion_solicitada,
+                        "DEALER": dealer
+                    }
                     
-                    # 2. FILTRADO (Solo Spain OJ)
-                    df_p = df_precios[df_precios.astype(str).apply(lambda x: x.str.contains("Spain OJ", na=False)).any(axis=1)]
-                    df_t = df_tiempos[df_tiempos.astype(str).apply(lambda x: x.str.contains("Spain OJ", na=False)).any(axis=1)]
+                    # Definir columnas en el orden exacto solicitado
+                    columnas_orden = [
+                        "SN", "Submitted on", "Respondents", "Fecha del día", 
+                        "Marca del vehículo", "INTRODUCIR MODELO", "INTRODUCIR VIN", 
+                        "Mercado", "CÓDIGO DE PRODUCTO", "REFERENCIA DE PIEZA", 
+                        "OPERACIÓN QUE SE SOLICITA AÑADIR", "DEALER"
+                    ]
                     
-                    # 3. CRUCE INTELIGENTE
-                    df_unido = pd.merge(df_p, df_t, left_on='new_partscode', right_on='new_code', how='inner', suffixes=('_p', '_t'))
+                    df_nueva_fila = pd.DataFrame([datos])
+                    df_nueva_fila = df_nueva_fila[columnas_orden]
                     
-                    # 4. BUSQUEDA POR NORMALIZACIÓN
-                    query_norm = normalizar(pregunta)
-                    mask = df_unido.astype(str).apply(lambda x: x.str.contains(query_norm, na=False)).any(axis=1)
-                    contexto = df_unido[mask].head(10).to_string()
+                    # Generar Excel en memoria
+                    output = io.BytesIO()
+                    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+                        df_nueva_fila.to_excel(writer, index=False, sheet_name='Solicitud')
                     
-                    if contexto.strip() == "Empty DataFrame":
-                        st.warning("No se encontró información técnica para esa consulta en Spain OJ.")
-                    else:
-                        # 5. LLAMADA A LA IA (Corregido a gemini-1.5-flash)
-                        model = genai.GenerativeModel('gemini-3.5-flash')
-                        
-                        prompt = f"""
-                        Eres el Ingeniero Jefe de OMODA España. Tu objetivo es la precisión quirúrgica.
-                        
-                        CONTEXTO DE DATOS CRUZADOS (SPAIN OJ):
-                        {contexto}
-                        
-                        CONSULTA: "{pregunta}"
-                        
-                        INSTRUCCIONES CRÍTICAS:
-                        1. IDENTIFICACIÓN: Extrae el 'new_partscode' exacto.
-                        2. PRECIO: Extrae el 'new_price'.
-                        3. TIEMPO (UTs): Si existen datos, DIVIDE ENTRE 100 para dar Horas (Ej: 60 UT = 0.6h).
-                        4. Si el dato no existe, responde: "Registro no encontrado. Verificar catálogo".
-                        5. Sé técnico, directo y sin relleno.
-                        """
-                        
-                        respuesta = model.generate_content(prompt)
-                        st.markdown("### 💬 Informe Técnico:")
-                        st.success(respuesta.text)
-
-                except Exception as e:
-                    st.error(f"❌ Error crítico en el proceso: {e}")
-"""
+                    st.success("✅ Solicitud procesada correctamente.")
+                    st.dataframe(df_nueva_fila, hide_index=True)
+                    
+                    # Botón de descarga
+                    st.download_button(
+                        label="📥 Descargar Excel de Solicitud",
+                        data=output.getvalue(),
+                        file_name=f"Solicitud_{vin}_{ahora.strftime('%Y%m%d_%H%M')}.xlsx",
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    )
