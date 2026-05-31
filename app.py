@@ -562,8 +562,8 @@ if check_password():
             with st.spinner("🤖 Consultando DMS (Análisis Técnico Senior)..."):
                 try:
                     # 1. CARGA DE DATOS
-                    df_precios = pd.read_csv("DMS_Active_Spare_Parts (1).xlsx - Parts price.csv")
-                    df_tiempos = pd.read_csv("DMS_Active_Spare_Parts (1).xlsx - new_srv_workhours.csv")
+                    df_precios = pd.read_csv("DMS_Active_Spare_Parts.xlsx - Parts price.csv")
+                    df_tiempos = pd.read_csv("DMS_Active_Spare_Parts.xlsx - new_srv_workhours.csv")
                     
                     # LIMPIEZA: Eliminamos espacios en blanco en los nombres de columnas (Evita errores de Key)
                     df_precios.columns = df_precios.columns.str.strip()
@@ -585,7 +585,7 @@ if check_password():
                         st.warning("No se encontró información técnica para esa consulta en Spain OJ.")
                     else:
                         # 5. LLAMADA A LA IA
-                        model = genai.GenerativeModel('gemini-1.5-flash')
+                        model = genai.GenerativeModel('gemini-3.5-flash')
                         
                         prompt = f"""
                         Eres el Ingeniero Jefe de OMODA España. Tu objetivo es la precisión quirúrgica.
