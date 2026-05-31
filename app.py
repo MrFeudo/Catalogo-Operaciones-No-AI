@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import datetime
 from streamlit_gsheets import GSheetsConnection
 
 st.set_page_config(page_title="Buscador Técnico OMODA & JAECOO", layout="wide")
@@ -38,7 +39,25 @@ IDIOMAS = {
         "err_precios": "Error al procesar el maestro de precios: {}",
         "todos": "Todos",
         "todas": "Todas",
-        "filtro_modelo": "Filtrar por Modelo:"
+        "filtro_modelo": "Filtrar por Modelo:",
+        "solicitar_titulo": "📝 Solicitud de Operaciones Adicionales de Mano de Obra",
+        "solicitar_sub": "Utilice este formulario para solicitar el alta de nuevas operaciones o precios en el maestro de HQ.",
+        "form_sub": "Datos de la Solicitud (Campos obligatorios *)",
+        "form_marca": "Marca del vehículo *",
+        "form_modelo": "INTRODUCIR MODELO *",
+        "form_vin": "INTRODUCIR VIN (Bastidor) *",
+        "form_vin_holder": "17 caracteres",
+        "form_dealer": "DEALER (Concesionario) *",
+        "form_hq_code": "CÓDIGO DE PRODUCTO (Asignado por HQ)",
+        "form_ref": "REFERENCIA DE PIEZA (Opcional)",
+        "form_ref_holder": "Ej. 7365747465AA",
+        "form_op": "OPERACIÓN QUE SE SOLICITA AÑADIR *",
+        "form_op_holder": "Describa detalladamente la operación técnica o falta de precio que requiere el taller...",
+        "form_btn": "Enviar Solicitud a Central",
+        "err_campos": "❌ Por favor, rellene todos los campos obligatorios (*).",
+        "err_vin_corto": "❌ El VIN introducido es demasiado corto. Revíselo.",
+        "success_sheet": "✅ ¡Solicitud registrada con éxito! Los datos se han volcado a la plantilla de Central.",
+        "warn_contingencia": "⚠️ Formulario correcto, guardado en modo de contingencia local."
     },
     "English": {
         "menu_titulo": "### 🗺️ Navigation Menu",
@@ -70,7 +89,25 @@ IDIOMAS = {
         "err_precios": "Error processing master price list: {}",
         "todos": "All",
         "todas": "All",
-        "filtro_modelo": "Filter by Model:"
+        "filtro_modelo": "Filter by Model:",
+        "solicitar_titulo": "📝 Request for Additional Labor Operations",
+        "solicitar_sub": "Use this form to request new operations or prices to be added to HQ master list.",
+        "form_sub": "Request Details (* Required fields)",
+        "form_marca": "Vehicle Brand *",
+        "form_modelo": "ENTER MODEL *",
+        "form_vin": "ENTER VIN (Chassis) *",
+        "form_vin_holder": "17 characters",
+        "form_dealer": "DEALER *",
+        "form_hq_code": "PRODUCT CODE (Assigned by HQ)",
+        "form_ref": "PART REFERENCE (Optional)",
+        "form_ref_holder": "e.g., 7365747465AA",
+        "form_op": "OPERATION REQUESTED TO BE ADDED *",
+        "form_op_holder": "Describe in detail the technical operation or missing price required by the workshop...",
+        "form_btn": "Send Request to HQ",
+        "err_campos": "❌ Please fill in all required fields (*).",
+        "err_vin_corto": "❌ The entered VIN is too short. Please check it.",
+        "success_sheet": "✅ Request successfully registered! Data transferred to the HQ template.",
+        "warn_contingencia": "⚠️ Form valid, saved in local contingency mode."
     },
     "Chinese (中文)": {
         "menu_titulo": "### 🗺️ 导航菜单",
@@ -102,7 +139,25 @@ IDIOMAS = {
         "err_precios": "处理价格总表时出错: {}",
         "todos": "全部",
         "todas": "全部",
-        "filtro_modelo": "按车型过滤:"
+        "filtro_modelo": "按车型过滤:",
+        "solicitar_titulo": "📝 申请新增工时操作",
+        "solicitar_sub": "使用此表单申请在总部(HQ)主数据中添加新工时操作或价格。",
+        "form_sub": "申请信息 (* 为必填项)",
+        "form_marca": "车辆品牌 *",
+        "form_modelo": "输入车型 *",
+        "form_vin": "输入 VIN (车架号) *",
+        "form_vin_holder": "17位字符",
+        "form_dealer": "经销商 *",
+        "form_hq_code": "产品代码 (由总部分配)",
+        "form_ref": "零件编号 (选填)",
+        "form_ref_holder": "例如: 7365747465AA",
+        "form_op": "申请添加的操作内容 *",
+        "form_op_holder": "请详细描述车间所需的工时操作或缺失的价格...",
+        "form_btn": "发送申请至总部",
+        "err_campos": "❌ 请填写所有必填项 (*)。",
+        "err_vin_corto": "❌ 输入的 VIN 太短，请检查。",
+        "success_sheet": "✅ 申请登记成功！数据已同步至总部模板。",
+        "warn_contingencia": "⚠️ 表单正确，已保存至本地应急模式。"
     }
 }
 
@@ -220,7 +275,8 @@ if check_password():
                             indice_defecto = idx
                             break
                     
-                    mercado_seleccionado = st.selectbox(txt["f_mercado_taller"], mercados_disponibles, index=indice_defecto)
+                    market_label = txt["f_mercado_taller"]
+                    mercado_seleccionado = st.selectbox(market_label, mercados_disponibles, index=indice_defecto)
                 else:
                     mercado_seleccionado = txt["todos"]
                     
@@ -263,7 +319,7 @@ if check_password():
         except Exception as e:
             st.error(txt["err_taller"].format(e))
 
-# =========================================================================
+    # =========================================================================
     # PANTALLA 2: PRECIOS DE RECAMBIOS
     # =========================================================================
     elif opcion_menu == txt["menu_precios"]:
@@ -275,7 +331,7 @@ if check_password():
             
             # Mapeamos usando "new_businessunit_idname" que corresponde a esta hoja
             df = df.rename(columns={
-                'Model': 'Modelo',  # <--- NUEVA COLUMNA DE MODELO
+                'Model': 'Modelo',
                 'new_partscode': 'Código de Recambio',
                 'new_product_idname': 'Descripción de la Pieza',
                 'new_price': 'Precio Venta',
@@ -319,7 +375,7 @@ if check_password():
                         indice_defecto = idx
                         break
                         
-                market_name = txt["f_mercado_precios"] if "f_mercado_precios" in txt else txt.get("f_mercado", "Mercado")
+                market_name = txt["f_mercado_precios"]
                 mercado_seleccionado = st.selectbox(market_name, mercados_disponibles, index=indice_defecto)
                 
             with col_tar:
@@ -358,12 +414,12 @@ if check_password():
         except Exception as e:
             st.error(txt["err_precios"].format(e))
 
-# =========================================================================
+    # =========================================================================
     # PANTALLA 3: SOLICITUD DE OPERACIONES ADICIONALES (Para HQ)
     # =========================================================================
-    elif opcion_menu == "Solicitar Operación":
-        st.title("📝 Solicitud de Operaciones Adicionales de Mano de Obra")
-        st.write("Utilice este formulario para solicitar el alta de nuevas operaciones o precios en el maestro de HQ.")
+    elif opcion_menu == txt["menu_solicitar"]:
+        st.title(txt["solicitar_titulo"])
+        st.write(txt["solicitar_sub"])
         st.markdown("---")
         
         # --- BASE DE DATOS COMPLETA DE CONCESIONARIOS OFICIALES (94 DEALERS) ---
@@ -415,45 +471,31 @@ if check_password():
         }
         
         with st.form("hq_operation_form", clear_on_submit=True):
-            st.subheader("Datos de la Solicitud (Campos obligatorios *)")
+            st.subheader(txt["form_sub"])
             
             c1, c2 = st.columns(2)
             with c1:
-                # Elige la marca que filtrará visualmente al dealer
-                marca = st.selectbox("Marca del vehículo *", ["OMODA", "JAECOO", "LEPAS"])
-                
-                # Desplegable comercial limpio
-                modelo_comercial = st.selectbox("INTRODUCIR MODELO *", list(MAPEO_MODELOS.keys()))
-                
-                vin = st.text_input("INTRODUCIR VIN (Bastidor) *", max_chars=17, placeholder="17 caracteres").strip().upper()
+                marca = st.selectbox(txt["form_marca"], ["OMODA", "JAECOO", "LEPAS"])
+                modelo_comercial = st.selectbox(txt["form_modelo"], list(MAPEO_MODELOS.keys()))
+                vin = st.text_input(txt["form_vin"], max_chars=17, placeholder=txt["form_vin_holder"]).strip().upper()
                 
             with c2:
-                # Desplegable con los 94 puntos de la red oficial
-                dealer = st.selectbox("DEALER (Concesionario) *", LISTA_DEALERS)
-                
-                # Extracción automática del código HQ correspondiente
+                dealer = st.selectbox(txt["form_dealer"], LISTA_DEALERS)
                 codigo_producto_auto = MAPEO_MODELOS[modelo_comercial]
-                
-                # Campo protegido para evitar manipulación o erratas
-                st.text_input("CÓDIGO DE PRODUCTO (Asignado por HQ)", value=codigo_producto_auto, disabled=True)
-                
-                referencia = st.text_input("REFERENCIA DE PIEZA (Opcional)", placeholder="Ej. 7365747465AA").strip().upper()
+                st.text_input(txt["form_hq_code"], value=codigo_producto_auto, disabled=True)
+                referencia = st.text_input(txt["form_ref"], placeholder=txt["form_ref_holder"]).strip().upper()
             
-            operacion_solicitada = st.text_area("OPERACIÓN QUE SE SOLICITA AÑADIR *", 
-                                                placeholder="Describa detalladamente la operación técnica o falta de precio que requiere el taller...").strip()
-            
-            boton_enviar = st.form_submit_button("Enviar Solicitud a Central")
+            operacion_solicitada = st.text_area(txt["form_op"], placeholder=txt["form_op_holder"]).strip()
+            boton_enviar = st.form_submit_button(txt["form_btn"])
             
             if boton_enviar:
                 if not vin or not operacion_solicitada:
-                    st.error("❌ Por favor, rellene todos los campos obligatorios (*).")
+                    st.error(txt["err_campos"])
                 elif len(vin) < 11:
-                    st.error("❌ El VIN introducido es demasiado corto. Revíselo.")
+                    st.error(txt["err_vin_corto"])
                 else:
                     try:
                         conn = st.connection("gsheets", type=GSheetsConnection)
-                        
-                        import datetime
                         ahora = datetime.datetime.now()
                         
                         # --- GENERACIÓN DE FILA EXACTA PARA LA HOJA 'Form' de HQ ---
@@ -472,12 +514,14 @@ if check_password():
                             "DEALER": dealer
                         }])
                         
-                        # Inyección directa en el Google Sheet común
-                        conn.create(data=nueva_fila, worksheet="Form") 
+                        # Inyección segura: Leer datos existentes, concatenar y subir
+                        df_existente = conn.read(worksheet="Form", ttl=0)
+                        df_actualizado = pd.concat([df_existente, nueva_fila], ignore_index=True)
+                        conn.update(data=df_actualizado, worksheet="Form") 
                         
-                        st.success("✅ ¡Solicitud registrada con éxito! Los datos se han volcado a la plantilla de Central.")
+                        st.success(txt["success_sheet"])
                         st.balloons()
                         
                     except Exception as error_guardado:
-                        st.warning("⚠️ Formulario correcto, guardado en modo de contingencia local.")
+                        st.warning(txt["warn_contingencia"])
                         st.write(nueva_fila)
