@@ -470,20 +470,23 @@ if check_password():
             "LEPAS L8 PHEV": "T1G PHEV"
         }
         
-        # --- SELECTORES DINÁMICOS (FUERA DEL FORMULARIO PARA ACTUALIZACIÓN INMEDIATA) ---
+       # --- SELECTORES DINÁMICOS (FUERA DEL FORMULARIO PARA ACTUALIZACIÓN INMEDIATA) ---
         st.subheader(txt["form_sub"])
         
         col_dinamica1, col_dinamica2 = st.columns(2)
         with col_dinamica1:
             marca = st.selectbox(txt["form_marca"], ["OMODA", "JAECOO", "LEPAS"])
-            modelo_comercial = st.selectbox(txt["form_modelo"], list(MAPEO_MODELOS.keys()))
+            
+            # FILTRO INTELIGENTE: Filtramos el diccionario para que solo muestre los modelos 
+            # cuyo nombre empiece por la marca seleccionada
+            modelos_filtrados = [mod for mod in MAPEO_MODELOS.keys() if mod.upper().startswith(marca.upper())]
+            
+            modelo_commercial = st.selectbox(txt["form_modelo"], modelos_filtrados)
             
         with col_dinamica2:
             dealer = st.selectbox(txt["form_dealer"], LISTA_DEALERS)
-            codigo_producto_auto = MAPEO_MODELOS[modelo_comercial]
-            # Este campo ahora cambia de valor inmediatamente al cambiar el modelo de la izquierda
+            codigo_producto_auto = MAPEO_MODELOS[modelo_commercial]
             st.text_input(txt["form_hq_code"], value=codigo_producto_auto, disabled=True)
-            
         # --- FORMULARIO DE RECOGIDA DE TEXTOS ---
         with st.form("hq_operation_form", clear_on_submit=True):
             
