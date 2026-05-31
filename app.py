@@ -538,7 +538,7 @@ if check_password():
         # 1. CONFIGURACIÓN API
         try:
             genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-            genai.api_version = 'v1' # Forzamos la versión estable para evitar errores 404
+            genai.api_version = 'v1' 
         except Exception:
             st.error("⚠️ Error: Configura 'GEMINI_API_KEY' en los Secrets de Streamlit.")
             st.stop()
@@ -549,77 +549,34 @@ if check_password():
             with st.spinner("🤖 Consultando DMS (Cruzando Recambios y Mano de Obra)..."):
                 try:
                     # 2. CARGA DE DATOS
-                    # Asumimos que tienes definido URL_GITHUB_EXCEL en el inicio del script
                     df_precios = pd.read_excel(URL_GITHUB_EXCEL, sheet_name="Parts price")
                     df_tiempos = pd.read_excel(URL_GITHUB_EXCEL, sheet_name="new_srv_workhours")
                     
-                    # 3. FILTRO DE HIERRO: Spain OJ
-                    # Convertimos a string y buscamos "Spain OJ" en cualquier columna para ser inmunes a errores de nombre de columna
+                    # 3. FILTRO DE HIERRO: Solo Spain OJ
                     df_p = df_precios[df_precios.astype(str).apply(lambda x: x.str.contains("Spain OJ", case=False, na=False)).any(axis=1)]
                     df_t = df_tiempos[df_tiempos.astype(str).apply(lambda x: x.str.contains("Spain OJ", case=False, na=False)).any(axis=1)]
                     
-                    # 4. DICCIONARIO BILINGÜE
-# Diccionario técnico ampliado (Español -> Inglés)
-DICCIONARIO_TECNICO = {
-    # MOTOR Y MANTENIMIENTO
-    "bateria": "battery", "batería": "battery",
-    "aceite": "oil",
-    "filtro": "filter", "filtros": "filters",
-    "bujia": "plug", "bujías": "plugs",
-    "alternador": "alternator",
-    "radiador": "radiator",
-    "correa": "belt",
-    "bomba": "pump",
-    "motor": "engine",
-    "valvula": "valve",
-    "culata": "cylinder head",
-    
-    # FRENOS Y RUEDAS
-    "freno": "brake", "frenos": "brakes",
-    "pastilla": "pad", "pastillas": "pads",
-    "disco": "disc", "discos": "discs",
-    "llanta": "wheel", "rueda": "wheel",
-    "buje": "hub", "bujes": "hubs",
-    "neumatico": "tyre", "neumáticos": "tyres",
-    
-    # EXTERIOR Y CARROCERÍA
-    "paragolpes": "bumper", "parachoques": "bumper",
-    "puerta": "door",
-    "retrovisor": "rearview mirror", "espejo": "mirror",
-    "faro": "lamp", "faros": "headlamp",
-    "piloto": "light",
-    "luna": "glass", "parabrisas": "windshield",
-    "capo": "hood", "capó": "hood",
-    "aleta": "fender",
-    "rejilla": "grille",
-    "maneta": "handle",
-    "techo": "roof",
-    "aleron": "spoiler",
-    
-    # ELÉCTRICA E INTERIOR
-    "camara": "camera", "cámara": "camera",
-    "arnes": "harness", "cableado": "harness",
-    "elevalunas": "regulator",
-    "pantalla": "display", "monitor": "display",
-    "asiento": "seat",
-    "volante": "steering wheel",
-    "cuadro": "cluster",
-    "altavoz": "speaker",
-    "fusible": "fuse",
-    
-    # SUSPENSIÓN Y DIRECCIÓN
-    "amortiguador": "absorber", "amortiguadores": "shock",
-    "suspension": "suspension",
-    "direccion": "steering",
-    "rotula": "joint",
-    "brazo": "arm",
-    
-    # TRANSMISIÓN
-    "embrague": "clutch",
-    "cambio": "transmission",
-    "palier": "axle",
-    "caja": "gearbox"
-}
+                    # 4. DICCIONARIO TÉCNICO BILINGÜE
+                    DICCIONARIO = {
+                        "bateria": "battery", "batería": "battery", "alternador": "alternator",
+                        "freno": "brake", "frenos": "brakes", "pastilla": "pad", "pastillas": "pads",
+                        "disco": "disc", "discos": "discs", "paragolpes": "bumper", "parachoques": "bumper",
+                        "faro": "lamp", "faros": "headlamp", "piloto": "light", "aceite": "oil",
+                        "filtro": "filter", "filtros": "filters", "bujia": "plug", "bujías": "plugs",
+                        "motor": "engine", "embrague": "clutch", "radiador": "radiator",
+                        "correa": "belt", "bomba": "pump", "valvula": "valve", "culata": "cylinder head",
+                        "llanta": "wheel", "rueda": "wheel", "buje": "hub", "bujes": "hubs",
+                        "neumatico": "tyre", "neumáticos": "tyres", "puerta": "door",
+                        "retrovisor": "rearview mirror", "espejo": "mirror", "luna": "glass",
+                        "parabrisas": "windshield", "capo": "hood", "capó": "hood", "aleta": "fender",
+                        "rejilla": "grille", "maneta": "handle", "techo": "roof", "aleron": "spoiler",
+                        "camara": "camera", "cámara": "camera", "arnes": "harness", "cableado": "harness",
+                        "elevalunas": "regulator", "pantalla": "display", "monitor": "display",
+                        "asiento": "seat", "volante": "steering wheel", "cuadro": "cluster",
+                        "altavoz": "speaker", "fusible": "fuse", "amortiguador": "absorber", 
+                        "amortiguadores": "absorbers", "suspension": "suspension", "direccion": "steering",
+                        "rotula": "joint", "brazo": "arm", "cambio": "transmission", "palier": "axle", "caja": "gearbox"
+                    }
                     
                     # Procesar términos de búsqueda
                     palabras = [p.replace("?","").replace("¿","") for p in pregunta.lower().split() if len(p) > 2]
@@ -628,16 +585,16 @@ DICCIONARIO_TECNICO = {
                         if p in DICCIONARIO:
                             busqueda.append(DICCIONARIO[p])
                     
-                    # Aplicar filtro de búsqueda a ambos DataFrames
+                    # Aplicar filtro de búsqueda
                     criterio_p = df_p.astype(str).apply(lambda x: x.str.contains('|'.join(busqueda), case=False, na=False)).any(axis=1)
                     criterio_t = df_t.astype(str).apply(lambda x: x.str.contains('|'.join(busqueda), case=False, na=False)).any(axis=1)
                     
-                    # Limitar a las 15 mejores coincidencias para no saturar la IA
+                    # Contexto para IA
                     contexto_p = df_p[criterio_p].head(15).to_string()
                     contexto_t = df_t[criterio_t].head(15).to_string()
                     
-                    # 5. LLAMADA A LA IA CON CHAIN OF THOUGHT
-                    model = genai.GenerativeModel('gemini-1.5-flash')
+                    # 5. LLAMADA A LA IA
+                    model = genai.GenerativeModel('gemini-3.5-flash')
                     
                     prompt = f"""
                     Eres el Consultor Técnico de Posventa Senior para OMODA & JAECOO España.
@@ -651,10 +608,10 @@ DICCIONARIO_TECNICO = {
                     SOLICITUD DEL TALLER: "{pregunta}"
                     
                     INSTRUCCIONES DE RESPUESTA:
-                    1. TU BASE DE DATOS ES EXCLUSIVAMENTE 'SPAIN OJ'. IGNORES CUALQUIER DATO DE POLONIA, UK O OTROS MERCADOS.
+                    1. TU BASE DE DATOS ES EXCLUSIVAMENTE 'SPAIN OJ'. IGNORA CUALQUIER DATO DE POLONIA, UK U OTROS MERCADOS.
                     2. ANALIZA LA PREGUNTA: 
-                       - Si busca precio, busca el código en 'DATOS DE PRECIOS'.
-                       - Si busca mano de obra, busca en 'DATOS DE TIEMPOS'.
+                       - Si busca precio, usa 'DATOS DE PRECIOS'.
+                       - Si busca mano de obra, usa 'DATOS DE TIEMPOS'.
                        - Si busca ambos, cruza la información.
                     3. Si la pieza o operación NO CONSTA en los datos, responde exactamente: 
                        "Esta operación o recambio no consta actualmente en el DMS para el mercado español. Por favor, tramite su alta en la pestaña de 'Solicitar Operaciones'."
