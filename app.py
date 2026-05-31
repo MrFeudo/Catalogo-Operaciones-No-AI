@@ -3,6 +3,11 @@ import pandas as pd
 import datetime
 from streamlit_gsheets import GSheetsConnection
 import google.generativeai as genai
+import unicodedata
+
+def normalizar_texto(texto):
+    texto = str(texto)
+    return ''.join(c for c in unicodedata.normalize('NFD', texto) if unicodedata.category(c) != 'Mn').lower()
 
 st.set_page_config(page_title="Buscador Técnico OMODA & JAECOO", layout="wide")
 
@@ -527,6 +532,8 @@ if check_password():
                     except Exception as e_archivo:
                         st.error(f"Error al escribir en el archivo Excel. Asegúrate de que no esté abierto: {e_archivo}")
 
+    
+
 # =========================================================================
     # PANTALLA 4: ASISTENTE IA AVANZADO (Spain OJ + Recambios + Tiempos)
     # =========================================================================
@@ -596,28 +603,28 @@ if check_password():
                     # 5. LLAMADA A LA IA
                     model = genai.GenerativeModel('gemini-3.5-flash')
                     
+                    def normalizar(s):
+                        return ''.join(c for c in unicodedata.normalize('NFD', str(s)) if unicodedata.category(c) != 'Mn').lower()
+
                     prompt = f"""
                     Eres el Consultor Técnico de Posventa Senior para OMODA & JAECOO España.
                     
-                    DATOS DE PRECIOS (SPAIN OJ):
-                    {contexto_p}
+                    DATOS DE PRECIOS: {contexto_p}
+                    DATOS DE TIEMPOS: {contexto_t}
                     
-                    DATOS DE TIEMPOS (SPAIN OJ):
-                    {contexto_t}
+                    CONSULTA: "{pregunta}"
                     
-                    SOLICITUD DEL TALLER: "{pregunta}"
-                    
-                    INSTRUCCIONES DE RESPUESTA:
-                    1. TU BASE DE DATOS ES EXCLUSIVAMENTE 'SPAIN OJ'. IGNORA CUALQUIER DATO DE POLONIA, UK U OTROS MERCADOS.
-                    2. ANALIZA LA PREGUNTA: 
-                       - Si busca precio, usa 'DATOS DE PRECIOS'.
-                       - Si busca mano de obra, usa 'DATOS DE TIEMPOS'.
-                       - Si busca ambos, cruza la información.
-                    3. Si la pieza o operación NO CONSTA en los datos, responde exactamente: 
+                    INSTRUCCIONES OBLIGATORIAS:
+                    1. BASE DE DATOS: Usa EXCLUSIVAMENTE 'Spain OJ'. Ignora otros mercados.
+                    2. REFERENCIAS: Es OBLIGATORIO que incluyas el código de la pieza (columna 'new_partscode' o 'new_code') en la respuesta.
+                    3. TIEMPOS (UTs): Si los valores de tiempo están en UTs (ej: 50, 100), DIVIDE SIEMPRE ENTRE 100 para expresar el resultado en HORAS (ej: 50 UTs = 0.5h).
+                    4. Si la pieza o operación NO CONSTA en los datos, responde exactamente: 
                        "Esta operación o recambio no consta actualmente en el DMS para el mercado español. Por favor, tramite su alta en la pestaña de 'Solicitar Operaciones'."
-                    4. Sé conciso y técnico. Responde siempre en español.
+                    5. Sé técnico, conciso y responde en español.
                     """
                     
+                    # IMPORTANTE: Asegúrate de usar gemini-1.5-flash
+                    model = genai.GenerativeModel('gemini-3.5-flash')
                     respuesta = model.generate_content(prompt)
                     
                     st.markdown("---")
