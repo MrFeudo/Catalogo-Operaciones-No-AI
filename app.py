@@ -559,60 +559,48 @@ if check_password():
         
         if pregunta:
             with st.spinner("🤖 Consultando DMS (Análisis Técnico Senior)..."):
-                try:
-                    # 2. CARGA Y FILTRO DE DATOS
-                    df_precios = pd.read_excel(URL_GITHUB_EXCEL, sheet_name="Parts price")
-                    df_tiempos = pd.read_excel(URL_GITHUB_EXCEL, sheet_name="new_srv_workhours")
+              try:
+                    # 1. CARGA DE DATOS
+                    df_precios = pd.read_csv("DMS_Active_Spare_Parts (1).xlsx - Parts price.csv")
+                    df_tiempos = pd.read_csv("DMS_Active_Spare_Parts (1).xlsx - new_srv_workhours.csv")
                     
-                    df_p = df_precios[df_precios.astype(str).apply(lambda x: x.str.contains("Spain OJ", case=False, na=False)).any(axis=1)]
-                    df_t = df_tiempos[df_tiempos.astype(str).apply(lambda x: x.str.contains("Spain OJ", case=False, na=False)).any(axis=1)]
+                    # 2. FILTRADO (Solo Spain OJ)
+                    df_p = df_precios[df_precios.astype(str).apply(lambda x: x.str.contains("Spain OJ", na=False)).any(axis=1)]
+                    df_t = df_tiempos[df_tiempos.astype(str).apply(lambda x: x.str.contains("Spain OJ", na=False)).any(axis=1)]
                     
-                    # Diccionario y búsqueda (Manteniendo tu lógica base)
-                    DICCIONARIO = {"bateria": "battery", "alternador": "alternator", "freno": "brake", "motor": "engine"} # etc...
-                    palabras = [normalizar(p) for p in pregunta.lower().split() if len(p) > 2]
-                    busqueda = palabras + [DICCIONARIO[p] for p in palabras if p in DICCIONARIO]
+                    # 3. CRUCE INTELIGENTE (La clave para que encuentre la relación)
+                    # Unimos por el código de pieza común (ajusta los nombres de columna si es necesario)
+                    df_unido = pd.merge(df_p, df_t, left_on='new_partscode', right_on='new_code', how='inner', suffixes=('_p', '_t'))
                     
-                    criterio_p = df_p.astype(str).apply(lambda x: x.str.contains('|'.join(busqueda), case=False, na=False)).any(axis=1)
-                    criterio_t = df_t.astype(str).apply(lambda x: x.str.contains('|'.join(busqueda), case=False, na=False)).any(axis=1)
+                    # 4. BUSQUEDA POR NORMALIZACIÓN (Tildes)
+                    def normalizar(s):
+                        return ''.join(c for c in unicodedata.normalize('NFD', str(s)) if unicodedata.category(c) != 'Mn').lower()
                     
-                    contexto_p = df_p[criterio_p].head(15).to_string()
-                    contexto_t = df_t[criterio_t].head(15).to_string()
-                    
-                    # 5. LLAMADA A LA IA CON PROMPT DE INGENIERÍA
-                    model = genai.GenerativeModel('gemini-3.5-flash')
+                    # Filtramos el DataFrame unido según la consulta
+                    query_norm = normalizar(pregunta)
+                    mask = df_unido.astype(str).apply(lambda x: x.str.contains(query_norm, na=False)).any(axis=1)
+                    contexto = df_unido[mask].head(10).to_string()
+
+                    # 5. LLAMADA A LA IA CON EL CONTEXTO YA CRUZADO
+                    model = genai.GenerativeModel('gemini-1.5-flash')
                     
                     prompt = f"""
-                    Eres el Ingeniero Jefe de Soporte Técnico de OMODA & JAECOO España. Tu capacidad de análisis supera a cualquier técnico de taller. Tu objetivo es la precisión quirúrgica.
-
-                    DATOS DE REFERENCIA (SPAIN OJ):
-                    [PRECIOS]: {contexto_p}
-                    [TIEMPOS]: {contexto_t}
-
-                    CONSULTA RECIBIDA: "{pregunta}"
-
-                    ---
-                    PROCESO DE PENSAMIENTO:
-                    1. ANALIZAR: Desglosa la consulta ignorando tildes y normalizando terminología.
-                    2. FILTRAR: Cruza la información exclusivamente contra 'Spain OJ'. Descarta otros mercados.
-                    3. CÁLCULO: Si detectas 'new_standardhour', divídelo entre 100 para convertir UTs a horas (ej. 45 UT = 0.45h).
-                    4. ESTRUCTURAR: Genera la respuesta definitiva.
-
-                    ---
-                    FORMATO DE SALIDA OBLIGATORIO:
-                    **[ESTADO]:** (RESUELTA / PARCIAL / NO CONSTA)
-                    **[DATOS TÉCNICOS]:**
-                    - Código de Referencia: (¡OBLIGATORIO!)
-                    - Precio:
-                    - Tiempo de Reparación:
-                    **[DIAGNÓSTICO]:**
-                    (Breve, directo, sin relleno. Si los datos no están, indica: "No existe registro en Spain OJ, verificar catálogo oficial").
+                    Eres el Ingeniero Jefe Técnico de OMODA España. 
+                    CONTEXTO TÉCNICO (Datos ya cruzados):
+                    {contexto}
+                    
+                    CONSULTA: "{pregunta}"
+                    
+                    INSTRUCCIONES:
+                    1. Identifica el código de pieza en la columna 'new_partscode'.
+                    2. Extrae el precio de 'new_price'.
+                    3. Si hay UTs en 'new_standardhour', DIVIDE ENTRE 100 para dar Horas.
+                    4. Si no hay datos exactos, sé honesto y no inventes.
                     """
                     
                     respuesta = model.generate_content(prompt)
-                    
-                    st.markdown("---")
-                    st.markdown("### 💬 Respuesta del Asistente:")
+                    st.markdown("### 💬 Respuesta Técnica:")
                     st.write(respuesta.text)
                     
                 except Exception as e:
-                    st.error(f"❌ Error técnico: {e}")
+                    st.error(f"❌ Error crítico: {e}")
