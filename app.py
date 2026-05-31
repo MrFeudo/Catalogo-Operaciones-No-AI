@@ -415,122 +415,122 @@ if check_password():
         except Exception as e:
             st.error(txt["err_precios"].format(e))
 
-    # =========================================================================
-    # PANTALLA 3: SOLICITUD DE OPERACIONES ADICIONALES (Para HQ)
-    # =========================================================================
-    elif opcion_menu == txt["menu_solicitar"]:
-        st.title(txt["solicitar_titulo"])
-        st.write(txt["solicitar_sub"])
-        st.markdown("---")
+# =========================================================================
+# PANTALLA 3: SOLICITUD DE OPERACIONES ADICIONALES (Para HQ)
+# =========================================================================
+elif opcion_menu == txt["menu_solicitar"]:
+    st.title(txt["solicitar_titulo"])
+    st.write(txt["solicitar_sub"])
+    st.markdown("---")
+
+    LISTA_DEALERS = sorted([
+        "ACAI MOTOR MÁLAGA", "ALIFAVISA BILBAO", "ALIMOTOR ELCHE", "ANFERPA SEGOVIA", 
+        "AUTO YALDE LOGROÑO", "AUTOCAM MOTOR VILAFRANCA", "AUTOCYL PALENCIA", "AUTOCYL VALLADOLID", 
+        "AUTOTERMINAL", "AUTOVIDAL PALMA DE MALLORCA", "AXIS MOTORS", "BLENDIO LAREDO", 
+        "BLENDIO LUGO", "BLENDIO OURENSE", "BLENDIO SANTANDER", "BLENDIO TORRELAVEGA", 
+        "BORJAMOTOR ALICANTE", "CERVERA AVILA", "CERVERA SALAMANCA", "CHINARES GUADALAJARA", 
+        "DUMOSA BENAVENTE", "ESLAUTO LEON", "GRUP BASOLS IGUALADA", "GRUPO JULIAN BURGOS", 
+        "GRUPO NIETO MÁLAGA", "GRUPO NIETO MARBELLA", "HIMASA SEDAVÍ", "JEMOYA SORIA", 
+        "LASACAR MIRANDA DE EBRO", "LASACAR VITORIA", "M TECNIK ALCALÁ DE HENARES", 
+        "M TECNIK BARCELONA MAQUINIST", "M TECNIK CASTELLÓN", "M TECNIK GERONA", 
+        "M TECNIK MATARÓ", "M TECNIK VINAROZ", "MARTIN LIZAGA", "MARTIN LIZAGA TERUEL", 
+        "MAS AUTO LEGANÉS", "MAVEN BADAJOZ", "MAVEN CÁCERES", "MOLL MOTOR DENIA", 
+        "MOLL MOTOR GANDIA", "MONECAR AUTOMOCION", "MONECAR CUENCA", "MOTOR NACIENTE", 
+        "MOVINSUR GRANADA", "MOVINSUR JAÉN", "MOVINSUR MOTRIL", "MY CARS CÓRDOBA", 
+        "NOATUM", "NOVACAR BCN SANT BOI", "PALAUSA ZAMORA", "PRUNA CAR GO GRANOLLERS", 
+        "PROCHERY ALBACETE", "PROCHERY CARTAGENA", "PROCHERY MURCIA", "RAFAEL AFONSO AGUIMES", 
+        "RAFAEL AFONSO LANZAROTE", "RAFAEL AFONSO LAS PALMAS", "RAFAEL AFONSO TENERIFE", 
+        "RESNOVA MOTOR CORUÑA", "RESNOVA MOTOR GIJÓN", "RESNOVA MOTOR NARÓN", 
+        "RESNOVA MOTOR OVIEDO", "RESNOVA MOTOR SANTIAGO", "RESNOVA MOTOR VIGO", 
+        "SEGRE MOTORS LERIDA", "SERTECAUTO PONFERRADA", "SYRSA ALGECIRAS", 
+        "SYRSA ALMERIA", "SYRSA EJIDO", "SYRSA HUELVA", "SYRSA SEVILLA", 
+        "TALAUTO CAZALEGAS", "TALAUTO TOLEDO", "TALLERES CHINARES", "TECNOTARRACO TARRAGONA", 
+        "TERRY MOBILITY JERÉZ", "TRADECAR GAMBOA ALCORCÓN", "TRADECAR GAMBOA MADRID", 
+        "TRADECAR GAMBOA MAJADAHON", "TRADECAR GAMBOA RIVAS", "TUMASA HUESCA", 
+        "TUMASA MONZÓN", "UNIONE ALCAZAR DE SAN JUAN", "UNIONE CIUDAD REAL", 
+        "VALLESCAR SABADELL", "VALLESCAR TERRASSA", "VIAN AUTOMOBILE VILLALBA", 
+        "ZEN MOTOR OLABERRIA", "ZEN MOTOR PAMPLONA", "ZEN MOTOR SAN SEBASTIÁN", 
+        "ZEN MOTOR ZARAGOZA"
+    ])
+    
+    MAPEO_MODELOS = {
+        "OMODA 5 (Gasolina)": "T19C", "OMODA 5 HEV (Híbrido)": "T19C HEV", "OMODA 5 EV (Eléctrico)": "T19C EV",
+        "OMODA 7 PHEV": "T1GC PHEV", "OMODA 9 PHEV": "T22 PHEV", "JAECOO 5 (Gasolina)": "T13J",
+        "JAECOO 5 HEV": "T13J HEV", "JAECOO 5 BEV": "T13J BEV", "JAECOO 7 (Gasolina)": "T1EJ",
+        "JAECOO 7 HEV": "T1EJ HEV", "JAECOO 7 PHEV": "T1EJ PHEV", "JAECOO 8 PHEV": "T26", "LEPAS L8 PHEV": "T1G PHEV"
+    }
+    
+    st.subheader(txt["form_sub"])
+    col1, col2 = st.columns(2)
+    with col1:
+        marca = st.selectbox(txt["form_marca"], ["OMODA", "JAECOO", "LEPAS"])
+        modelos_filtrados = [mod for mod in MAPEO_MODELOS.keys() if mod.upper().startswith(marca.upper())]
+        modelo_comercial = st.selectbox(txt["form_modelo"], modelos_filtrados)
+    with col2:
+        dealer = st.selectbox(txt["form_dealer"], LISTA_DEALERS)
+        codigo_producto_auto = MAPEO_MODELOS[modelo_comercial]
+        st.text_input(txt["form_hq_code"], value=codigo_producto_auto, disabled=True)
+    
+    with st.form("hq_operation_form", clear_on_submit=True):
+        c1, c2 = st.columns(2)
+        with c1:
+            vin = st.text_input(txt["form_vin"], max_chars=17, placeholder=txt["form_vin_holder"]).strip().upper()
+        with c2:
+            referencia = st.text_input(txt["form_ref"], placeholder=txt["form_ref_holder"]).strip().upper()
         
-        LISTA_DEALERS = sorted([
-            "ACAI MOTOR MÁLAGA", "ALIFAVISA BILBAO", "ALIMOTOR ELCHE", "ANFERPA SEGOVIA", 
-            "AUTO YALDE LOGROÑO", "AUTOCAM MOTOR VILAFRANCA", "AUTOCYL PALENCIA", "AUTOCYL VALLADOLID", 
-            "AUTOTERMINAL", "AUTOVIDAL PALMA DE MALLORCA", "AXIS MOTORS", "BLENDIO LAREDO", 
-            "BLENDIO LUGO", "BLENDIO OURENSE", "BLENDIO SANTANDER", "BLENDIO TORRELAVEGA", 
-            "BORJAMOTOR ALICANTE", "CERVERA AVILA", "CERVERA SALAMANCA", "CHINARES GUADALAJARA", 
-            "DUMOSA BENAVENTE", "ESLAUTO LEON", "GRUP BASOLS IGUALADA", "GRUPO JULIAN BURGOS", 
-            "GRUPO NIETO MÁLAGA", "GRUPO NIETO MARBELLA", "HIMASA SEDAVÍ", "JEMOYA SORIA", 
-            "LASACAR MIRANDA DE EBRO", "LASACAR VITORIA", "M TECNIK ALCALÁ DE HENARES", 
-            "M TECNIK BARCELONA MAQUINIST", "M TECNIK CASTELLÓN", "M TECNIK GERONA", 
-            "M TECNIK MATARÓ", "M TECNIK VINAROZ", "MARTIN LIZAGA", "MARTIN LIZAGA TERUEL", 
-            "MAS AUTO LEGANÉS", "MAVEN BADAJOZ", "MAVEN CÁCERES", "MOLL MOTOR DENIA", 
-            "MOLL MOTOR GANDIA", "MONECAR AUTOMOCION", "MONECAR CUENCA", "MOTOR NACIENTE", 
-            "MOVINSUR GRANADA", "MOVINSUR JAÉN", "MOVINSUR MOTRIL", "MY CARS CÓRDOBA", 
-            "NOATUM", "NOVACAR BCN SANT BOI", "PALAUSA ZAMORA", "PRUNA CAR GO GRANOLLERS", 
-            "PROCHERY ALBACETE", "PROCHERY CARTAGENA", "PROCHERY MURCIA", "RAFAEL AFONSO AGUIMES", 
-            "RAFAEL AFONSO LANZAROTE", "RAFAEL AFONSO LAS PALMAS", "RAFAEL AFONSO TENERIFE", 
-            "RESNOVA MOTOR CORUÑA", "RESNOVA MOTOR GIJÓN", "RESNOVA MOTOR NARÓN", 
-            "RESNOVA MOTOR OVIEDO", "RESNOVA MOTOR SANTIAGO", "RESNOVA MOTOR VIGO", 
-            "SEGRE MOTORS LERIDA", "SERTECAUTO PONFERRADA", "SYRSA ALGECIRAS", 
-            "SYRSA ALMERIA", "SYRSA EJIDO", "SYRSA HUELVA", "SYRSA SEVILLA", 
-            "TALAUTO CAZALEGAS", "TALAUTO TOLEDO", "TALLERES CHINARES", "TECNOTARRACO TARRAGONA", 
-            "TERRY MOBILITY JERÉZ", "TRADECAR GAMBOA ALCORCÓN", "TRADECAR GAMBOA MADRID", 
-            "TRADECAR GAMBOA MAJADAHON", "TRADECAR GAMBOA RIVAS", "TUMASA HUESCA", 
-            "TUMASA MONZÓN", "UNIONE ALCAZAR DE SAN JUAN", "UNIONE CIUDAD REAL", 
-            "VALLESCAR SABADELL", "VALLESCAR TERRASSA", "VIAN AUTOMOBILE VILLALBA", 
-            "ZEN MOTOR OLABERRIA", "ZEN MOTOR PAMPLONA", "ZEN MOTOR SAN SEBASTIÁN", 
-            "ZEN MOTOR ZARAGOZA"
-        ])
+        operacion_solicitada = st.text_area(txt["form_op"], placeholder=txt["form_op_holder"]).strip()
+        boton_enviar = st.form_submit_button(txt["form_btn"])
         
-        MAPEO_MODELOS = {
-            "OMODA 5 (Gasolina)": "T19C",
-            "OMODA 5 HEV (Híbrido)": "T19C HEV",
-            "OMODA 5 EV (Eléctrico)": "T19C EV",
-            "OMODA 7 PHEV": "T1GC PHEV",
-            "OMODA 9 PHEV": "T22 PHEV",
-            "JAECOO 5 (Gasolina)": "T13J",
-            "JAECOO 5 HEV": "T13J HEV",
-            "JAECOO 5 BEV": "T13J BEV",
-            "JAECOO 7 (Gasolina)": "T1EJ",
-            "JAECOO 7 HEV": "T1EJ HEV",
-            "JAECOO 7 PHEV": "T1EJ PHEV",
-            "JAECOO 8 PHEV": "T26",
-            "LEPAS L8 PHEV": "T1G PHEV"
-        }
-        
-        st.subheader(txt["form_sub"])
-        
-        col_dinamica1, col_dinamica2 = st.columns(2)
-        with col_dinamica1:
-            marca = st.selectbox(txt["form_marca"], ["OMODA", "JAECOO", "LEPAS"])
-            modelos_filtrados = [mod for mod in MAPEO_MODELOS.keys() if mod.upper().startswith(marca.upper())]
-            modelo_comercial = st.selectbox(txt["form_modelo"], modelos_filtrados)
-            
-        with col_dinamica2:
-            dealer = st.selectbox(txt["form_dealer"], LISTA_DEALERS)
-            codigo_producto_auto = MAPEO_MODELOS[modelo_comercial]
-            st.text_input(txt["form_hq_code"], value=codigo_producto_auto, disabled=True)
-            
-        with st.form("hq_operation_form", clear_on_submit=True):
-            c1, c2 = st.columns(2)
-            with c1:
-                vin = st.text_input(txt["form_vin"], max_chars=17, placeholder=txt["form_vin_holder"]).strip().upper()
-            with c2:
-                referencia = st.text_input(txt["form_ref"], placeholder=txt["form_ref_holder"]).strip().upper()
-            
-            operacion_solicitada = st.text_area(txt["form_op"], placeholder=txt["form_op_holder"]).strip()
-            boton_enviar = st.form_submit_button(txt["form_btn"])
-            
-            if boton_enviar:
-                if not vin or not operacion_solicitada:
-                    st.error(txt["err_campos"])
-                elif len(vin) < 11:
-                    st.error(txt["err_vin_corto"])
-                else:
-                    ahora = datetime.datetime.now()
-                    
-                    nueva_fila = pd.DataFrame([{
-                        "SN": "",
-                        "Submitted on": ahora.strftime("%Y-%m-%d %H:%M:%S"),
-                        "Respondents": f"Dealer App ({dealer})",
-                        "Fecha del día": ahora.strftime("%Y-%m-%d"),
-                        "Marca del vehículo": marca,
-                        "INTRODUCIR MODELO": modelo_comercial,
-                        "INTRODUCIR VIN": vin,
-                        "Mercado": "Spain OJ",
-                        "CÓDIGO DE PRODUCTO": codigo_producto_auto,
-                        "REFERENCIA DE PIEZA": referencia if referencia else "NaN",
-                        "OPERACIÓN QUE SE SOLICITA AÑADIR": operacion_solicitada,
-                        "DEALER": dealer
-                    }])
-                    
-                    ruta_guardado = "C:/Users/PabloMorenoMartín/OneDrive - O&J Automotive Netherlands B.V/Documentos/Mis cosas/Recambios/Catalogo operaciones/solicitudes_operaciones_MO_HQ.xlsx"
-                    
-                    try:
-                        df_local_existente = pd.read_excel(ruta_guardado)
-                        df_local_final = pd.concat([df_local_existente, nueva_fila], ignore_index=True)
-                    except Exception:
-                        df_local_final = nueva_fila
-                    
-                    try:
-                        df_local_final.to_excel(ruta_guardado, index=False)
-                        st.success("¡Solicitud guardada con éxito localmente en tu carpeta de OneDrive!")
-                        st.balloons()
-                        # FIJADO AQUÍ: El st.dataframe queda metido dentro del bloque de éxito del envío
-                        st.dataframe(nueva_fila, hide_index=True)
-                    except Exception as e_archivo:
-                        st.error(f"Error al escribir en el archivo Excel. Asegúrate de que no esté abierto: {e_archivo}")
+        if boton_enviar:
+            if not vin or not operacion_solicitada:
+                st.error(txt["err_campos"])
+            elif len(vin) < 11:
+                st.error(txt["err_vin_corto"])
+            else:
+                ahora = datetime.datetime.now()
+                
+                # Crear diccionario con los datos
+                datos = {
+                    "SN": "",
+                    "Submitted on": ahora.strftime("%Y-%m-%d %H:%M:%S"),
+                    "Respondents": f"Dealer App ({dealer})",
+                    "Fecha del día": ahora.strftime("%Y-%m-%d"),
+                    "Marca del vehículo": marca,
+                    "INTRODUCIR MODELO": modelo_comercial,
+                    "INTRODUCIR VIN": vin,
+                    "Mercado": "Spain OJ",
+                    "CÓDIGO DE PRODUCTO": codigo_producto_auto,
+                    "REFERENCIA DE PIEZA": referencia if referencia else "NaN",
+                    "OPERACIÓN QUE SE SOLICITA AÑADIR": operacion_solicitada,
+                    "DEALER": dealer
+                }
+                
+                # Definir columnas en el orden exacto solicitado
+                columnas_orden = [
+                    "SN", "Submitted on", "Respondents", "Fecha del día", 
+                    "Marca del vehículo", "INTRODUCIR MODELO", "INTRODUCIR VIN", 
+                    "Mercado", "CÓDIGO DE PRODUCTO", "REFERENCIA DE PIEZA", 
+                    "OPERACIÓN QUE SE SOLICITA AÑADIR", "DEALER"
+                ]
+                
+                df_nueva_fila = pd.DataFrame([datos])
+                df_nueva_fila = df_nueva_fila[columnas_orden]
+                
+                # Generar Excel en memoria
+                output = io.BytesIO()
+                with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+                    df_nueva_fila.to_excel(writer, index=False, sheet_name='Solicitud')
+                
+                st.success("✅ Solicitud procesada correctamente.")
+                st.dataframe(df_nueva_fila, hide_index=True)
+                
+                # Botón de descarga
+                st.download_button(
+                    label="📥 Descargar Excel de Solicitud",
+                    data=output.getvalue(),
+                    file_name=f"Solicitud_{vin}_{ahora.strftime('%Y%m%d_%H%M')}.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
 
     
 
