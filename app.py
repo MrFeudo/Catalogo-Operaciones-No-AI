@@ -527,7 +527,7 @@ if check_password():
                     except Exception as e_archivo:
                         st.error(f"Error al escribir en el archivo Excel. Asegúrate de que no esté abierto: {e_archivo}")
 
-    # =========================================================================
+   # =========================================================================
     # PANTALLA 4: ASISTENTE IA GRATUITO (Conexión con Google Gemini)
     # =========================================================================
     elif opcion_menu == txt["menu_ia"]:
@@ -537,8 +537,8 @@ if check_password():
         
         # 1. ENLAZAR TU API KEY DESDE LOS SECRETS DE STREAMLIT
         try:
+            # Usamos la configuración directa de la API para evitar conflictos de versiones
             genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-            genai.api_version = 'v1'
         except Exception:
             st.error("⚠️ Error de configuración: Falta añadir la 'GEMINI_API_KEY' en los Secrets de Streamlit Cloud.")
             st.stop()
@@ -569,21 +569,26 @@ if check_password():
                     else:
                         contexto_excel = "No se han encontrado registros que coincidan directamente con esas palabras clave en el volcado actual del DMS."
                     
-                    # 3. CONFIGURAR EL MODELO DE GEMINI
-                    model = genai.GenerativeModel('gemini-3.5-flash-latest')
-                    
-                    instrucciones = (
-                        "Eres el asistente de IA oficial de posventa para OMODA & JAECOO España.\n"
-                        "Tu único objetivo es responder a las dudas de los talleres basándándose en los datos de este extracto del DMS empresarial:\n"
-                        f"{contexto_excel}\n\n"
-                        "REGLAS OBLIGATORIAS DE RESPUESTA:\n"
-                        "1. Si los datos del DMS muestran que el recambio o precio EXISTE, detalla la información de forma clara (Código de pieza, descripción y el precio reflejado en 'wholesale price (domestic)'). No inventes ni asumas precios al público (Retail).\n"
-                        "2. Si la operación técnica o la pieza NO CONSTA en el extracto proporcionado, di exactamente lo siguiente:\n"
-                        "'Esta operación o recambio no consta en el catálogo activo del DMS. Por favor, dirígete a la pestaña \"Solicitar Operaciones\" para tramitar su alta inmediata con HQ.'\n"
-                        "3. Responde siempre en español, de manera educada, concisa y ultra-profesional."
-                    )
-                    
-                    response = model.generate_content(f"{instrucciones}\n\nPregunta del taller: {pregunta}")
+                    # 3. CONFIGURACIÓN COMPATIBLE CON SERVIDORES TERCOS
+                    # Si el entorno está obsoleto, 'gemini-pro' es el único modelo que acepta la ruta v1beta sin dar 404
+                    try:
+                        model = genai.GenerativeModel('gemini-1.5-flash')
+                        instrucciones = (
+                            "Eres el asistente de IA oficial de posventa para OMODA & JAECOO España.\n"
+                            "Tu único objetivo es responder a las dudas de los talleres basándándose en los datos de este extracto del DMS empresarial:\n"
+                            f"{contexto_excel}\n\n"
+                            "REGLAS OBLIGATORIAS DE RESPUESTA:\n"
+                            "1. Si los datos del DMS muestran que el recambio o precio EXISTE, detalla la información de forma clara (Código de pieza, descripción y el precio reflejado en 'wholesale price (domestic)'). No inventes ni asumas precios al público (Retail).\n"
+                            "2. Si la operación técnica o la pieza NO CONSTA en el extracto proporcionado, di exactamente lo siguiente:\n"
+                            "'Esta operación o recambio no consta en el catálogo activo del DMS. Por favor, dirígete a la pestaña \"Solicitar Operaciones\" para tramitar su alta inmediata con HQ.'\n"
+                            "3. Responde siempre en español, de manera educada, concisa y ultra-profesional."
+                        )
+                        response = model.generate_content(f"{instrucciones}\n\nPregunta del taller: {pregunta}")
+                    except Exception:
+                        # Plan B de emergencia: Si el servidor sigue empeñado en usar la API vieja, recurrimos a 'gemini-pro'
+                        model = genai.GenerativeModel('gemini-pro')
+                        instrucciones = f"Extracto del DMS:\n{contexto_excel}\n\nResponde brevemente en español a la siguiente pregunta usando los datos anteriores: {pregunta}"
+                        response = model.generate_content(instrucciones)
                     
                     st.markdown("---")
                     st.markdown("### 💬 Respuesta del Asistente Técnico:")
