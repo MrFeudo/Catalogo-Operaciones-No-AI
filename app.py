@@ -10,11 +10,23 @@ def normalizar_texto(texto):
 
 st.set_page_config(page_title="Buscador Técnico OMODA & JAECOO", layout="wide")
 
-# URL Directa (Raw) al archivo Excel en tu GitHub
+# =========================================================================
+# 1. INICIALIZACIÓN ABSOLUTA DEL SESSION STATE (Para evitar AttributeError)
+# =========================================================================
+if "lista_solicitudes" not in st.session_state:
+    st.session_state.lista_solicitudes = []
+
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
+
+if "idioma" not in st.session_state:
+    st.session_state.idioma = "Español"
+
+# URL Directa (Raw) al archivo Excel en GitHub
 URL_GITHUB_EXCEL = "https://github.com/MrFeudo/Catalogo-Operaciones/raw/0d67464a70c2267e0f58aabe31f4530976f1aae8/DMS_Active_Spare_Parts.xlsx"
 
 # =========================================================================
-# DICCIONARIO DE TRADUCCIÓN (Internacionalización - i18n para TFM)
+# 2. DICCIONARIO DE TRADUCCIÓN (Internacionalización - i18n para TFM)
 # =========================================================================
 IDIOMAS = {
     "Español": {
@@ -170,7 +182,7 @@ IDIOMAS = {
 }
 
 # ==========================================
-# 1. BARRA LATERAL: LOGO + SELECCIÓN IDIOMA + MENÚ
+# 3. BARRA LATERAL: LOGO + SELECCIÓN IDIOMA + MENÚ
 # ==========================================
 try:
     st.sidebar.image("logo_empresa.png", use_container_width=True)
@@ -179,12 +191,10 @@ except Exception:
 
 st.sidebar.markdown("---")
 
-if "idioma" not in st.session_state:
-    st.session_state.idioma = "Español"
-
 idioma_seleccionado = st.sidebar.selectbox(
     "🌐 Language / Idioma / 语言:",
-    ["Español", "English", "Chinese (中文)"]
+    ["Español", "English", "Chinese (中文)"],
+    index=["Español", "English", "Chinese (中文)"].index(st.session_state.idioma)
 )
 st.session_state.idioma = idioma_seleccionado
 txt = IDIOMAS[st.session_state.idioma]
@@ -198,11 +208,9 @@ opcion_menu = st.sidebar.radio(
 )
 
 # ==========================================
-# 2. SEGURIDAD (Acceso único global)
+# 4. SISTEMA DE SEGURIDAD CONTRASEÑA
 # ==========================================
 def check_password():
-    if "authenticated" not in st.session_state:
-        st.session_state.authenticated = False
     if not st.session_state.authenticated:
         st.title(txt["pass_titulo"])
         password = st.text_input(txt["pass_input"], type="password")
@@ -411,8 +419,8 @@ if check_password():
         except Exception as e:
             st.error(txt["err_precios"].format(e))
 
-   # =========================================================================
-    # PANTALLA 3: SOLICITUD DE OPERACIONES ADICIONALES (CON ACUMULACIÓN HISTÓRICA)
+    # =========================================================================
+    # PANTALLA 3: SOLICITUD DE OPERACIONES ADICIONALES (PERSISTENCIA ESTABLE)
     # =========================================================================
     elif opcion_menu == txt["menu_solicitar"]:
         st.title(txt["solicitar_titulo"])
@@ -467,7 +475,7 @@ if check_password():
             codigo_producto_auto = MAPEO_MODELOS[modelo_comercial]
             st.text_input(txt["form_hq_code"], value=codigo_producto_auto, disabled=True)
         
-        # --- EL FORMULARIO TERMINA EN LA LÍNEA DEL RERUN ---
+        # Formulario estructurado
         with st.form("hq_operation_form", clear_on_submit=True):
             c1, c2 = st.columns(2)
             with c1:
@@ -507,7 +515,7 @@ if check_password():
                     st.rerun()
 
         # =========================================================================
-        # ZONA DE HISTÓRICO (AHORA FUERA DEL FORMULARIO - ADIÓS AL ERROR)
+        # VISTA DEL HISTÓRICO Y LOGÍSTICA DE REPORTES (Totalmente Fuera del Formulario)
         # =========================================================================
         if st.session_state.lista_solicitudes:
             st.markdown("---")
@@ -523,6 +531,7 @@ if check_password():
             df_acumulado = pd.DataFrame(st.session_state.lista_solicitudes)[columnas_orden]
             st.dataframe(df_acumulado, use_container_width=True, hide_index=True)
             
+            # Creación del documento binario para Excel en memoria
             output = io.BytesIO()
             with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                 df_acumulado.to_excel(writer, index=False, sheet_name='Solicitud')
