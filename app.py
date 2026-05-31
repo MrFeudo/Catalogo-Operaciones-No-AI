@@ -552,7 +552,7 @@ if check_password():
             st.error("⚠️ Error: Configura 'GEMINI_API_KEY' en los Secrets.")
             st.stop()
             
-        # Función global para normalizar
+        # Función de normalización
         def normalizar(s):
             return ''.join(c for c in unicodedata.normalize('NFD', str(s)) if unicodedata.category(c) != 'Mn').lower()
 
@@ -561,11 +561,11 @@ if check_password():
         if pregunta:
             with st.spinner("🤖 Consultando DMS (Análisis Técnico Senior)..."):
                 try:
-                    # 1. CARGA DE DATOS
-                    df_precios = pd.read_csv("DMS_Active_Spare_Parts.xlsx - Parts price")
-                    df_tiempos = pd.read_csv("DMS_Active_Spare_Parts.xlsx - new_srv_workhours")
+                    # 1. CARGA DE DATOS (Usamos read_excel con la URL global)
+                    df_precios = pd.read_excel(URL_GITHUB_EXCEL, sheet_name="Parts price")
+                    df_tiempos = pd.read_excel(URL_GITHUB_EXCEL, sheet_name="new_srv_workhours")
                     
-                    # LIMPIEZA: Eliminamos espacios en blanco en los nombres de columnas (Evita errores de Key)
+                    # LIMPIEZA: Eliminamos espacios en blanco en los nombres de columnas
                     df_precios.columns = df_precios.columns.str.strip()
                     df_tiempos.columns = df_tiempos.columns.str.strip()
                     
@@ -584,7 +584,7 @@ if check_password():
                     if contexto.strip() == "Empty DataFrame":
                         st.warning("No se encontró información técnica para esa consulta en Spain OJ.")
                     else:
-                        # 5. LLAMADA A LA IA
+                        # 5. LLAMADA A LA IA (Corregido a gemini-1.5-flash)
                         model = genai.GenerativeModel('gemini-3.5-flash')
                         
                         prompt = f"""
