@@ -545,7 +545,7 @@ if check_password():
         pregunta = st.text_input("Escribe tu consulta técnica (Ej: ¿Cuál es el precio del alternador del OMODA 5? o ¿Existe tempario para la revisión del JAECOO 7?):").strip()
         
         if pregunta:
-            with St.spinner("🤖 Consultando la última actualización del DMS en GitHub..."):
+            with st.spinner("🤖 Consultando la última actualización del DMS en GitHub..."):
                 try:
                     # 2. LEER EL EXCEL DINÁMICO DESDE LA URL DIRECTA DE GITHUB
                     df_tarifas = pd.read_excel(URL_GITHUB_EXCEL, sheet_name="Parts price")
