@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import datetime
 from streamlit_gsheets import GSheetsConnection
+import google.generativeai as genai
 
 st.set_page_config(page_title="Buscador Técnico OMODA & JAECOO", layout="wide")
 
@@ -15,6 +16,7 @@ IDIOMAS = {
         "menu_taller": "📋 Tiempos de Taller",
         "menu_precios": "💰 Precios de Recambios",
         "menu_solicitar": "📝 Solicitar Operación",
+        "menu_ia": "🤖 Asistente IA",
         "pass_titulo": "🔐 Acceso Red de Dealers",
         "pass_input": "Introduce la contraseña de acceso:",
         "pass_boton": "Entrar",
@@ -65,6 +67,7 @@ IDIOMAS = {
         "menu_taller": "📋 Workshop Times",
         "menu_precios": "💰 Spare Parts Prices",
         "menu_solicitar": "📝 Request Operation",
+        "menu_ia": "🤖 AI Assistant",
         "pass_titulo": "🔐 Dealer Network Access",
         "pass_input": "Enter access password:",
         "pass_boton": "Login",
@@ -115,6 +118,7 @@ IDIOMAS = {
         "menu_taller": "📋 车间工时",
         "menu_precios": "💰 零配件价格",
         "menu_solicitar": "📝 请求操作",
+        "menu_ia": "🤖 智能助手",
         "pass_titulo": "🔐 经销商网络访问",
         "pass_input": "输入访问密码:",
         "pass_boton": "登录",
@@ -152,7 +156,7 @@ IDIOMAS = {
         "form_ref": "零件编号 (选填)",
         "form_ref_holder": "例如: 7365747465AA",
         "form_op": "申请添加的操作内容 *",
-        "form_op_holder": "请详细描述车间所需的工时操作或缺失的价格...",
+        "form_op_holder": "请详细描述车间所需的工时操作 or 缺失的价格...",
         "form_btn": "发送申请至总部",
         "err_campos": "❌ 请填写所有必填项 (*)。",
         "err_vin_corto": "❌ 输入的 VIN 太短，请检查。",
@@ -186,9 +190,11 @@ txt = IDIOMAS[st.session_state.idioma]
 
 st.sidebar.markdown("---")
 st.sidebar.markdown(txt["menu_titulo"])
+
+# Corregido: Ahora incluimos la opción de la IA en la botonera del menú
 opcion_menu = st.sidebar.radio(
     txt["menu_radio"],
-    [txt["menu_taller"], txt["menu_precios"], txt["menu_solicitar"]]
+    [txt["menu_taller"], txt["menu_precios"], txt["menu_solicitar"], txt["menu_ia"]]
 )
 
 # ==========================================
@@ -221,7 +227,6 @@ if check_password():
             df = pd.read_excel("DMS_Active_Spare_Parts.xlsx", sheet_name="new_srv_workhours")
             df.columns = df.columns.astype(str).str.strip()
             
-            # Mapeamos usando "organization" que es el nombre real en esta pestaña
             df = df.rename(columns={
                 'new_productmodel_idname': 'Modelo',
                 'new_product_idname': 'Nombre de la Pieza',
@@ -252,7 +257,6 @@ if check_password():
             st.write(txt["taller_sub"])
             st.markdown("---")
 
-            # --- FILA 1 DE FILTROS ---
             col1, col2, col3 = st.columns([1, 1.5, 1.5])
             with col1:
                 modelos_disponibles = [txt["todos"]] + list(data['Modelo'].dropna().unique())
@@ -262,7 +266,6 @@ if check_password():
             with col3:
                 buscar_operacion = st.text_input(txt["f_operacion"], "").strip()
 
-            # --- FILA 2 DE FILTROS ---
             col_m, col_e = st.columns([2, 2])
             
             with col_m:
@@ -288,7 +291,6 @@ if check_password():
                 else:
                     estado_seleccionado = txt["todos"]
 
-            # --- LÓGICA DE FILTRADO ---
             df_filtrado = data.copy()
             
             if modelo_seleccionado != txt["todos"]:
@@ -309,7 +311,6 @@ if check_password():
             if buscar_operacion:
                 df_filtrado = df_filtrado[df_filtrado['Operación Técnica'].astype(str).str.contains(buscar_operacion, case=False, na=False)]
 
-            # --- TABLA DE TIEMPOS ---
             st.markdown(txt["res_taller"].format(len(df_filtrado)))
             if not df_filtrado.empty:
                 st.dataframe(df_filtrado, use_container_width=True, hide_index=True)
@@ -329,7 +330,6 @@ if check_password():
             df = pd.read_excel("DMS_Active_Spare_Parts.xlsx", sheet_name="Parts price")
             df.columns = df.columns.astype(str).str.strip()
             
-            # Mapeamos usando "new_businessunit_idname" que corresponde a esta hoja
             df = df.rename(columns={
                 'Model': 'Modelo',
                 'new_partscode': 'Código de Recambio',
@@ -360,7 +360,6 @@ if check_password():
             st.write(txt["precios_sub"])
             st.markdown("---")
             
-            # --- FILTROS DE PRECIOS ---
             col_busc, col_org_p, col_tar, col_mod = st.columns([2, 1, 1, 1])
             
             with col_busc:
@@ -386,7 +385,6 @@ if check_password():
                 modelos_disponibles = [txt["todos"]] + [str(mo).strip() for mo in prices_data['Modelo'].unique() if str(mo).strip() != ""]
                 modelo_seleccionado = st.selectbox(txt["filtro_modelo"], modelos_disponibles)
 
-            # --- LÓGICA DE FILTRADO ---
             df_final_precios = prices_data.copy()
 
             if modelo_seleccionado != txt["todos"]:
@@ -404,7 +402,6 @@ if check_password():
                     df_final_precios['Descripción de la Pieza'].astype(str).str.contains(buscar_recambio, case=False)
                 ]
 
-            # --- TABLA DE PRECIOS ---
             st.markdown(txt["res_precios"].format(len(df_final_precios)))
             if not df_final_precios.empty:
                 st.dataframe(df_final_precios, use_container_width=True, hide_index=True)
@@ -414,7 +411,7 @@ if check_password():
         except Exception as e:
             st.error(txt["err_precios"].format(e))
 
-# =========================================================================
+    # =========================================================================
     # PANTALLA 3: SOLICITUD DE OPERACIONES ADICIONALES (Para HQ)
     # =========================================================================
     elif opcion_menu == txt["menu_solicitar"]:
@@ -422,7 +419,6 @@ if check_password():
         st.write(txt["solicitar_sub"])
         st.markdown("---")
         
-        # --- BASE DE DATOS COMPLETA DE CONCESIONARIOS OFICIALES (94 DEALERS) ---
         LISTA_DEALERS = sorted([
             "ACAI MOTOR MÁLAGA", "ALIFAVISA BILBAO", "ALIMOTOR ELCHE", "ANFERPA SEGOVIA", 
             "AUTO YALDE LOGROÑO", "AUTOCAM MOTOR VILAFRANCA", "AUTOCYL PALENCIA", "AUTOCYL VALLADOLID", 
@@ -453,7 +449,6 @@ if check_password():
             "ZEN MOTOR ZARAGOZA"
         ])
         
-        # --- MAPEO EXACTO DE MODELOS Y CÓDIGOS DE PRODUCTO (HQ) ---
         MAPEO_MODELOS = {
             "OMODA 5 (Gasolina)": "T19C",
             "OMODA 5 HEV (Híbrido)": "T19C HEV",
@@ -470,14 +465,11 @@ if check_password():
             "LEPAS L8 PHEV": "T1G PHEV"
         }
         
-        # --- SELECTORES DINÁMICOS ---
         st.subheader(txt["form_sub"])
         
         col_dinamica1, col_dinamica2 = st.columns(2)
         with col_dinamica1:
             marca = st.selectbox(txt["form_marca"], ["OMODA", "JAECOO", "LEPAS"])
-            
-            # Filtro inteligente por marca
             modelos_filtrados = [mod for mod in MAPEO_MODELOS.keys() if mod.upper().startswith(marca.upper())]
             modelo_comercial = st.selectbox(txt["form_modelo"], modelos_filtrados)
             
@@ -486,13 +478,10 @@ if check_password():
             codigo_producto_auto = MAPEO_MODELOS[modelo_comercial]
             st.text_input(txt["form_hq_code"], value=codigo_producto_auto, disabled=True)
             
-        # --- FORMULARIO DE RECOGIDA DE TEXTOS ---
         with st.form("hq_operation_form", clear_on_submit=True):
-            
             c1, c2 = st.columns(2)
             with c1:
                 vin = st.text_input(txt["form_vin"], max_chars=17, placeholder=txt["form_vin_holder"]).strip().upper()
-                
             with c2:
                 referencia = st.text_input(txt["form_ref"], placeholder=txt["form_ref_holder"]).strip().upper()
             
@@ -507,7 +496,6 @@ if check_password():
                 else:
                     ahora = datetime.datetime.now()
                     
-                    # Estructuración limpia de la fila
                     nueva_fila = pd.DataFrame([{
                         "SN": "",
                         "Submitted on": ahora.strftime("%Y-%m-%d %H:%M:%S"),
@@ -523,38 +511,31 @@ if check_password():
                         "DEALER": dealer
                     }])
                     
-                    # RUTA ABSOLUTA ACTUALIZADA CON EL NUEVO NOMBRE DE ARCHIVO
                     ruta_guardado = "C:/Users/PabloMorenoMartín/OneDrive - O&J Automotive Netherlands B.V/Documentos/Mis cosas/Recambios/Catalogo operaciones/solicitudes_operaciones_MO_HQ.xlsx"
                     
                     try:
-                        # Si el archivo ya existe, leemos y concatenamos la fila nueva abajo
                         df_local_existente = pd.read_excel(ruta_guardado)
                         df_local_final = pd.concat([df_local_existente, nueva_fila], ignore_index=True)
                     except Exception:
-                        # Si es la primera vez o no existe, creamos el archivo desde cero con la fila nueva
                         df_local_final = nueva_fila
                     
                     try:
-                        # Guardamos el archivo Excel localmente
                         df_local_final.to_excel(ruta_guardado, index=False)
                         st.success("¡Solicitud guardada con éxito localmente en tu carpeta de OneDrive!")
                         st.balloons()
-                        
-                        # Mostramos un resumen limpio en pantalla de lo enviado
                         st.dataframe(nueva_fila, hide_index=True)
                     except Exception as e_archivo:
                         st.error(f"Error al escribir en el archivo Excel. Asegúrate de que no esté abierto: {e_archivo}")
 
-# =========================================================================
-    # PANTALLA 5: ASISTENTE IA GRATUITO (Conexión con Google Gemini)
     # =========================================================================
-    elif opcion_menu == "🤖 Asistente IA":
+    # PANTALLA 4: ASISTENTE IA GRATUITO (Conexión con Google Gemini)
+    # =========================================================================
+    elif opcion_menu == txt["menu_ia"]:
         st.title("🤖 Asistente Virtual de Posventa (Gemini)")
         st.write("Consulta al asistente inteligente sobre tarifas, referencias o tiempos de taller vinculados al DMS.")
         st.markdown("---")
         
-        # 1. ENLAZAR TU API KEY GRATUITA DE GOOGLE
-        # Recuerda pegar tu clave (AQ.Ab8RN6KfXjo-...) en los Secrets de Streamlit Cloud con el nombre GEMINI_API_KEY
+        # 1. ENLAZAR TU API KEY DESDE LOS SECRETS DE STREAMLIT
         try:
             genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
         except Exception:
@@ -564,28 +545,22 @@ if check_password():
         pregunta = st.text_input("Escribe tu consulta técnica (Ej: ¿Cuál es el precio del alternador del OMODA 5? o ¿Existe tempario para la revisión del JAECOO 7?):").strip()
         
         if pregunta:
-            # 2. DEFINIR LA URL RAW DE TU GITHUB
-            # IMPORTANTE: Cambia 'TU_USUARIO' y 'TU_REPOSITORIO' por tus datos reales de GitHub.
-            # Fíjate que la URL debe empezar por 'raw.githubusercontent.com' para que pandas descargue el Excel binario correctamente.
+            # 2. DEFINIR LA URL RAW DE TU GITHUB (Cambia 'TU_USUARIO' y 'TU_REPOSITORIO' cuando lo subas)
             url_github_excel = "https://raw.githubusercontent.com/TU_USUARIO/TU_REPOSITORIO/main/DMS_Active_Spare_Parts.xlsx"
             
             with st.spinner("🤖 Consultando la última actualización del DMS en GitHub..."):
                 try:
                     # 3. LEER EL EXCEL DINÁMICO DESDE GITHUB
-                    # Leemos la pestaña de precios ("Parts price"). Si tu PowerQuery genera otra pestaña, cambia el nombre aquí.
                     df_tarifas = pd.read_excel(url_github_excel, sheet_name="Parts price")
                     
-                    # Filtro inteligente de seguridad en Python:
-                    # Rompemos la pregunta en palabras y buscamos solo filas que coincidan para no saturar a la IA
+                    # Filtro inteligente para no desbordar el contexto de la IA
                     palabras_clave = [p for p in pregunta.split() if len(p) > 3]
                     df_filtrado = pd.DataFrame()
                     
                     if palabras_clave:
-                        # Buscamos en todo el dataframe convertido a texto
                         criterio = df_tarifas.astype(str).apply(lambda x: x.str.contains('|'.join(palabras_clave), case=False)).any(axis=1)
-                        df_filtrado = df_tarifas[criterio].head(40) # Filtramos un máximo de 40 filas para que quepa en el contexto gratuito
+                        df_filtrado = df_tarifas[criterio].head(40)
                     
-                    # Convertimos el resultado a texto para inyectárselo a la IA
                     if not df_filtrado.empty:
                         contexto_excel = df_filtrado.to_string()
                     else:
@@ -594,7 +569,6 @@ if check_password():
                     # 4. CONFIGURAR EL MODELO DE GEMINI
                     model = genai.GenerativeModel('gemini-pro')
                     
-                    # Prompt del Sistema: Aquí le marcamos las reglas del negocio de OMODA & JAECOO
                     instrucciones = (
                         "Eres el asistente de IA oficial de posventa para OMODA & JAECOO España.\n"
                         "Tu único objetivo es responder a las dudas de los talleres basándote en los datos de este extracto del DMS empresarial:\n"
@@ -606,13 +580,12 @@ if check_password():
                         "3. Responde siempre en español, de manera educada, concisa y ultra-profesional."
                     )
                     
-                    # Ejecutamos la consulta enviando el bloque completo
                     response = model.generate_content(f"{instrucciones}\n\nPregunta del taller: {pregunta}")
                     
-                    # 5. DIBUJAR LA RESPUESTA EN LA APLICACIÓN
                     st.markdown("---")
                     st.markdown("### 💬 Respuesta del Asistente Técnico:")
                     st.write(response.text)
                     
                 except Exception as error:
                     st.error(f"❌ Error al procesar la consulta. Verifica que el archivo en GitHub esté en la ruta correcta y que el nombre de la pestaña sea 'Parts price'. Detalle: {error}")
+                    
