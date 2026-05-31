@@ -169,6 +169,16 @@ IDIOMAS = {
     }
 }
 
+# Inicialización de estados globales para la descarga del Excel (Evita errores dentro del Form)
+if "excel_listo" not in st.session_state:
+    st.session_state.excel_listo = False
+if "excel_data" not in st.session_state:
+    st.session_state.excel_data = None
+if "excel_filename" not in st.session_state:
+    st.session_state.excel_filename = "Solicitud.xlsx"
+if "df_preview" not in st.session_state:
+    st.session_state.df_preview = None
+
 # ==========================================
 # 1. BARRA LATERAL: LOGO + SELECCIÓN IDIOMA + MENÚ
 # ==========================================
@@ -196,6 +206,15 @@ opcion_menu = st.sidebar.radio(
     txt["menu_radio"],
     [txt["menu_taller"], txt["menu_precios"], txt["menu_solicitar"]]
 )
+
+# Resetear estado de descarga si el usuario cambia de pestaña en el menú
+if "menu_anterior" not in st.session_state:
+    st.session_state.menu_anterior = opcion_menu
+if st.session_state.menu_anterior != opcion_menu:
+    st.session_state.excel_listo = False
+    st.session_state.excel_data = None
+    st.session_state.df_preview = None
+    st.session_state.menu_anterior = opcion_menu
 
 # ==========================================
 # 2. SEGURIDAD (Acceso único global)
@@ -467,6 +486,7 @@ if check_password():
             codigo_producto_auto = MAPEO_MODELOS[modelo_comercial]
             st.text_input(txt["form_hq_code"], value=codigo_producto_auto, disabled=True)
         
+        # INICIO DEL FORMULARIO
         with st.form("hq_operation_form", clear_on_submit=True):
             c1, c2 = st.columns(2)
             with c1:
@@ -485,7 +505,7 @@ if check_password():
                 else:
                     ahora = datetime.datetime.now()
                     
-                    # Crear diccionario con los datos
+                    # Diccionario base estructurado para HQ
                     datos = {
                         "SN": "",
                         "Submitted on": ahora.strftime("%Y-%m-%d %H:%M:%S"),
@@ -501,7 +521,6 @@ if check_password():
                         "DEALER": dealer
                     }
                     
-                    # Definir columnas en el orden exacto solicitado
                     columnas_orden = [
                         "SN", "Submitted on", "Respondents", "Fecha del día", 
                         "Marca del vehículo", "INTRODUCIR MODELO", "INTRODUCIR VIN", 
@@ -512,18 +531,29 @@ if check_password():
                     df_nueva_fila = pd.DataFrame([datos])
                     df_nueva_fila = df_nueva_fila[columnas_orden]
                     
-                    # Generar Excel en memoria
+                    # Generar Excel en memoria binaria
                     output = io.BytesIO()
                     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                         df_nueva_fila.to_excel(writer, index=False, sheet_name='Solicitud')
                     
-                    st.success("✅ Solicitud procesada correctamente.")
-                    st.dataframe(df_nueva_fila, hide_index=True)
+                    # Almacenamiento crítico en el Session State para persistencia fuera del Form
+                    st.session_state.excel_data = output.getvalue()
+                    st.session_state.excel_filename = f"Solicitud_{vin}_{ahora.strftime('%Y%m%d_%H%M')}.xlsx"
+                    st.session_state.df_preview = df_nueva_fila
+                    st.session_state.excel_listo = True
                     
-                    # Botón de descarga
-                    st.download_button(
-                        label="📥 Descargar Excel de Solicitud",
-                        data=output.getvalue(),
-                        file_name=f"Solicitud_{vin}_{ahora.strftime('%Y%m%d_%H%M')}.xlsx",
-                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                    )
+                    st.rerun()  # Forzamos refresco limpio para pintar la zona de descarga externa
+
+        # BLOQUE DE DESCARGA Y VISTA PREVIA (Totalmente fuera del Form)
+        if st.session_state.excel_listo and st.session_state.df_preview is not None:
+            st.markdown("---")
+            st.success("✅ Solicitud procesada correctamente.")
+            st.dataframe(st.session_state.df_preview, hide_index=True)
+            
+            # El botón de descarga ahora se ejecuta limpiamente aquí sin interferencias
+            st.download_button(
+                label="📥 Descargar Excel de Solicitud",
+                data=st.session_state.excel_data,
+                file_name=st.session_state.excel_filename,
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
