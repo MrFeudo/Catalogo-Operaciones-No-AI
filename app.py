@@ -470,19 +470,28 @@ if check_password():
             "LEPAS L8 PHEV": "T1G PHEV"
         }
         
+        # --- SELECTORES DINÁMICOS (FUERA DEL FORMULARIO PARA ACTUALIZACIÓN INMEDIATA) ---
+        st.subheader(txt["form_sub"])
+        
+        col_dinamica1, col_dinamica2 = st.columns(2)
+        with col_dinamica1:
+            marca = st.selectbox(txt["form_marca"], ["OMODA", "JAECOO", "LEPAS"])
+            modelo_comercial = st.selectbox(txt["form_modelo"], list(MAPEO_MODELOS.keys()))
+            
+        with col_dinamica2:
+            dealer = st.selectbox(txt["form_dealer"], LISTA_DEALERS)
+            codigo_producto_auto = MAPEO_MODELOS[modelo_comercial]
+            # Este campo ahora cambia de valor inmediatamente al cambiar el modelo de la izquierda
+            st.text_input(txt["form_hq_code"], value=codigo_producto_auto, disabled=True)
+            
+        # --- FORMULARIO DE RECOGIDA DE TEXTOS ---
         with st.form("hq_operation_form", clear_on_submit=True):
-            st.subheader(txt["form_sub"])
             
             c1, c2 = st.columns(2)
             with c1:
-                marca = st.selectbox(txt["form_marca"], ["OMODA", "JAECOO", "LEPAS"])
-                modelo_comercial = st.selectbox(txt["form_modelo"], list(MAPEO_MODELOS.keys()))
                 vin = st.text_input(txt["form_vin"], max_chars=17, placeholder=txt["form_vin_holder"]).strip().upper()
                 
             with c2:
-                dealer = st.selectbox(txt["form_dealer"], LISTA_DEALERS)
-                codigo_producto_auto = MAPEO_MODELOS[modelo_comercial]
-                st.text_input(txt["form_hq_code"], value=codigo_producto_auto, disabled=True)
                 referencia = st.text_input(txt["form_ref"], placeholder=txt["form_ref_holder"]).strip().upper()
             
             operacion_solicitada = st.text_area(txt["form_op"], placeholder=txt["form_op_holder"]).strip()
