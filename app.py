@@ -572,7 +572,7 @@ if check_password():
                     # 3. CONFIGURACIÓN COMPATIBLE CON SERVIDORES TERCOS
                     # Si el entorno está obsoleto, 'gemini-pro' es el único modelo que acepta la ruta v1beta sin dar 404
                     try:
-                        model = genai.GenerativeModel('gemini-1.5-flash')
+                        model = genai.GenerativeModel('gemini-3.5-flash')
                         instrucciones = (
                             "Eres el asistente de IA oficial de posventa para OMODA & JAECOO España.\n"
                             "Tu único objetivo es responder a las dudas de los talleres basándándose en los datos de este extracto del DMS empresarial:\n"
