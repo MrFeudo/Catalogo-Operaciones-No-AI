@@ -562,8 +562,8 @@ if check_password():
             with st.spinner("🤖 Consultando DMS (Análisis Técnico Senior)..."):
                 try:
                     # 1. CARGA DE DATOS
-                    df_precios = pd.read_csv("DMS_Active_Spare_Parts.xlsx - Parts price.csv")
-                    df_tiempos = pd.read_csv("DMS_Active_Spare_Parts.xlsx - new_srv_workhours.csv")
+                    df_precios = pd.read_csv("DMS_Active_Spare_Parts.xlsx - Parts price")
+                    df_tiempos = pd.read_csv("DMS_Active_Spare_Parts.xlsx - new_srv_workhours")
                     
                     # LIMPIEZA: Eliminamos espacios en blanco en los nombres de columnas (Evita errores de Key)
                     df_precios.columns = df_precios.columns.str.strip()
