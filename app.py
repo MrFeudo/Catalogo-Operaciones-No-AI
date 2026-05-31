@@ -527,7 +527,7 @@ if check_password():
                     except Exception as e_archivo:
                         st.error(f"Error al escribir en el archivo Excel. Asegúrate de que no esté abierto: {e_archivo}")
 
-   # =========================================================================
+  # =========================================================================
     # PANTALLA 4: ASISTENTE IA GRATUITO (Conexión con Google Gemini)
     # =========================================================================
     elif opcion_menu == txt["menu_ia"]:
@@ -535,9 +535,7 @@ if check_password():
         st.write("Consulta al asistente inteligente sobre tarifas, referencias o tiempos de taller vinculados al DMS.")
         st.markdown("---")
         
-        # 1. ENLAZAR TU API KEY DESDE LOS SECRETS DE STREAMLIT
         try:
-            # Usamos la configuración directa de la API para evitar conflictos de versiones
             genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
         except Exception:
             st.error("⚠️ Error de configuración: Falta añadir la 'GEMINI_API_KEY' en los Secrets de Streamlit Cloud.")
@@ -546,49 +544,83 @@ if check_password():
         pregunta = st.text_input("Escribe tu consulta técnica (Ej: ¿Cuál es el precio del alternador del OMODA 5? o ¿Existe tempario para la revisión del JAECOO 7?):").strip()
         
         if pregunta:
-            with st.spinner("🤖 Consultando la última actualización del DMS en GitHub..."):
+            with st.spinner("🤖 Analizando catálogo bilingüe del DMS..."):
                 try:
-                    # 2. LEER EL EXCEL DINÁMICO DESDE LA URL DIRECTA DE GITHUB
+                    # 1. LEER EL EXCEL DESDE GITHUB
                     df_tarifas = pd.read_excel(URL_GITHUB_EXCEL, sheet_name="Parts price")
                     df_tarifas.columns = df_tarifas.columns.astype(str).str.strip()
                     
-                    # Filtro inteligente para no desbordar el contexto de la IA
-                    palabras_clave = [p for p in pregunta.split() if len(p) > 3]
+                    # 2. MAPEO / TRADUCCIÓN AUTOMÁTICA DE PALABRAS TÉCNICAS FRECUENTES (Español -> Inglés)
+                    # Esto asegura que el filtro de Python localice las filas aunque el Excel esté en inglés.
+                    DICCIONARIO_TECNICO = {
+                        "bateria": "battery", "batería": "battery",
+                        "alternador": "alternator",
+                        "freno": "brake", "frenos": "brakes",
+                        "pastilla": "pad", "pastillas": "pads",
+                        "disco": "disc", "discos": "discs",
+                        "paragolpes": "bumper", "parachoques": "bumper",
+                        "faro": "lamp", "faros": "headlamp", "piloto": "light",
+                        "filtro": "filter", "filtros": "filters",
+                        "aceite": "oil",
+                        "bomba": "pump",
+                        "correa": "belt",
+                        "amortiguador": "absorber", "amortiguadores": "shock",
+                        "bujia": "plug", "bujías": "plugs",
+                        "embrague": "clutch",
+                        "radiador": "radiator",
+                        "motor": "engine",
+                        "luna": "glass", "parabrisas": "windshield"
+                    }
+                    
+                    # Extraemos las palabras de la pregunta
+                    palabras_usuario = pregunta.lower().split()
+                    palabras_busqueda = []
+                    
+                    for p in palabras_usuario:
+                        cleaned_p = p.replace("?", "").replace("¿", "").replace(" de ", "").strip()
+                        if len(cleaned_p) > 2:
+                            palabras_busqueda.append(cleaned_p)
+                            # Si la palabra tiene traducción técnica, la añadimos al filtro de búsqueda
+                            if cleaned_p in DICCIONARIO_TECNICO:
+                                palabras_busqueda.append(DICCIONARIO_TECNICO[cleaned_p])
+                    
+                    # Filtrado inteligente en el DataFrame
                     df_filtrado = pd.DataFrame()
+                    if palabras_busqueda:
+                        # Buscamos si alguna de las palabras (en ES o EN) aparece en las celdas
+                        criterio = df_tarifas.astype(str).apply(
+                            lambda x: x.str.contains('|'.join(palabras_busqueda), case=False, na=False)
+                        ).any(axis=1)
+                        df_filtrado = df_tarifas[criterio].head(50)
                     
-                    if palabras_clave:
-                        criterio = df_tarifas.astype(str).apply(lambda x: x.str.contains('|'.join(palabras_clave), case=False)).any(axis=1)
-                        df_filtrado = df_tarifas[criterio].head(40)
-                    
-                    # Seleccionar exclusivamente columnas informativas y de precio mayorista (wholesale)
+                    # Seleccionar columnas clave
                     columnas_interes = ["Model", "new_partscode", "new_product_idname", "wholesale price (domestic)", "transactioncurrencyidname"]
                     columnas_validas = [c for c in columnas_interes if c in df_filtrado.columns]
                     
                     if not df_filtrado.empty:
                         contexto_excel = df_filtrado[columnas_validas].to_string()
                     else:
-                        contexto_excel = "No se han encontrado registros que coincidan directamente con esas palabras clave en el volcado actual del DMS."
+                        contexto_excel = "No se han encontrado registros en el Excel para las palabras clave indexadas."
                     
-                    # 3. CONFIGURACIÓN COMPATIBLE CON SERVIDORES TERCOS
-                    # Si el entorno está obsoleto, 'gemini-pro' es el único modelo que acepta la ruta v1beta sin dar 404
+                    # 3. INSTANCIAR EL MODELO (Con el plan B por si el servidor sigue forzando la ruta antigua)
                     try:
-                        model = genai.GenerativeModel('gemini-3.5-flash')
-                        instrucciones = (
-                            "Eres el asistente de IA oficial de posventa para OMODA & JAECOO España.\n"
-                            "Tu único objetivo es responder a las dudas de los talleres basándándose en los datos de este extracto del DMS empresarial:\n"
-                            f"{contexto_excel}\n\n"
-                            "REGLAS OBLIGATORIAS DE RESPUESTA:\n"
-                            "1. Si los datos del DMS muestran que el recambio o precio EXISTE, detalla la información de forma clara (Código de pieza, descripción y el precio reflejado en 'wholesale price (domestic)'). No inventes ni asumas precios al público (Retail).\n"
-                            "2. Si la operación técnica o la pieza NO CONSTA en el extracto proporcionado, di exactamente lo siguiente:\n"
-                            "'Esta operación o recambio no consta en el catálogo activo del DMS. Por favor, dirígete a la pestaña \"Solicitar Operaciones\" para tramitar su alta inmediata con HQ.'\n"
-                            "3. Responde siempre en español, de manera educada, concisa y ultra-profesional."
-                        )
-                        response = model.generate_content(f"{instrucciones}\n\nPregunta del taller: {pregunta}")
+                        model = genai.GenerativeModel('gemini-1.5-flash')
                     except Exception:
-                        # Plan B de emergencia: Si el servidor sigue empeñado en usar la API vieja, recurrimos a 'gemini-pro'
                         model = genai.GenerativeModel('gemini-pro')
-                        instrucciones = f"Extracto del DMS:\n{contexto_excel}\n\nResponde brevemente en español a la siguiente pregunta usando los datos anteriores: {pregunta}"
-                        response = model.generate_content(instrucciones)
+                        
+                    instrucciones = (
+                        "Eres el asistente de IA oficial de posventa para OMODA & JAECOO España.\n"
+                        "Los usuarios preguntarán en español, pero el extracto del DMS de la empresa que tienes aquí abajo está en inglés.\n"
+                        "Tu trabajo es cruzar mentalmente los términos (ej: 'batería' = 'battery', 'alternador' = 'alternator') para encontrar la información.\n\n"
+                        f"EXTRACTO DEL DMS DISPONIBLE:\n{contexto_excel}\n\n"
+                        "REGLAS OBLIGATORIAS DE RESPUESTA:\n"
+                        "1. Si localizas el recambio solicitado bajo su nombre en inglés (ej: 'Battery 12V'), traduce los datos clave al español y muestra el Código de pieza ('new_partscode'), descripción y el precio exacto en 'wholesale price (domestic)'.\n"
+                        "2. Si la pieza NO CONSTA de ninguna forma en el extracto proporcionado, responde textualmente:\n"
+                        "'Esta operación o recambio no consta en el catálogo activo del DMS. Por favor, dirígete a la pestaña \"Solicitar Operaciones\" para tramitar su alta inmediata con HQ.'\n"
+                        "3. Sé conciso, educado y responde siempre en español."
+                    )
+                    
+                    response = model.generate_content(f"{instrucciones}\n\nPregunta del taller: {pregunta}")
                     
                     st.markdown("---")
                     st.markdown("### 💬 Respuesta del Asistente Técnico:")
