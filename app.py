@@ -604,7 +604,7 @@ if check_password():
                     
                     # 3. INSTANCIAR EL MODELO (Con el plan B por si el servidor sigue forzando la ruta antigua)
                     try:
-                        model = genai.GenerativeModel('gemini-1.5-flash')
+                        model = genai.GenerativeModel('gemini-3.5-flash')
                     except Exception:
                         model = genai.GenerativeModel('gemini-pro')
                         
