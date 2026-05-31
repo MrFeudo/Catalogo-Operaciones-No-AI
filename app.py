@@ -411,8 +411,8 @@ if check_password():
         except Exception as e:
             st.error(txt["err_precios"].format(e))
 
-    # =========================================================================
-    # PANTALLA 3: SOLICITUD DE OPERACIONES ADICIONALES (Para HQ)
+   # =========================================================================
+    # PANTALLA 3: SOLICITUD DE OPERACIONES ADICIONALES (CON ACUMULACIÓN HISTÓRICA)
     # =========================================================================
     elif opcion_menu == txt["menu_solicitar"]:
         st.title(txt["solicitar_titulo"])
@@ -467,6 +467,7 @@ if check_password():
             codigo_producto_auto = MAPEO_MODELOS[modelo_comercial]
             st.text_input(txt["form_hq_code"], value=codigo_producto_auto, disabled=True)
         
+        # --- EL FORMULARIO TERMINA EN LA LÍNEA DEL RERUN ---
         with st.form("hq_operation_form", clear_on_submit=True):
             c1, c2 = st.columns(2)
             with c1:
@@ -484,10 +485,10 @@ if check_password():
                     st.error(txt["err_vin_corto"])
                 else:
                     ahora = datetime.datetime.now()
+                    nuevo_sn = len(st.session_state.lista_solicitudes) + 1
                     
-                    # Crear diccionario con los datos
-                    datos = {
-                        "SN": "",
+                    nueva_solicitud = {
+                        "SN": nuevo_sn,
                         "Submitted on": ahora.strftime("%Y-%m-%d %H:%M:%S"),
                         "Respondents": f"Dealer App ({dealer})",
                         "Fecha del día": ahora.strftime("%Y-%m-%d"),
@@ -501,29 +502,43 @@ if check_password():
                         "DEALER": dealer
                     }
                     
-                    # Definir columnas en el orden exacto solicitado
-                    columnas_orden = [
-                        "SN", "Submitted on", "Respondents", "Fecha del día", 
-                        "Marca del vehículo", "INTRODUCIR MODELO", "INTRODUCIR VIN", 
-                        "Mercado", "CÓDIGO DE PRODUCTO", "REFERENCIA DE PIEZA", 
-                        "OPERACIÓN QUE SE SOLICITA AÑADIR", "DEALER"
-                    ]
-                    
-                    df_nueva_fila = pd.DataFrame([datos])
-                    df_nueva_fila = df_nueva_fila[columnas_orden]
-                    
-                    # Generar Excel en memoria
-                    output = io.BytesIO()
-                    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-                        df_nueva_fila.to_excel(writer, index=False, sheet_name='Solicitud')
-                    
-                    st.success("✅ Solicitud procesada correctamente.")
-                    st.dataframe(df_nueva_fila, hide_index=True)
-                    
-                    # Botón de descarga
-                    st.download_button(
-                        label="📥 Descargar Excel de Solicitud",
-                        data=output.getvalue(),
-                        file_name=f"Solicitud_{vin}_{ahora.strftime('%Y%m%d_%H%M')}.xlsx",
-                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                    )
+                    st.session_state.lista_solicitudes.append(nueva_solicitud)
+                    st.success(f"✅ ¡Operación técnica número {nuevo_sn} añadida al histórico!")
+                    st.rerun()
+
+        # =========================================================================
+        # ZONA DE HISTÓRICO (AHORA FUERA DEL FORMULARIO - ADIÓS AL ERROR)
+        # =========================================================================
+        if st.session_state.lista_solicitudes:
+            st.markdown("---")
+            st.markdown(f"### 📋 Histórico de Solicitudes Acumuladas ({len(st.session_state.lista_solicitudes)} filas)")
+            
+            columnas_orden = [
+                "SN", "Submitted on", "Respondents", "Fecha del día", 
+                "Marca del vehículo", "INTRODUCIR MODELO", "INTRODUCIR VIN", 
+                "Mercado", "CÓDIGO DE PRODUCTO", "REFERENCIA DE PIEZA", 
+                "OPERACIÓN QUE SE SOLICITA AÑADIR", "DEALER"
+            ]
+            
+            df_acumulado = pd.DataFrame(st.session_state.lista_solicitudes)[columnas_orden]
+            st.dataframe(df_acumulado, use_container_width=True, hide_index=True)
+            
+            output = io.BytesIO()
+            with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+                df_acumulado.to_excel(writer, index=False, sheet_name='Solicitud')
+            
+            fecha_archivo = datetime.datetime.now().strftime('%Y%m%d')
+            
+            col_descarga, col_resetear = st.columns([3, 1])
+            with col_descarga:
+                st.download_button(
+                    label=f"📥 Descargar Reporte Completo ({len(st.session_state.lista_solicitudes)} registros)",
+                    data=output.getvalue(),
+                    file_name=f"Reporte_Solicitudes_HQ_{fecha_archivo}.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    use_container_width=True
+                )
+            with col_resetear:
+                if st.button("🗑️ Limpiar Histórico", use_container_width=True):
+                    st.session_state.lista_solicitudes = []
+                    st.rerun()
