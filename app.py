@@ -6,6 +6,9 @@ import google.generativeai as genai
 
 st.set_page_config(page_title="Buscador Técnico OMODA & JAECOO", layout="wide")
 
+# URL Directa (Raw) al archivo Excel en tu GitHub
+URL_GITHUB_EXCEL = "https://github.com/MrFeudo/Catalogo-Operaciones/raw/0d67464a70c2267e0f58aabe31f4530976f1aae8/DMS_Active_Spare_Parts.xlsx"
+
 # =========================================================================
 # DICCIONARIO DE TRADUCCIÓN (Internacionalización - i18n para TFM)
 # =========================================================================
@@ -145,7 +148,7 @@ IDIOMAS = {
         "todas": "全部",
         "filtro_modelo": "按车型过滤:",
         "solicitar_titulo": "📝 申请新增工时操作",
-        "solicitar_sub": "使用此表单申请在总部(HQ)主数据中添加新工时操作或价格。",
+        "solicitar_sub": "使用此表单申请在总部(HQ)主数据中添加新工时操作 or 价格。",
         "form_sub": "申请信息 (* 为必填项)",
         "form_marca": "车辆品牌 *",
         "form_modelo": "输入车型 *",
@@ -175,7 +178,6 @@ except Exception:
 
 st.sidebar.markdown("---")
 
-# Selector de Idioma Global
 if "idioma" not in st.session_state:
     st.session_state.idioma = "Español"
 
@@ -184,14 +186,11 @@ idioma_seleccionado = st.sidebar.selectbox(
     ["Español", "English", "Chinese (中文)"]
 )
 st.session_state.idioma = idioma_seleccionado
-
-# Acceso rápido a los textos según el idioma activo
 txt = IDIOMAS[st.session_state.idioma]
 
 st.sidebar.markdown("---")
 st.sidebar.markdown(txt["menu_titulo"])
 
-# Corregido: Ahora incluimos la opción de la IA en la botonera del menú
 opcion_menu = st.sidebar.radio(
     txt["menu_radio"],
     [txt["menu_taller"], txt["menu_precios"], txt["menu_solicitar"], txt["menu_ia"]]
@@ -224,7 +223,7 @@ if check_password():
         
         @st.cache_data
         def load_data_tiempos_v3():
-            df = pd.read_excel("DMS_Active_Spare_Parts.xlsx", sheet_name="new_srv_workhours")
+            df = pd.read_excel(URL_GITHUB_EXCEL, sheet_name="new_srv_workhours")
             df.columns = df.columns.astype(str).str.strip()
             
             df = df.rename(columns={
@@ -327,14 +326,14 @@ if check_password():
         
         @st.cache_data
         def load_prices_nueva_version():
-            df = pd.read_excel("DMS_Active_Spare_Parts.xlsx", sheet_name="Parts price")
+            df = pd.read_excel(URL_GITHUB_EXCEL, sheet_name="Parts price")
             df.columns = df.columns.astype(str).str.strip()
             
             df = df.rename(columns={
                 'Model': 'Modelo',
                 'new_partscode': 'Código de Recambio',
                 'new_product_idname': 'Descripción de la Pieza',
-                'new_price': 'Precio Venta',
+                'wholesale price (domestic)': 'Precio Mayorista Doméstico',
                 'transactioncurrencyidname': 'Moneda',
                 'new_pricetypename': 'Tipo de Tarifa',
                 'new_businessunit_idname': 'Mercado / Organización',
@@ -343,7 +342,7 @@ if check_password():
             
             columnas_finales_precios = [
                 'Modelo', 'Código de Recambio', 'Descripción de la Pieza', 
-                'Precio Venta', 'Moneda', 'Tipo de Tarifa', 
+                'Precio Mayorista Doméstico', 'Moneda', 'Tipo de Tarifa', 
                 'Mercado / Organización', 'Estado'
             ]
             
@@ -523,6 +522,7 @@ if check_password():
                         df_local_final.to_excel(ruta_guardado, index=False)
                         st.success("¡Solicitud guardada con éxito localmente en tu carpeta de OneDrive!")
                         st.balloons()
+                        # FIJADO AQUÍ: El st.dataframe queda metido dentro del bloque de éxito del envío
                         st.dataframe(nueva_fila, hide_index=True)
                     except Exception as e_archivo:
                         st.error(f"Error al escribir en el archivo Excel. Asegúrate de que no esté abierto: {e_archivo}")
@@ -545,13 +545,11 @@ if check_password():
         pregunta = st.text_input("Escribe tu consulta técnica (Ej: ¿Cuál es el precio del alternador del OMODA 5? o ¿Existe tempario para la revisión del JAECOO 7?):").strip()
         
         if pregunta:
-            # 2. DEFINIR LA URL RAW DE TU GITHUB (Cambia 'TU_USUARIO' y 'TU_REPOSITORIO' cuando lo subas)
-            url_github_excel = "https://raw.githubusercontent.com/TU_USUARIO/TU_REPOSITORIO/main/DMS_Active_Spare_Parts.xlsx"
-            
-            with st.spinner("🤖 Consultando la última actualización del DMS en GitHub..."):
+            with St.spinner("🤖 Consultando la última actualización del DMS en GitHub..."):
                 try:
-                    # 3. LEER EL EXCEL DINÁMICO DESDE GITHUB
-                    df_tarifas = pd.read_excel(url_github_excel, sheet_name="Parts price")
+                    # 2. LEER EL EXCEL DINÁMICO DESDE LA URL DIRECTA DE GITHUB
+                    df_tarifas = pd.read_excel(URL_GITHUB_EXCEL, sheet_name="Parts price")
+                    df_tarifas.columns = df_tarifas.columns.astype(str).str.strip()
                     
                     # Filtro inteligente para no desbordar el contexto de la IA
                     palabras_clave = [p for p in pregunta.split() if len(p) > 3]
@@ -561,20 +559,24 @@ if check_password():
                         criterio = df_tarifas.astype(str).apply(lambda x: x.str.contains('|'.join(palabras_clave), case=False)).any(axis=1)
                         df_filtrado = df_tarifas[criterio].head(40)
                     
+                    # Seleccionar exclusivamente columnas informativas y de precio mayorista (wholesale)
+                    columnas_interes = ["Model", "new_partscode", "new_product_idname", "wholesale price (domestic)", "transactioncurrencyidname"]
+                    columnas_validas = [c for c in columnas_interes if c in df_filtrado.columns]
+                    
                     if not df_filtrado.empty:
-                        contexto_excel = df_filtrado.to_string()
+                        contexto_excel = df_filtrado[columnas_validas].to_string()
                     else:
                         contexto_excel = "No se han encontrado registros que coincidan directamente con esas palabras clave en el volcado actual del DMS."
                     
-                    # 4. CONFIGURAR EL MODELO DE GEMINI
+                    # 3. CONFIGURAR EL MODELO DE GEMINI
                     model = genai.GenerativeModel('gemini-pro')
                     
                     instrucciones = (
                         "Eres el asistente de IA oficial de posventa para OMODA & JAECOO España.\n"
-                        "Tu único objetivo es responder a las dudas de los talleres basándote en los datos de este extracto del DMS empresarial:\n"
+                        "Tu único objetivo es responder a las dudas de los talleres basándándose en los datos de este extracto del DMS empresarial:\n"
                         f"{contexto_excel}\n\n"
                         "REGLAS OBLIGATORIAS DE RESPUESTA:\n"
-                        "1. Si los datos del DMS muestran que el recambio, precio o tiempo de mano de obra EXISTE, detalla la información de forma clara (Código de pieza, descripción en inglés/español y tarifa Retail ESP).\n"
+                        "1. Si los datos del DMS muestran que el recambio o precio EXISTE, detalla la información de forma clara (Código de pieza, descripción y el precio reflejado en 'wholesale price (domestic)'). No inventes ni asumas precios al público (Retail).\n"
                         "2. Si la operación técnica o la pieza NO CONSTA en el extracto proporcionado, di exactamente lo siguiente:\n"
                         "'Esta operación o recambio no consta en el catálogo activo del DMS. Por favor, dirígete a la pestaña \"Solicitar Operaciones\" para tramitar su alta inmediata con HQ.'\n"
                         "3. Responde siempre en español, de manera educada, concisa y ultra-profesional."
@@ -587,5 +589,4 @@ if check_password():
                     st.write(response.text)
                     
                 except Exception as error:
-                    st.error(f"❌ Error al procesar la consulta. Verifica que el archivo en GitHub esté en la ruta correcta y que el nombre de la pestaña sea 'Parts price'. Detalle: {error}")
-                    
+                    st.error(f"❌ Error al procesar la consulta. Detalle del fallo: {error}")
