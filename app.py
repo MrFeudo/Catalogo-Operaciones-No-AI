@@ -419,7 +419,7 @@ if check_password():
         except Exception as e:
             st.error(txt["err_precios"].format(e))
 
-   # =========================================================================
+# =========================================================================
     # PANTALLA 3: SOLICITUD DE OPERACIONES ADICIONALES (CONEXIÓN GOOGLE SHEETS)
     # =========================================================================
     elif opcion_menu == txt["menu_solicitar"]:
@@ -487,7 +487,7 @@ if check_password():
             operacion_solicitada = st.text_area(txt["form_op"], placeholder=txt["form_op_holder"]).strip()
             boton_enviar = st.form_submit_button(txt["form_btn"])
             
-           if boton_enviar:
+            if boton_enviar:
                 if not vin or not operacion_solicitada:
                     st.error(txt["err_campos"])
                 elif len(vin) != 17:
@@ -501,7 +501,6 @@ if check_password():
                         "OPERACIÓN QUE SE SOLICITA AÑADIR", "DEALER"
                     ]
                     
-                    # Variable de control para saber si todo ha ido bien
                     subida_exitosa = False
                     
                     # 1. Intentar conectar y leer el estado actual de la nube
@@ -509,7 +508,6 @@ if check_password():
                         from streamlit_gsheets import GSheetsConnection
                         conn = st.connection("gsheets", type=GSheetsConnection)
                         
-                        # Extraer la URL del spreadsheet soportando diferentes estructuras de secrets.toml
                         if "connections" in st.secrets and "gsheets" in st.secrets["connections"]:
                             spreadsheet_url = st.secrets["connections"]["gsheets"]["spreadsheet"]
                         elif "gsheets" in st.secrets and "spreadsheet" in st.secrets["gsheets"]:
@@ -525,7 +523,7 @@ if check_password():
                             df_cloud = df_cloud.dropna(how='all').loc[:, ~df_cloud.columns.str.contains('^Unnamed')]
                         
                         nuevo_sn = len(df_cloud) + 1
-                    except Exception as err_lectura:
+                    except Exception:
                         nuevo_sn = len(st.session_state.lista_solicitudes) + 1
                         df_cloud = pd.DataFrame(columns=columnas_orden)
                         spreadsheet_url = ""
@@ -559,36 +557,40 @@ if check_password():
                                 spreadsheet=spreadsheet_url,
                                 data=df_actualizado
                             )
-                            # Si llega aquí, la escritura en la nube ha funcionado
                             st.session_state.lista_solicitudes.append(nueva_solicitud)
                             subida_exitosa = True
                         else:
-                            raise ValueError("No se pudo localizar la URL de la hoja en st.secrets o tus secrets están vacíos.")
+                            raise ValueError("No se encontró la URL del archivo de Sheets en st.secrets.")
                             
                     except Exception as e:
-                        # CRÍTICO: Aquí retenemos el flujo. Al NO hacer rerun, el mensaje se queda fijo en pantalla
                         st.error(f"❌ Error de conexión con Google Sheets: {e}")
-                        st.info("💡 Por seguridad, hemos guardado esta línea en la tabla inferior (Caché Local) para que no la pierdas.")
-                        
-                        # Guardamos en local para que el usuario pueda trabajar offline si falla Google
+                        st.info("💡 Por seguridad, hemos guardado esta línea en la tabla inferior (Caché Local).")
                         st.session_state.lista_solicitudes.append(nueva_solicitud)
                     
-                    # Solo recargamos la interfaz automáticamente si se guardó en la nube con éxito
                     if subida_exitosa:
-                        st.success(f"🚀 ¡Operación técnica Nº {nuevo_sn} subida a Google Sheets con éxito!")
                         st.rerun()
                         
         # =========================================================================
         # VISTA DEL HISTÓRICO Y LOGÍSTICA DE REPORTES (Sincronizado de la Nube)
         # =========================================================================
-        # Intentamos pintar el histórico directamente desde lo que hay en Google Sheets
         try:
             from streamlit_gsheets import GSheetsConnection
             conn = st.connection("gsheets", type=GSheetsConnection)
-            df_mostrar = conn.read(spreadsheet=st.secrets["connections"]["gsheets"]["spreadsheet"])
+            
+            if "connections" in st.secrets and "gsheets" in st.secrets["connections"]:
+                spreadsheet_url = st.secrets["connections"]["gsheets"]["spreadsheet"]
+            elif "gsheets" in st.secrets and "spreadsheet" in st.secrets["gsheets"]:
+                spreadsheet_url = st.secrets["gsheets"]["spreadsheet"]
+            else:
+                spreadsheet_url = st.secrets.get("spreadsheet", "")
+
+            df_mostrar = conn.read(spreadsheet=spreadsheet_url)
             origen_datos = "Google Sheets (Tiempo Real)"
+            
+            if df_mostrar.empty or len(df_mostrar.columns) < 2:
+                raise ValueError()
+            df_mostrar = df_mostrar.dropna(how='all').loc[:, ~df_mostrar.columns.str.contains('^Unnamed')]
         except Exception:
-            # Si falla el internet o el token, tiramos del histórico de la sesión local
             if st.session_state.lista_solicitudes:
                 columnas_orden = [
                     "SN", "Submitted on", "Respondents", "Fecha del día", 
@@ -607,7 +609,6 @@ if check_password():
             
             st.dataframe(df_mostrar, use_container_width=True, hide_index=True)
             
-            # Creación del documento binario para Excel en memoria
             output = io.BytesIO()
             with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                 df_mostrar.to_excel(writer, index=False, sheet_name='Solicitud')
