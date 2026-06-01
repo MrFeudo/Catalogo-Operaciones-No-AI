@@ -4,3 +4,5 @@ openpyxl
 xlsxwriter
 google-generativeai
 st-gsheets-connection
+google-genai
+google-auth
