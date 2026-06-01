@@ -677,11 +677,6 @@ if check_password():
                     st.session_state.lista_solicitudes = []
                     st.rerun()
 
-¡Excelente! Vamos a integrar ese Disclaimer de forma que quede profesional, claro y visualmente diferenciado. Esto le da mucha seriedad a la herramienta y protege tanto al concesionario como a ti ante cualquier malentendido sobre la naturaleza orientativa de la IA.
-
-Aquí tienes el código modificado para tu bloque de la pantalla. He añadido un componente de st.warning específico para el aviso y he limpiado el flujo:
-
-Python
 # ==========================================
 # PANTALLA: CONSULTORIO TÉCNICO IA
 # ==========================================
