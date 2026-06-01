@@ -214,35 +214,54 @@ opcion_menu = st.sidebar.radio(
 # ==========================================
 def consultar_ia_garantias(descripcion_averia):
     """
-    Conecta con Gemini usando los secretos del robot para analizar la avería.
+    Función que lee la política de conocimiento local y procesa 
+    la consulta de garantía con Gemini.
     """
+    # 1. LEER TU ARCHIVO DE POLÍTICA (Ajusta el nombre/extensión real de tu archivo)
     try:
-        # Recuperamos las credenciales del robot de tus secrets
-        creds_dict = st.secrets["connections"]["gsheets"]
-        google_creds = service_account.Credentials.from_service_account_info(creds_dict)
-        
-        # Conectamos con el cliente de IA de Google
-        client = genai.Client(credentials=google_creds)
-        
-        # Le damos un rol ultra profesional a Gemini
-        prompt = f"""
-        Eres un Ingeniero de Soporte Técnico Senior y Gestor de Garantías para OMODA y JAECOO España.
-        Un concesionario oficial acaba de introducir la siguiente descripción de una avería en el sistema:
-        "{descripcion_averia}"
-        
-        Por favor, genera un informe de validación técnica estructurado exactamente así:
-        - **Categoría del Sistema**: [Motor / Transmisión / Chasis y Suspensión / Sistema Eléctrico / Carrocería / Infoentretenimiento]
-        - **Criticidad**: [Baja / Media / Alta]
-        - **Traducción Técnica (EN)**: [Resume y traduce la avería al inglés técnico para HQ]
-        - **Sugerencia de Diagnóstico**: [Escribe 1 o 2 líneas técnicas con lo que el mecánico debería comprobar primero en el taller]
-        """
-        
-        # Llamamos al modelo Gemini 2.5 Flash
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=prompt,
+        # Ejemplo si es un txt de texto plano:
+        with open("Politica_conocimiento.txt", "r", encoding="utf-8") as f:
+            politica_texto = f.read()
+    except Exception:
+        try:
+            # Ejemplo alternativo si es un Excel con hojas de política:
+            df_politica = pd.read_excel("Politica_conocimiento.xlsx")
+            politica_texto = df_politica.to_string()
+        except Exception:
+            politica_texto = "Siga los estándares generales de garantía de OMODA & JAECOO."
+
+    # 2. CONFIGURAR EL CLIENTE DE GEMINI
+    # Recuerda tener configurada tu API Key en el entorno (st.secrets o variable de entorno)
+    client = genai.Client()
+
+    # 3. CREAR EL PROMPT ESTRUCTURADO (RAG)
+    prompt_sistema = (
+        "Eres un Ingeniero de Garantías Senior para la red de dealers de OMODA & JAECOO. "
+        "Tu objetivo es analizar la avería reportada por el mecánico y determinar si está "
+        "cubierta por la garantía oficial basándote ESTRICTAMENTE en la política adjunta.\n\n"
+        f"--- POLÍTICA DE CONOCIMIENTO DE GARANTÍAS OMODA & JAECOO ---\n{politica_texto}\n\n"
+    )
+
+    prompt_usuario = (
+        f"El taller reporta la siguiente avería o consulta:\n'{descripcion_averia}'\n\n"
+        "Por favor, genera un informe estructurado con:\n"
+        "1. Categoría del Sistema afectado.\n"
+        "2. Criticidad.\n"
+        "3. ¿Entra en Garantía? (Justifica según la Política de Conocimiento).\n"
+        "4. Sugerencia de Diagnóstico técnico para el taller."
+    )
+
+    # 4. LLAMADA A GEMINI (Usando el modelo flash rápido y eficiente)
+    response = client.models.generate_content(
+        model='gemini-2.5-flash',
+        contents=prompt_usuario,
+        config=types.GenerateContentConfig(
+            system_instruction=prompt_sistema,
+            temperature=0.3, # Temperatura baja para que no invente reglas
         )
-        return response.text
+    )
+    
+    return response.text
         
     except Exception as e:
         return f"No se pudo conectar con el consultorio de IA. Error: {str(e)}"
@@ -688,9 +707,10 @@ if opcion_menu == "🧠 Consultorio Técnico IA":
         if descripcion_averia.strip() == "":
             st.warning("Por favor, escribe algo sobre la avería antes de consultar.")
         else:
-            with st.spinner("Conectando con el búnker de Google Cloud... Analizando avería..."):
+            with st.spinner("Analizando manuales y políticas de cobertura oficial..."):
+                # Aquí se ejecuta la magia leyendo tu archivo
                 resultado_diagnostico = consultar_ia_garantias(descripcion_averia)
             
-            st.success("¡Análisis completado con éxito!")
-            st.markdown("### 📋 Informe Técnico Generado")
+            st.success("¡Análisis de política completado!")
+            st.markdown("### 📋 Informe de Validación Técnica")
             st.info(resultado_diagnostico)
