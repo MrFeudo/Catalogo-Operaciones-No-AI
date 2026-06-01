@@ -214,58 +214,46 @@ opcion_menu = st.sidebar.radio(
 # ==========================================
 def consultar_ia_garantias(descripcion_averia):
     """
-    Función que lee la política de conocimiento local y procesa 
-    la consulta de garantía con Gemini.
+    Lee la política local y procesa la consulta con Gemini usando las credenciales del robot.
     """
-    # 1. LEER TU ARCHIVO DE POLÍTICA (Ajusta el nombre/extensión real de tu archivo)
     try:
-        # Ejemplo si es un txt de texto plano:
-        with open("Politica_conocimiento.txt", "r", encoding="utf-8") as f:
-            politica_texto = f.read()
-    except Exception:
+        # 1. Recuperamos credenciales del búnker
+        creds_dict = st.secrets["connections"]["gsheets"]
+        google_creds = service_account.Credentials.from_service_account_info(creds_dict)
+        client = genai.Client(credentials=google_creds)
+
+        # 2. Intentamos cargar la política (ajusta el nombre si es .txt o .xlsx)
         try:
-            # Ejemplo alternativo si es un Excel con hojas de política:
-            df_politica = pd.read_excel("Politica_conocimiento.xlsx")
-            politica_texto = df_politica.to_string()
-        except Exception:
-            politica_texto = "Siga los estándares generales de garantía de OMODA & JAECOO."
+            with open("Politica_conocimiento.txt", "r", encoding="utf-8") as f:
+                politica_texto = f.read()
+        except FileNotFoundError:
+            politica_texto = "Política no encontrada. Siga los estándares generales de garantía."
 
-    # 2. CONFIGURAR EL CLIENTE DE GEMINI
-    # Recuerda tener configurada tu API Key en el entorno (st.secrets o variable de entorno)
-    client = genai.Client()
-
-    # 3. CREAR EL PROMPT ESTRUCTURADO (RAG)
-    prompt_sistema = (
-        "Eres un Ingeniero de Garantías Senior para la red de dealers de OMODA & JAECOO. "
-        "Tu objetivo es analizar la avería reportada por el mecánico y determinar si está "
-        "cubierta por la garantía oficial basándote ESTRICTAMENTE en la política adjunta.\n\n"
-        f"--- POLÍTICA DE CONOCIMIENTO DE GARANTÍAS OMODA & JAECOO ---\n{politica_texto}\n\n"
-    )
-
-    prompt_usuario = (
-        f"El taller reporta la siguiente avería o consulta:\n'{descripcion_averia}'\n\n"
-        "Por favor, genera un informe estructurado con:\n"
-        "1. Categoría del Sistema afectado.\n"
-        "2. Criticidad.\n"
-        "3. ¿Entra en Garantía? (Justifica según la Política de Conocimiento).\n"
-        "4. Sugerencia de Diagnóstico técnico para el taller."
-    )
-
-    # 4. LLAMADA A GEMINI (Usando el modelo flash rápido y eficiente)
-    response = client.models.generate_content(
-        model='gemini-2.5-flash',
-        contents=prompt_usuario,
-        config=types.GenerateContentConfig(
-            system_instruction=prompt_sistema,
-            temperature=0.3, # Temperatura baja para que no invente reglas
+        # 3. Configuración del prompt con el conocimiento (RAG básico)
+        prompt_sistema = (
+            "Eres un Ingeniero de Garantías Senior para OMODA & JAECOO. "
+            "Usa estrictamente esta política para responder:\n"
+            f"{politica_texto}\n\n"
         )
-    )
-    
-    return response.text
-    
-except Exception as e:
-    return f"No se pudo conectar con el consultorio de IA. Error: {str(e)}"
 
+        prompt_usuario = (
+            f"Avería reportada: '{descripcion_averia}'\n\n"
+            "Genera un informe con: 1. Categoría, 2. Criticidad, 3. ¿Entra en Garantía? (Justifica), 4. Sugerencia de diagnóstico."
+        )
+
+        # 4. Llamada al modelo
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt_usuario,
+            config=types.GenerateContentConfig(
+                system_instruction=prompt_sistema,
+                temperature=0.3
+            )
+        )
+        return response.text
+
+    except Exception as e:
+        return f"Error en el consultorio de IA: {str(e)}"
 # ==========================================
 # 4. SISTEMA DE SEGURIDAD CONTRASEÑA
 # ==========================================
