@@ -491,53 +491,86 @@ if check_password():
                 if not vin or not operacion_solicitada:
                     st.error(txt["err_campos"])
                 elif len(vin) != 17:
-                    # Forzamos los 17 caracteres exactos para evitar que los mecánicos metan VINs incorrectos en Sheets
                     st.error("❌ Error: El número de bastidor (VIN) debe tener exactamente 17 caracteres.")
                 else:
                     ahora = datetime.datetime.now()
+                    columnas_orden = [
+                        "SN", "Submitted on", "Respondents", "Fecha del día", 
+                        "Marca del vehículo", "INTRODUCIR MODELO", "INTRODUCIR VIN", 
+                        "Mercado", "CÓDIGO DE PRODUCTO", "REFERENCIA DE PIEZA", 
+                        "OPERACIÓN QUE SE SOLICITA AÑADIR", "DEALER"
+                    ]
                     
-                    # Conexión remota con Google Sheets usando las credenciales del st.secrets
+                    # 1. Intentar conectar y leer el estado actual de la nube
                     try:
                         from streamlit_gsheets import GSheetsConnection
                         conn = st.connection("gsheets", type=GSheetsConnection)
                         
-                        # Leer los datos actuales de la nube para calcular el SN continuo
-                        df_cloud = conn.read(spreadsheet=st.secrets["connections"]["gsheets"]["spreadsheet"])
+                        # Extraer la URL del spreadsheet soportando diferentes estructuras de secrets.toml
+                        if "connections" in st.secrets and "gsheets" in st.secrets["connections"]:
+                            spreadsheet_url = st.secrets["connections"]["gsheets"]["spreadsheet"]
+                        elif "gsheets" in st.secrets and "spreadsheet" in st.secrets["gsheets"]:
+                            spreadsheet_url = st.secrets["gsheets"]["spreadsheet"]
+                        else:
+                            spreadsheet_url = st.secrets.get("spreadsheet", "")
+
+                        df_cloud = conn.read(spreadsheet=spreadsheet_url)
+                        
+                        if df_cloud.empty or len(df_cloud.columns) < 2:
+                            df_cloud = pd.DataFrame(columns=columnas_orden)
+                        else:
+                            # Limpiar columnas fantasma que a veces genera la lectura inicial
+                            df_cloud = df_cloud.dropna(how='all').loc[:, ~df_cloud.columns.str.contains('^Unnamed')]
+                        
                         nuevo_sn = len(df_cloud) + 1
-                    except Exception:
-                        # Fallback local si el componente no está listo o sincroniza lento
+                    except Exception as err_lectura:
                         nuevo_sn = len(st.session_state.lista_solicitudes) + 1
+                        df_cloud = pd.DataFrame(columns=columnas_orden)
+                        spreadsheet_url = ""
                     
+                    # 2. Estructurar la nueva fila
                     nueva_solicitud = {
-                        "SN": nuevo_sn,
-                        "Submitted on": ahora.strftime("%Y-%m-%d %H:%M:%S"),
-                        "Respondents": f"Dealer App ({dealer})",
-                        "Fecha del día": ahora.strftime("%Y-%m-%d"),
-                        "Marca del vehículo": marca,
-                        "INTRODUCIR MODELO": modelo_comercial,
-                        "INTRODUCIR VIN": vin,
+                        "SN": int(nuevo_sn),
+                        "Submitted on": str(ahora.strftime("%Y-%m-%d %H:%M:%S")),
+                        "Respondents": str(f"Dealer App ({dealer})"),
+                        "Fecha del día": str(ahora.strftime("%Y-%m-%d")),
+                        "Marca del vehículo": str(marca),
+                        "INTRODUCIR MODELO": str(modelo_comercial),
+                        "INTRODUCIR VIN": str(vin),
                         "Mercado": "Spain OJ",
-                        "CÓDIGO DE PRODUCTO": codigo_producto_auto,
-                        "REFERENCIA DE PIEZA": referencia if referencia else "NaN",
-                        "OPERACIÓN QUE SE SOLICITA AÑADIR": operacion_solicitada,
-                        "DEALER": dealer
+                        "CÓDIGO DE PRODUCTO": str(codigo_producto_auto),
+                        "REFERENCIA DE PIEZA": str(referencia) if referencia else "NaN",
+                        "OPERACIÓN QUE SE SOLICITA AÑADIR": str(operacion_solicitada),
+                        "DEALER": str(dealer)
                     }
                     
-                    # Guardamos tanto en local (session_state) como el intento de envío a la nube
+                    # Guardamos siempre una copia de seguridad en la sesión local
                     st.session_state.lista_solicitudes.append(nueva_solicitud)
                     
+                    # 3. Intentar subir los datos a Google Sheets
                     try:
-                        # Convertimos a DataFrame y actualizamos la hoja en la nube de Google Drive
                         df_nuevo = pd.DataFrame([nueva_solicitud])
-                        df_actualizado = pd.concat([df_cloud, df_nuevo], ignore_index=True) if 'df_cloud' in locals() else df_nuevo
                         
-                        conn.update(
-                            spreadsheet=st.secrets["connections"]["gsheets"]["spreadsheet"],
-                            data=df_actualizado
-                        )
-                        st.success(f"🚀 ¡Operación técnica Nº {nuevo_sn} subida a Google Sheets y guardada en histórico!")
+                        # Forzar a que ambos DataFrames tengan exactamente la misma estructura de columnas
+                        df_nuevo = df_nuevo.reindex(columns=columnas_orden)
+                        df_cloud = df_cloud.reindex(columns=columnas_orden)
+                        
+                        df_actualizado = pd.concat([df_cloud, df_nuevo], ignore_index=True)
+                        
+                        # Intentar la actualización remota
+                        if spreadsheet_url:
+                            conn.update(
+                                spreadsheet=spreadsheet_url,
+                                data=df_actualizado
+                            )
+                            st.success(f"🚀 ¡Operación técnica Nº {nuevo_sn} subida a Google Sheets con éxito!")
+                        else:
+                            raise ValueError("No se pudo localizar la URL del 'spreadsheet' en st.secrets")
+                            
                     except Exception as e:
-                        st.warning(f"⚠️ Guardado en caché local. (No se pudo subir a Google Sheets: {e})")
+                        # Si falla, imprimimos el error real para saber exactamente qué pasa con la API de Google
+                        st.error(f"❌ Error de conexión con Google Sheets: {e}")
+                        st.warning("⚠️ Los datos se han retenido en la Caché Local inferior de la pantalla para evitar pérdidas.")
                     
                     st.rerun()
 
