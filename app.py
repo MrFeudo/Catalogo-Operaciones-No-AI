@@ -677,16 +677,21 @@ if check_password():
                     st.session_state.lista_solicitudes = []
                     st.rerun()
 
+¡Excelente! Vamos a integrar ese Disclaimer de forma que quede profesional, claro y visualmente diferenciado. Esto le da mucha seriedad a la herramienta y protege tanto al concesionario como a ti ante cualquier malentendido sobre la naturaleza orientativa de la IA.
+
+Aquí tienes el código modificado para tu bloque de la pantalla. He añadido un componente de st.warning específico para el aviso y he limpiado el flujo:
+
+Python
 # ==========================================
 # PANTALLA: CONSULTORIO TÉCNICO IA
 # ==========================================
 if opcion_menu == "🧠 Consultorio Técnico IA":
-    st.title("🧠 Consultorio Técnico Inteligente")
-    st.write("Introduce los síntomas o la descripción de la avería de forma libre. La IA de OMODA & JAECOO analizará los datos para ofrecerte un pre-diagnóstico técnico.")
+    st.title("🧠 Consultorio Técnico de Garantías")
+    st.write("Introduce los síntomas o la descripción de la avería de forma libre. La IA de OMODA & JAECOO analizará los datos para ofrecerte un pre-diagnóstico técnico basado en la política oficial.")
 
     # Cuadro de texto amplio para el mecánico
     descripcion_averia = st.text_area(
-        "Describe la avería o introduce los códigos de error (DTC):",
+        "Describe la avería o la duda a consultar:",
         placeholder="Ej: El OMODA 5 hace un traqueteo metálico en la parte delantera derecha al girar a bajas revoluciones y ha encendido el testigo de motor...",
         height=150
     )
@@ -697,9 +702,21 @@ if opcion_menu == "🧠 Consultorio Técnico IA":
             st.warning("Por favor, escribe algo sobre la avería antes de consultar.")
         else:
             with st.spinner("Analizando manuales y políticas de cobertura oficial..."):
-                # Aquí se ejecuta la magia leyendo tu archivo
+                # Llamada a la función que ya contiene el disclaimer en el texto
                 resultado_diagnostico = consultar_ia_garantias(descripcion_averia)
             
             st.success("¡Análisis de política completado!")
+            
+            # Mostramos el informe
             st.markdown("### 📋 Informe de Validación Técnica")
             st.info(resultado_diagnostico)
+            
+            # Aviso Legal destacado (fuera del informe para que sea imposible ignorarlo)
+            st.divider()
+            st.warning("⚠️ **AVISO IMPORTANTE:**")
+            st.markdown(
+                "Esta respuesta ha sido generada por Inteligencia Artificial y tiene carácter **puramente orientativo**. "
+                "No constituye una respuesta oficial de la marca ni una aprobación vinculante de garantía. "
+                "Para cualquier gestión oficial, resolución de dudas o autorización de reparaciones, "
+                "debes contactar con el departamento de garantías en: **garantias@omodaes.com**"
+            )
