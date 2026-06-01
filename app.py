@@ -680,38 +680,38 @@ if check_password():
 # ==========================================
 # PANTALLA: CONSULTORIO TÉCNICO IA
 # ==========================================
-if opcion_menu == "🧠 Consultorio Técnico IA":
-    st.title("🧠 Consultorio Técnico de Garantías")
-    st.write("Introduce los síntomas o la descripción de la avería de forma libre. La IA de OMODA & JAECOO analizará los datos para ofrecerte un pre-diagnóstico técnico basado en la política oficial.")
+elif opcion_menu == "🧠 Consultorio Técnico IA":
+        st.title("🧠 Consultorio Técnico de Garantías")
+        st.write("Introduce los síntomas o la descripción de la avería de forma libre. La IA de OMODA & JAECOO analizará los datos para ofrecerte un pre-diagnóstico técnico basado en la política oficial.")
 
-    # Cuadro de texto amplio para el mecánico
-    descripcion_averia = st.text_area(
-        "Describe la avería o la duda a consultar:",
-        placeholder="Ej: El OMODA 5 hace un traqueteo metálico en la parte delantera derecha al girar a bajas revoluciones y ha encendido el testigo de motor...",
-        height=150
-    )
+        # Cuadro de texto amplio para el mecánico
+        descripcion_averia = st.text_area(
+            "Describe la avería o la duda a consultar:",
+            placeholder="Ej: El OMODA 5 hace un traqueteo metálico en la parte delantera derecha al girar a bajas revoluciones y ha encendido el testigo de motor...",
+            height=150
+        )
 
-    # Botón para lanzar la consulta
-    if st.button("Consultar con el Ingeniero IA"):
-        if descripcion_averia.strip() == "":
-            st.warning("Por favor, escribe algo sobre la avería antes de consultar.")
-        else:
-            with st.spinner("Analizando manuales y políticas de cobertura oficial..."):
-                # Llamada a la función que ya contiene el disclaimer en el texto
-                resultado_diagnostico = consultar_ia_garantias(descripcion_averia)
-            
-            st.success("¡Análisis de política completado!")
-            
-            # Mostramos el informe
-            st.markdown("### 📋 Informe de Validación Técnica")
-            st.info(resultado_diagnostico)
-            
-            # Aviso Legal destacado (fuera del informe para que sea imposible ignorarlo)
-            st.divider()
-            st.warning("⚠️ **AVISO IMPORTANTE:**")
-            st.markdown(
-                "Esta respuesta ha sido generada por Inteligencia Artificial y tiene carácter **puramente orientativo**. "
-                "No constituye una respuesta oficial de la marca ni una aprobación vinculante de garantía. "
-                "Para cualquier gestión oficial, resolución de dudas o autorización de reparaciones, "
-                "debes contactar con el departamento de garantías en: **garantias@omodaes.com**"
-            )
+        # Botón para lanzar la consulta
+        if st.button("Consultar con el Ingeniero IA"):
+            if descripcion_averia.strip() == "":
+                st.warning("Por favor, escribe algo sobre la avería antes de consultar.")
+            else:
+                with st.spinner("Analizando manuales y políticas de cobertura oficial..."):
+                    # Llamada a la función que ya contiene el disclaimer en el texto
+                    resultado_diagnostico = consultar_ia_garantias(descripcion_averia)
+                
+                st.success("¡Análisis de política completado!")
+                
+                # Mostramos el informe
+                st.markdown("### 📋 Informe de Validación Técnica")
+                st.info(resultado_diagnostico)
+                
+                # Aviso Legal destacado
+                st.divider()
+                st.warning("⚠️ **AVISO IMPORTANTE:**")
+                st.markdown(
+                    "Esta respuesta ha sido generada por Inteligencia Artificial y tiene carácter **puramente orientativo**. "
+                    "No constituye una respuesta oficial de la marca ni una aprobación vinculante de garantía. "
+                    "Para cualquier gestión oficial, resolución de dudas o autorización de reparaciones, "
+                    "debes contactar con el departamento de garantías en: **garantias@omodaes.com**"
+                )
