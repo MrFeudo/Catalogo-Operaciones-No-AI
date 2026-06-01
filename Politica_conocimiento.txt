@@ -1,243 +1,256 @@
 ===============================================================================
 BASE DE CONOCIMIENTO COMPLETA: POLÍTICAS DE POSTVENTA OMODA / JAECOO ESPAÑA
-Fuentes oficiales: 
-- Política de Garantías V1.03.26 ACTUAL.pdf (V1.1 - Marzo 2026)
-- POLÍTICA DE VEHÍCULOS DE CORTESÍA.pdf (Soluciones de Movilidad)
+Documentos Oficiales Integrados:
+- Política de Garantías OMODA/JAECOO España (V1.1 - Marzo 2026)
+- Guía Oficial de Soluciones de Movilidad y Flujos de Vehículos de Cortesía
 ===============================================================================
 
 -------------------------------------------------------------------------------
-DOCUMENTO 1: POLÍTICA DE GARANTÍAS (V1.1 - MARZO 2026)
+PARTE 1: POLÍTICA DE GARANTÍAS (V1.1 - MARZO 2026)
 -------------------------------------------------------------------------------
 
 SECCIÓN I - DISPOSICIONES GENERALES
-La presente Política de Garantías ha sido elaborada por OMODA MOTOR SPAIN, S.L. (la "MARCA") en relación con sus marcas comercializadas OMODA y JAECOO ("OMODA/JAECOO") con el objetivo de proporcionar a su Red Oficial de Concesionarios y Servicios Oficiales de Posventa (los "Servicios de Posventa") las directrices necesarias para la correcta aplicación y gestión de las garantías ofrecidas en los vehículos OMODA/JAECOO (los "Vehículos").
-* Confidencialidad: El contenido es confidencial y protegido por leyes de propiedad intelectual. No se permite compartir, divulgar, reproducir o distribuir a terceros sin consentimiento previo por escrito.
-* Normativa: Se rige por la normativa vigente aplicable en España. En caso de discrepancia entre esta Política y el Contrato Posventa firmado, prevalecerá lo establecido en el Contrato Posventa.
+La presente Política de Garantías ha sido elaborada por OMODA MOTOR SPAIN, S.L. (la "MARCA") en relación con sus marcas comercializadas OMODA y JAECOO con el objetivo de proporcionar a su Red Oficial de Concesionarios y Servicios Oficiales de Posventa (los "Servicios de Posventa") las directrices necesarias para la correcta aplicación y gestión de las garantías ofrecidas en los vehículos OMODA/JAECOO.
+* Confidencialidad Extrema: El contenido de este documento es estrictamente confidencial. No se permite compartir, divulgar, reproducir o distribuir a terceros ajenos a la red oficial sin consentimiento previo por escrito de la MARCA.
+* Marco Normativo: Se rige por la legislación vigente aplicable en España. En caso de cualquier discrepancia o conflicto entre esta Política y el Contrato Posventa firmado por el concesionario, prevalecerá siempre lo establecido en el Contrato Posventa.
 
 1.1 Responsabilidades de OMODA/JAECOO
-1.1.1 Garantía de los productos OMODA/JAECOO: Proporcionará una garantía comercial limitada a los Vehículos fabricados o suministrados por la MARCA, y compensará a los Servicios de Posventa por la reparación o reemplazo de las piezas bajo garantía legal o comercial. OMODA/JAECOO no asume ninguna otra garantía. Ningún Servicio de Posventa tiene derecho a asumir obligaciones adicionales en nombre de la MARCA; si lo hacen, asumirán el costo total.
-1.1.2 Especificación de las condiciones de garantía: Especifica las particularidades (periodo, tarifa de mano de obra y coste de compensación).
-1.1.3 Compensación: OMODA/JAECOO se compromete a compensar a los Servicios de Posventa de acuerdo con la tarifa acordada.
+1.1.1 Garantía de los productos: La MARCA proporcionará una garantía comercial limitada a los Vehículos fabricados o suministrados por ella, y compensará a los Servicios de Posventa por la reparación o reemplazo de las piezas bajo garantía legal o comercial. OMODA/JAECOO no asume ninguna otra garantía. Ningún Servicio de Posventa tiene derecho a asumir obligaciones o promesas adicionales en nombre de la MARCA; si lo hacen, asumirán el costo total de la reparación de su propio bolsillo.
+1.1.2 Especificación de las condiciones: La MARCA especifica las particularidades de la garantía (periodos, tarifas de mano de obra asignadas y costes de compensación).
+1.1.3 Compensación: OMODA/JAECOO se compromete a compensar a los Servicios de Posventa de acuerdo con la tarifa y tiempos (UT) previamente acordados y homologados.
 
 1.2 Responsabilidades de los Servicios de Posventa
 Los Servicios de Posventa proporcionarán servicios de garantía de manera oportuna, exhaustiva y profesional, asegurando que los Clientes sean tratados de manera educada y justa.
-1.2.1 Red de servicios: La MARCA establecerá y mantendrá una Red de Servicios de Posventa.
-1.2.2 Instalaciones y personal: Disponer de oficinas, instalaciones y sitios necesarios, y emplear un número suficiente de personal cualificado sujeto a formación continua.
-1.2.3 Equipos de servicio y utillaje: Poseer suficientes equipos y herramientas específicas de cada uno de los modelos establecidos por la MARCA.
-1.2.4 Formación: La MARCA proporcionará capacitación. Los Servicios de Posventa cumplirán con los estándares y normativa vigente.
-1.2.5 Piezas de repuesto originales: Hacer uso de piezas de recambio original y/o homologado por la MARCA. Almacenar suficientes piezas para satisfacer las demandas.
-1.2.7 Mantenimiento y servicio: Proporcionar mantenimiento, servicio regular y reparaciones de carrocería.
-1.2.8 Registro de servicio y revisión: Mantener registros históricos a través del sistema de garantías de la MARCA. Cualquier representante de OMODA/JAECOO tendrá derecho a auditar, revisar, verificar y/o copiar documentos.
-1.2.9 Evaluación del rendimiento del servicio: La MARCA evaluará la satisfacción del cliente, gestión, procedimientos, personal, PDI, recambios, herramientas y equipos. Si es deficiente, creará planes de acción.
+1.2.1 Red de servicios: La MARCA establecerá y mantendrá una Red de Servicios de Posventa autorizados.
+1.2.2 Instalaciones y personal: Disponer de oficinas, instalaciones y boxes necesarios, y emplear un número suficiente de personal técnico cualificado sujeto a la formación continua dictada por la MARCA.
+1.2.3 Equipos de servicio y utillaje: Poseer suficientes equipos de diagnosis y herramientas específicas de cada uno de los modelos establecidos por la MARCA.
+1.2.4 Formación: Los Servicios de Posventa cumplirán con los estándares de capacitación y normativa vigente impartida por HQ.
+1.2.5 Piezas de repuesto originales: Hacer uso exclusivo de piezas de recambio original y/o homologado por la MARCA. Almacenar suficientes piezas en su stock para satisfacer las demandas habituales del taller.
+1.2.7 Mantenimiento y servicio: Proporcionar mantenimiento, servicio regular y reparaciones de carrocería bajo los estándares de calidad de la MARCA.
+1.2.8 Registro de servicio y revisión: Mantener registros históricos exhaustivos a través del sistema informático de garantías de la MARCA. Cualquier representante de OMODA/JAECOO tendrá derecho a auditar, revisar, verificar y/o copiar estos documentos en cualquier momento.
+1.2.9 Evaluación del rendimiento: La MARCA evaluará la satisfacción del cliente (CSI), gestión, procedimientos, personal, calidad de PDI, recambios, herramientas y equipos. Si el rendimiento es deficiente, se obligará a crear planes de acción correctivos.
 
-1.3 Auditoría del negocio de servicios de los Servicios de Posventa
-Todos los registros, contabilidades, procedimientos de operación y datos de mantenimiento deben estar disponibles para verificación y auditoría por la MARCA en cualquier momento.
+1.3 Auditoría del negocio de servicios
+Todos los registros, contabilidades, órdenes de reparación (OR), hojas de fichajes y datos de mantenimiento deben estar disponibles para verificación y auditoría por la MARCA en cualquier momento y sin previo aviso.
 
 SECCIÓN II - POLÍTICAS DE RECEPCIÓN DE VEHÍCULOS, INSPECCIÓN E INVENTARIO
-OMODA/JAECOO solo asumirá responsabilidad por daños o falta de piezas previos a la recepción del Vehículo. Si no inspeccionan e informan adecuadamente los daños a la recepción, los Servicios de Posventa asumirán los costos. Los daños surgidos en el transporte terrestre no están cubiertos por la garantía de OMODA/JAECOO (se rigen por la Política de daños de transporte).
+OMODA/JAECOO solo asumirá responsabilidad por daños o falta de piezas previos a la recepción del Vehículo en la campa/concesionario. Si el personal del taller no inspecciona e informa adecuadamente de los daños a la recepción del camión portavehículos, los Servicios de Posventa asumirán íntegramente los costos de reparación. Los daños surgidos en el transporte terrestre no están cubiertos por la garantía ordinaria de OMODA/JAECOO (se rigen de forma independiente por la Política de daños de transporte).
 
 2.1 Elementos en garantía
-2.1.1 Ausencia de piezas o error: Cubierta la falta de piezas por negligencia o error durante la producción.
-2.1.2 Características o equipamiento incorrecto: Como norma general no se permite la sustitución de elementos. Contactar con el Departamento Comercial de OMODA/JAECOO.
+2.1.1 Ausencia de piezas o error: Queda cubierta la falta de piezas por negligencia o error durante la producción en fábrica.
+2.1.2 Características o equipamiento incorrecto: Como norma general no se permite la sustitución de elementos por desajustes de equipamiento de fábrica. Se debe contactar inmediatamente con el Departamento Comercial de OMODA/JAECOO.
 
 2.2 Pasos de recepción e inspección
-2.2.1 Recepción de Vehículos: Disponer de espacios adecuados para vehículos nuevos.
-2.2.2 Procedimientos de inspección: Persona encargada para verificar daños en transporte y ausencia de piezas. Seguir la última versión de la Política de daños de transporte comunicada por la marca.
+2.2.1 Recepción de Vehículos: Disponer de espacios adecuados y limpios para el desembarque de vehículos nuevos.
+2.2.2 Procedimientos de inspección: Designar una persona encargada para verificar visualmente daños en transporte y ausencia de piezas en el mismo momento de la descarga. Seguir la versión vigente de la Política de daños de transporte.
 
-2.3 Gestión del almacenamiento de Vehículos
-Los Servicios de Posventa son responsables de la protección y mantenimiento previo a la entrega al Cliente, por su cuenta y riesgo.
-2.3.1 Condiciones generales de conservación: Pavimentada dura, ambiente seco, ventilado, limpio y protegido del sol. Lejos de árboles, equipos eléctricos o mercancías inflamables si es al aire libre. Operaciones obligatorias de control:
-- Inspección de daños en transporte durante la recepción.
-- Desconexión de todos los aparatos eléctricos.
-- Cierre de puertas, ventanas, maletero y capó.
-- Desconexión del borne negativo de la batería.
-- Levantar limpiaparabrisas delanteros y trasero.
-- Mantenimiento de la presión de los neumáticos a un nivel superior de 3 BAR.
-2.3.2 Protección exterior del Vehículo: Limpiar suciedad antes de almacenar. Efectuar reparaciones necesarias en caso de decoloración o daños.
-2.3.3 Protección de los interiores del Vehículo: Ventanillas cerradas. Usar elementos secantes en lugares con calor y humedad extremos.
-2.3.4 Protección del motor: Poner en funcionamiento el motor térmico a un régimen superior a las 2000rpm durante al menos 10 minutos hasta alcanzar temperatura normal de funcionamiento, y revisar niveles. Mover hacia delante y atrás el vehículo para lubricar componentes y evitar problemas en neumáticos. Prueba de voltaje de batería. Operación obligatoria al menos una vez al mes con hoja de registro guardada.
+2.3 Gestión del almacenamiento de Vehículos (Stock de Campa/Concesionario)
+Los Servicios de Posventa son responsables de la protección y mantenimiento de los vehículos nuevos previo a la entrega al Cliente, por su cuenta y riesgo.
+2.3.1 Condiciones generales de conservación: Superficie pavimentada dura, ambiente seco, ventilado, limpio y protegido de la radiación solar directa. Lejos de árboles (por resina o aves), equipos eléctricos de alta tensión o mercancías inflamables. Operaciones obligatorias de control al recibir el stock:
+- Inspección exhaustiva de daños en transporte durante la recepción.
+- Desconexión de todos los aparatos eléctricos redundantes.
+- Cierre total de puertas, ventanas, maletero y capó.
+- Desconexión estricta del borne negativo de la batería de 12V.
+- Levantar los limpiaparabrisas delanteros y traseros para evitar deformaciones en la goma.
+- Mantenimiento de la presión de los neumáticos a un nivel superior de 3 BAR para evitar planos en la banda de rodadura.
+2.3.2 Protección exterior: Limpiar suciedad externa antes de almacenar. Efectuar reparaciones necesarias inmediatas en caso de detectar decoloración o daños corrosivos.
+2.3.3 Protección de los interiores: Ventanillas completamente cerradas. Usar elementos secantes (gel de sílice) en habitáculos si el almacenamiento coincide con épocas de calor y humedad extremos.
+2.3.4 Protección del motor: Poner en funcionamiento el motor térmico a un régimen superior a las 2.000 rpm durante al menos 10 minutos hasta alcanzar la temperatura normal de funcionamiento, y revisar niveles de fluidos. Mover hacia delante y hacia atrás el vehículo para lubricar componentes de la transmisión y evitar deformaciones en neumáticos. Realizar prueba de voltaje de batería de 12V. Esta operación es obligatoria al menos una vez al mes, debiendo quedar registrada en una hoja de control física guardada en el vehículo.
 
 2.4 Mantenimiento programado durante el almacenamiento
-2.4.1 Mantenimiento de almacenamiento mensual: Inspección mensual con hoja de registro guardada. Tareas obligatorias:
-- Abrir capó, conectar borne negativo y arrancar al menos 10 minutos hasta temperatura de funcionamiento para detectar anomalías y cargar batería de 12V.
-- Girar dirección completamente a ambos lados con el motor en marcha.
-- Apagar motor y retirar borne negativo.
-- Verificar presión de neumáticos > 3 BAR.
-- Mover el vehículo hacia delante y atrás.
-- Limpiar el vehículo para eliminar polvo y agentes externos.
-2.4.2 Mantenimiento de almacenamiento anual: Si están almacenados durante un año, realizar lo del apartado 2.4.1 más:
-- Verificar si hay envejecimiento en piezas de plástico y realizar mantenimiento de las mismas.
-- Realizar sustitución de aceite motor. Guardar hoja de registro.
+2.4.1 Mantenimiento mensual de almacenamiento: Inspección mensual obligatoria con hoja de registro firmada y guardada. Tareas obligatorias:
+- Abrir capó, conectar el borne negativo y arrancar el motor al menos 10 minutos hasta temperatura de funcionamiento para detectar anomalías y recargar la batería de 12V.
+- Girar la dirección completamente a ambos lados con el motor en marcha para mover el líquido hidráulico/asistencia.
+- Apagar motor y volver a retirar el borne negativo de la batería.
+- Verificar y reajustar presión de neumáticos por encima de 3 BAR.
+- Mover el vehículo de posición (hacia delante o atrás).
+- Limpiar externamente el vehículo para eliminar agentes externos corrosivos.
+2.4.2 Mantenimiento anual de almacenamiento: Si un vehículo permanece almacenado durante un año completo en las instalaciones, realizar lo estipulado en el apartado 2.4.1 más las siguientes acciones:
+- Verificar si hay envejecimiento o cuarteamiento en piezas de plástico/gomas exteriores y realizar mantenimiento protector de las mismas.
+- Realizar la sustitución obligatoria de aceite de motor y filtro. Archivar la hoja de registro firmada por el jefe de taller.
 
-SECCIÓN III - INSPECCIÓN Y ENTREGA DE VEHÍCULOS NUEVOS
-3.1 Obligaciones y responsabilidades de los Servicios de Posventa: Realizar PDI de acuerdo con el proceso estipulado a todos los vehículos de manera previa a la entrega. Designar técnicos cualificados. Realizar el registro de PDI cumplimentando el procedimiento.
-3.2 Documentación de la revisión de preentrega (PDI): Es obligatoria la existencia de una Orden de Reparación (OR) en cada proceso de PDI.
-3.3 Garantía PDI: Los daños identificados en PDI podrán ser reclamados a OMODA/JAECOO excepto:
-- Daños causados por transporte (reclamar a la empresa de transporte).
-- Problemas que debieran ser identificados en la revisión PDI y se manifiesten de manera posterior.
-- Problemas de calidad que puedan resolverse por ajuste.
-* Defectos en garantía detectados durante la entrega a cliente (no detectados en PDI): Reclamables siempre que se aporten en un plazo máximo de 24 horas laborables desde la entrega mediante pre-reclamación "reclamación PDI" incluyendo:
-- Evidencias del VIN y de los KM en el momento de la entrega.
-- Evidencias de los daños detectados (recopiladas en el momento de la entrega).
-- Cita para la reparación en un plazo de 24 horas laborables desde la entrega.
+SECCIÓN III - INSPECCIÓN Y ENTREGA DE VEHÍCULOS NUEVOS (PDI)
+3.1 Obligaciones y responsabilidades: Realizar la Revisión de Preentrega (PDI) de acuerdo con el manual técnico estipulado por la MARCA a absolutamente todos los vehículos de manera previa a la entrega al cliente final. Designar técnicos formados. Cumplimentar y firmar el registro físico/digital de PDI.
+3.2 Documentación de la PDI: Es obligatoria e inexcusable la apertura y cierre de una Orden de Reparación (OR) interna específica para cada proceso de PDI.
+3.3 Garantía PDI: Los daños de calidad identificados estrictamente durante la PDI podrán ser reclamados a OMODA/JAECOO excepto:
+- Daños causados directamente por el transporte terrestre (se deben reclamar a la empresa logística de transportes).
+- Problemas o fallos que por su naturaleza debieron ser identificados visual o técnicamente en la revisión PDI y se manifiesten con posterioridad a la entrega al cliente.
+- Problemas menores de calidad que puedan resolverse mediante un simple ajuste mecánico.
+* Defectos en garantía detectados durante el acto de entrega al cliente (no vistos en PDI): Serán reclamables a la marca siempre y cuando se reporten en un plazo máximo de 24 horas laborables desde la entrega mediante una pre-reclamación tipificada como "Reclamación PDI" que incluya obligatoriamente:
+- Evidencias fotográficas del VIN y del cuadro de instrumentos mostrando los KM exactos en el momento de la entrega.
+- Evidencias nítidas de los daños detectados recopiladas en el mismo momento de la entrega frente al cliente.
+- Apertura de una cita de taller para la reparación en un plazo máximo de 24 horas laborables desde la entrega.
 
-SECCIÓN IV - POLÍTICA DE GARANTÍA
-4.1 Descripción general: Garantía legal de 3 años de acuerdo con la Ley General 1/2007 para la Defensa de los Consumidores y Usuarios. Además, ofrece una Garantía Comercial limitada.
-4.1.1 Obligaciones de la MARCA: Usuarios dentro del Espacio Económico Europeo tienen derecho a la garantía siempre que exista servicio oficial en el país. Cubre defectos de diseño, fabricación y montaje que no permitan el correcto funcionamiento.
-4.1.2 Periodo de garantía: Comienza en la fecha de matriculación. Sujeta al tiempo y kilometraje del contrato de compra. Se transfiere al siguiente propietario el periodo restante si se vende el vehículo.
-4.1.3 Disposiciones sobre la garantía internacional: Servicios de Posventa aceptarán y tramitarán garantías de Vehículos Europeos. Si la política del país del EEE es diferente a la española, consultar a la MARCA antes de intervenir.
+SECCIÓN IV - POLÍTICA DE GARANTÍA COMERCIAL Y LEGAL
+4.1 Descripción general: Los vehículos disfrutan de la garantía legal de 3 años de acuerdo con la Ley General 1/2007 para la Defensa de los Consumidores y Usuarios en España. Adicionalmente, OMODA/JAECOO ofrece una Garantía Comercial limitada ampliada.
+4.1.1 Obligaciones de la MARCA: Los usuarios que circulen dentro del Espacio Económico Europeo (EEE) tienen derecho a la asistencia en garantía siempre que exista un servicio oficial establecido en dicho país. Cubre fallos de diseño, defectos de fabricación y errores de montaje de componentes que impidan el correcto funcionamiento del vehículo.
+4.1.2 Periodo de garantía: Comienza a computar exactamente en la fecha de primera matriculación del vehículo. Está sujeta al tiempo y kilometraje del contrato. Se transfiere de forma íntegra al siguiente propietario por el periodo remanente si el vehículo es vendido.
+4.1.3 Disposiciones sobre la garantía internacional: Los Servicios de Posventa españoles aceptarán y tramitarán las garantías de vehículos procedentes de otros países de la Unión Europea (EEE). Si la política de coberturas del país de origen del vehículo difiere de la española, es obligatorio consultar explícitamente al Departamento de Garantías de la MARCA antes de realizar cualquier intervención.
 
-4.2 Garantía Comercial para Vehículos nuevos
-* Periodo General OMODA/JAECOO: 7 años / 150.000 kilómetros (lo que ocurra primero), sin límite de kilometraje para los primeros 3 años.
-* Modelo OMODA 7 SHS: 8 años / 160.000 kilómetros (lo que ocurra primero), sin límite de kilometraje para los primeros 3 años.
-* Vehículos de Nuevas Energías (NEV) vendidos en España:
-- Motor de tracción, MCU (unidad de control del motor), VCU (unidad de control del vehículo) y conjunto de la batería (incluido BMS de HV): 8 años / 160.000 kilómetros (lo que ocurra primero).
-- Sustitución de batería HV por degradación de SOH (State of Health) cuando supere los límites:
+4.2 Coberturas de la Garantía Comercial para Vehículos Nuevos
+* Periodo General OMODA y JAECOO (Modelos térmicos/combustión): 7 años o 150.000 kilómetros (lo que ocurra primero). Excepción: Sin límite de kilometraje durante los primeros 3 años de vida del coche.
+* Modelo OMODA 7 SHS: 8 años o 160.000 kilómetros (lo que ocurra primero). Excepción: Sin límite de kilometraje durante los primeros 3 años de vida del coche.
+* Vehículos de Nuevas Energías (NEV / Eléctricos e Híbridos Enchufables) vendidos en España:
+- El motor de tracción eléctrica, la MCU (unidad de control del motor), la VCU (unidad de control del vehículo) y el conjunto completo de la batería de alta tensión (incluyendo el sistema de gestión de batería BMS de HV): 8 años o 160.000 kilómetros (lo que ocurra primero).
+- Sustitución de la batería de alta tensión por pérdida de capacidad o degradación del SOH (State of Health) cuando supere estrictamente los siguientes límites oficiales de la marca:
   • Degradación superior al 10% en un periodo de 2 años o 50.000 kilómetros.
   • Degradación superior al 20% en un periodo de 4 años o 100.000 kilómetros.
   • Degradación superior al 25% en un periodo de 8 años o 160.000 kilómetros.
-- Exclusión NEV: No seguir las indicaciones de carga pautadas o realizar mantenimiento incorrecto que provoque mayor degradación anula la conformidad de la garantía sobre la batería o elementos HV.
-- Cable de carga: La sustitución no está cubierta salvo que derive de una falta de conformidad del producto.
-4.2.1 Garante: OMODA/JAECOO ofrece la garantía conforme a este documento y el Manual de Garantía. Se reserva el derecho de modificar equipamientos sin obligación de aplicarlos a vehículos ya vendidos. Quedan amparados únicamente los elementos instalados originariamente. La decisión final sobre la aplicación es exclusiva de OMODA/JAECOO.
-4.2.2 Alcance de la garantía: Los Servicios de Posventa deben vender los Vehículos en un plazo de 9 meses. Si se sobrepasa, la garantía comercial comenzará a computar desde el noveno mes, debiendo el Servicio de Posventa asumir el coste de las reparaciones frente al Cliente por la diferencia de tiempo.
-Si a partir de 200 km o 1 semana (lo que ocurra primero) desde la entrega aparece un defecto que debió reportarse en PDI, el coste lo asume el Servicio de Posventa. Para desalineado de dirección, el periodo de asunción del taller se amplía a 1.000 km o 1 mes (lo que ocurra primero).
-4.2.3 Deberes y responsabilidades de los Clientes: Uso según Manual del Propietario. Mantener el Registro de Revisiones sin exceder en más de 30 días o 1.500 km (lo que antes ocurra) respecto al mantenimiento programado.
-4.2.4 Excepciones de Garantía (No cubierto):
-1. Uso y desgaste normales, tareas regulares de mantenimiento: limpieza, pulido, cambio de aceite, ajustes, lubricación, filtros, alineación de ruedas, corrección de neumáticos, baterías de arranque, bujías, correas, cinturones, discos o pastillas de freno, amortiguadores, escobillas, discos de embrague, bombillas, lámparas, fusibles, consumibles y fluidos (grasas, refrigerantes, aceites, líquidos hidráulicos, anticongelantes, combustibles).
-2. Elementos que muestren envejecimiento o desgaste normal.
-3. Vehículos con cambio deliberado en el kilometraje.
-4. Daños causados por: Falta de mantenimiento o no presentar justificantes; uso de piezas no originales o accesorios no suministrados por la marca sin calidad equivalente demostrable; uso inapropiado, negligencia, accidentes, robos, incendios, uso insuficiente o inadecuado de combustible, líquidos, batería o lubricante; carreras o circuito; sobrepasar pesos máximos; situaciones climatológicas adversas (granizo, inundaciones), contaminación atmosférica, ataque químico; escasez de fluidos; retrofitting o modificación inadecuada; daños por agentes externos en carrocería; ruidos o vibraciones menores que no afecten calidad; particularidades de diseño; vehículos reparados por el usuario; manipulación en transporte/almacenamiento del taller.
-5. Compensación por pérdida de tiempo o negocios.
-6. Defectos o retrasos en reparaciones causados por los Servicios de Posventa no dan derecho a resarcimiento ni extensión por parte de OMODA/JAECOO.
-7. Continuar usando el vehículo tras detectar una avería cuya naturaleza indique la necesidad de detenerlo inmediatamente.
-4.2.5 Obtención del servicio de garantía: Proporcionada por la marca. No se faculta a realizar operaciones de garantía a ningún centro no oficial de la MARCA.
+- Exclusión Crítica NEV: El incumplimiento de las indicaciones de carga pautadas en el manual, el uso de cargadores no homologados o realizar un mantenimiento incorrecto que provoque una degradación acelerada anula por completo la conformidad de la garantía sobre la batería de alta tensión y los elementos del sistema HV.
+- Cable de carga suministrado: La sustitución del cable de carga NO está cubierta por la garantía comercial, salvo que se demuestre de forma inequívoca que deriva de una falta de conformidad o defecto de fabricación de origen del propio componente.
 
-4.3 Garantía de pieza
-El período de garantía para cualquier pieza de repuesto o falta de conformidad distinta a las previstas será de 3 años de acuerdo con la Ley General 1/2007. Una pieza comprada por mostrador y no instalada en Servicio Oficial tendrá cobertura únicamente del componente (no cubre montaje ni daños a otros componentes). El fabricante garantizará disponibilidad de piezas por 10 años desde que el bien deje de fabricarse. El periodo de una pieza sustituida en garantía no excederá el periodo de garantía remanente del Vehículo.
+4.2.1 Garante y Decisiones: OMODA/JAECOO ofrece la garantía conforme a este documento y las condiciones del Manual de Garantía entregado al cliente. La MARCA se reserva el derecho de modificar o mejorar equipamientos en fábrica sin obligación alguna de aplicarlos a vehículos ya fabricados o vendidos. Quedan amparados únicamente los elementos e instalaciones originales de fábrica. La decisión final e inapelable sobre la aplicación, aprobación o rechazo de una garantía es competencia exclusiva de OMODA/JAECOO.
 
-4.4 Política de garantía de la pintura
-4.4.1 Periodo de garantía de la pintura: 3 años para defectos de pintura (pulverización excesiva, bajo brillo, diferencias de tonalidad, sombras moteadas, ojos de pez/hoyuelos y puntos de alfiler/poros). 12 años en caso de corrosión de la chapa metálica de la carrocería (peladuras, soldaduras defectuosas, ampollas, oxidación y corrosión).
-4.4.2 Exención de garantía de pintura (No cubierto): Corrosión de fuera hacia dentro; corrosión en los bajos; zonas que no sean chapa metálica; factores externos (granizo, inundaciones, excrementos de aves, contaminación química/férrica); objetos extraños (piedras, roces); daños en almacenamiento/transporte/utilización incorrectos (estacionamiento al aire libre a largo plazo); piezas reparadas tras golpe; modificaciones para fines especiales; retrasos en la limpieza; defectos menores (suciedad, arañazos, poros) que puedan repararse mediante encerado y pulido y no se detectaran en PDI.
+4.2.2 Alcance y la Regla de los 9 Meses de Almacenamiento: Los Servicios de Posventa tienen la obligación de vender y entregar los Vehículos nuevos en un plazo máximo de 9 meses desde la fecha de recepción del coche en sus instalaciones. Si un vehículo sobrepasa este límite de 9 meses almacenado sin ser vendido, la Garantía Comercial ampliada de la marca comenzará a computar automáticamente desde el noveno mes. En consecuencia, el Servicio de Posventa (concesionario) deberá asumir íntegramente de su bolsillo el coste de cualquier reparación en garantía frente al Cliente por la diferencia de tiempo hasta la fecha real de venta y matriculación.
+Defectos PDI post-entrega: Si a partir de los 200 km o de 1 semana transcurrida desde la entrega al cliente (lo que ocurra primero) aparece un defecto de calidad que debió ser detectado y solucionado en la revisión PDI, el coste total de la reparación lo asumirá el propio Servicio de Posventa. Para problemas de desalineado de dirección, el periodo de asunción obligatoria por parte del taller se amplía a 1.000 km o 1 mes desde la entrega (lo que ocurra primero).
 
-SECCIÓN V - PROCESO DE LIQUIDACIÓN DE RECLAMACIONES
-5.1 Comprobación de derecho a garantía: Confirmar en primer lugar si el vehículo se encuentra dentro del periodo de garantía.
-5.2 Descripción de la defecto o daño: Registrar la reclamación de manera literal y detallada (velocidad, estado de carretera, etc.). Debe coincidir con la Orden de Reparación (OR) y comenzar estrictamente con la estructura: "Cliente comenta", "Cliente manifiesta", "Según cliente" o "Cliente se queja", para no dar por hecho la existencia del defecto sin diagnóstico.
-5.3 Diagnosis del defecto o daño: Comprobar la existencia tras verificar la reclamación. Es obligatorio que exista al menos un fichaje de diagnóstico y otro de montaje registrado por reloj de fichaje digital por parte del técnico.
-5.4 Adjuntos a la reclamación y toma evidencias: Evidencias claras y concisas. En caso de ruido: video adjunto. En caso de rotura: imágenes. En caso de anomalía eléctrica: datos de la herramienta de diagnóstico (DTC) o pruebas con utillaje (multímetro). Archivos obligatorios a recopilar y adjuntar en el sistema:
-- Orden de reparación (OR) original escaneada con firma del Cliente.
-- Evidencias de la anomalía.
-- Fotografía del número de bastidor (VIN).
-- Fotografía del cuadro con el kilometraje.
-5.5 Tramitación de trabajos subcontratados: Podrán reclamarse mediante aprobación previa (pre-reclamación) en el sistema. Los gastos estarán sujetos al coste real del subcontratado externo (rectificados, tapiceros, etc.) pero nunca excederán el precio establecido por OMODA/JAECOO. Si usan piezas, las suministrará el Servicio de Posventa.
-5.6 Aprobaciones previas: Es obligatorio solicitar una aprobación previa (pre-reclamación) a través del sistema para:
-- Operaciones que superen el importe de 1.000 €.
-- Operaciones que requieran algún trabajo subcontratado.
-- Reparaciones de carrocería.
+4.2.3 Deberes del Cliente: Utilizar el vehículo siguiendo las pautas del Manual del Propietario. Es obligatorio realizar y mantener el Registro de Revisiones de mantenimiento en la Red Oficial sin exceder bajo ningún concepto el límite programado por más de 30 días naturales o 1.500 kilómetros (lo que antes ocurra) respecto a los intervalos establecidos.
 
-SECCIÓN VI - PRESENTACIÓN DE LA RECLAMACIÓN DE GARANTÍA
-6. Envío de la reclamación
-6.1.1 Plazo de presentación de la reclamación: Norma general de un máximo de 7 días hábiles tras finalizar la reparación (último fichaje del técnico). Toda garantía rechazada o devuelta por la marca debe ser respondida por el taller en un plazo de 5 días hábiles.
-6.1.2 Plazo de reparación tras la aceptación de aprobación previa: Si requiere aprobación previa, el plazo se amplía a 10 días hábiles para reclamar la garantía. Si hay retrasos por la llegada de la pieza, contactar con la MARCA.
-6.1.3 Registros de anomalías de carácter especial: Durante los primeros 6 meses del vehículo, las anomalías especiales relacionadas con la seguridad y el grupo motor propulsor deben registrarse en el sistema dentro de las 24 horas posteriores a la identificación por el técnico. No se admitirá la reclamación sin dicho registro. Una vez enviado, debe reclamarse en el periodo habitual de 3 días hábiles posteriores.
+4.2.4 Excepciones de Garantía (Elementos NO cubiertos):
+1. Uso, desgaste normal y operaciones regulares de mantenimiento: Tareas de limpieza, pulido, cambios de aceite, ajustes de componentes, lubricación, sustitución de filtros, alineación de ruedas, equilibrado de neumáticos, baterías de arranque de 12V, bujías, correas auxiliares, cinturones de seguridad, discos de freno, pastillas de freno, amortiguadores, escobillas de limpiaparabrisas, discos de embrague, bombillas, lámparas, fusibles, consumibles y fluidos de cualquier tipo (grasas, refrigerantes, aceites de motor o transmisión, líquidos de frenos o hidráulicos, anticongelantes, aditivos y combustibles).
+2. Elementos estéticos o mecánicos que muestren signos obvios de envejecimiento natural o desgaste por uso.
+3. Vehículos que presenten una alteración o cambio deliberado/manipulación en el kilometraje del cuadro de instrumentos.
+4. Daños causados directamente por: Falta de mantenimiento regular o no presentar las facturas justificantes de las revisiones; uso de piezas de recambio no originales o accesorios no suministrados por la marca sin calidad equivalente demostrable; uso inapropiado del vehículo, negligencia, accidentes, robos, incendios, uso insuficiente o inadecuado de combustibles, líquidos, carga incorrecta de batería o lubricantes no homologados; participación en carreras, circuitos o conducción deportiva extrema; sobrepasar los pesos máximos de carga autorizados; situaciones climatológicas extremas adversas (granizo, inundaciones, rayos), contaminación atmosférica industrial, ataques químicos o resinas; escasez o circular sin fluidos; retrofitting o modificaciones inadecuadas de software/hardware; daños por impactos de agentes externos en la carrocería; ruidos o vibraciones menores que no afecten a la calidad de conducción ni a la función del componente; particularidades propias del diseño del vehículo; vehículos reparados o manipulados previamente por el propio usuario o talleres independientes; negligencia o manipulación incorrecta en el transporte/almacenamiento del coche por parte del taller.
+5. Compensación por pérdidas indirectas, pérdida de tiempo, costes de alojamiento, transporte alternativo no autorizado o pérdidas de negocios debidas a la inmovilización de un vehículo.
+6. Defectos, errores o retrasos en las reparaciones causados directamente por la mala gestión de los Servicios de Posventa no darán derecho a resarcimiento ni a la extensión del periodo de garantía por parte de OMODA/JAECOO.
+7. Continuar circulando con el vehículo tras haberse encendido un testigo crítico de avería o haberse detectado una anomalía cuya naturaleza técnica indique la necesidad de detener el vehículo de forma inmediata para evitar males mayores.
 
-SECCIÓN VII - POLÍTICA DE PAGO DE RECLAMACIONES EN GARANTÍA
-7.1 Compensación de reparaciones: Gastos de materiales, tiempo de mano de obra, materiales auxiliares necesarios y Comisión por Gestión.
-7.1.1 Compensación por Subcontratado: Sujeto a los gastos reales sin exceder el precio establecido por la marca.
-7.2 Compensación por Mano de Obra: El precio por unidad de tiempo ("UT") se multiplicará por el precio unitario por hora. Fórmula: si la mano de obra es de 30€/h y la operación es de 110 UT, el importe es: (110 / 100) * 30 = 33€. Nota explícita: 1 hora = 100 UT.
-7.2.1 Determinación de la tarifa de mano de obra: Cumplimentar el formulario de estudio de tarifa con 3 meses de antelación al cumplimiento anual o cuando sea solicitado. Si no se presenta, OMODA/JAECOO estipulará la tarifa. Basado en la tarifa abonada por el Cliente. Si hay discrepancias, la marca puede cambiar la tarifa y recuperar excesos.
-7.2.2 Investigación de precios de mercado: Formulario con información de al menos 2 empresas de la competencia (datos públicos de mano de obra de vehículos similares). La marca analizará y establecerá la tarifa informando en un plazo máximo de un mes.
-7.2.3 Cálculo tasa de mano de obra: Referencia de las últimas 20 facturas consecutivas abonadas por Cliente (PVP aplicando descuentos). Se aplica un porcentaje y se pueden sumar incentivos KPI ("Warranty Claim Rate"): Tasa mano de obra en garantía = %PVP + Warranty Claim Rate. Para nuevos servicios sin histórico, se calcula en base a su PVP y media del mercado.
-7.3 Comisión de gestión: Se aplica un 10% de incremento por pieza con un máximo de 85 € por garantía.
-7.5 Proceso de Compensación: Mensual tras revisar el mes anterior. Objeciones del taller en un plazo máximo de 3 días hábiles.
+4.3 Garantía de recambios y piezas de repuesto
+El período de garantía para cualquier pieza de repuesto original comprada de forma independiente y que presente una falta de conformidad será de 3 años, conforme a la Ley General 1/2007. Si una pieza es comprada por mostrador (recambio directo) y es instalada fuera de un Servicio Oficial, la garantía cubrirá única y exclusivamente el componente físico defectuoso (quedando totalmente excluido el abono de la mano de obra de montaje, el diagnóstico o los daños derivados que cause a otros componentes del vehículo). El fabricante garantiza la disponibilidad de piezas de repuesto durante un periodo de 10 años desde que el modelo en cuestión deje de fabricarse de forma oficial. El periodo de garantía de una pieza sustituida de forma gratuita dentro de una reparación en garantía finalizará exactamente el mismo día en que expire la garantía remanente original del Vehículo.
 
-SECCIÓN VIII - GESTIÓN DE PIEZAS
-8.1 Deberes y responsabilidades de OMODA/JAECOO: Derecho de propiedad de las piezas sustituidas; derecho a verificar las piezas en el periodo de almacenamiento; derecho a exigir la destrucción; derecho a evaluar y revisar la gestión del almacenamiento y destrucción.
-8.2 Deberes y responsabilidades de los Servicios de Posventa: Almacenar o destruir según instrucciones siguiendo leyes locales. Cooperar en el análisis. Seguir normas de verificación definidas. Obligación de destruir las piezas al pasar el periodo obligatorio. Derecho a solicitar conservación excepcional para enseñanza.
-8.3 Normas de gestión de las piezas sustituidas
-8.3.1 Almacenamiento de las piezas sustituidas: Habilitar espacio específico, señalizado con el logotipo de OMODA/JAECOO, con estanterías y menaje acorde. Almacenadas divididas por meses y debidamente identificadas con copia de la garantía impresa o etiqueta adherida a la pieza.
-8.3.2 Período de almacenamiento de las piezas reclamadas: Conservación obligatoria durante 3 meses a partir de la aprobación de la garantía. Si el almacén está saturado se puede solicitar destrucción excepcional. Las piezas no podrán permanecer en el almacén más de 7 meses.
+4.4 Política de garantía para pintura y carrocería
+4.4.1 Periodos de cobertura: Se otorgan 3 años de garantía para defectos directos de pintura originados en fábrica (tales como pulverización excesiva, bajo brillo, marcadas diferencias de tonalidad, sombras moteadas, ojos de pez o hoyuelos, y puntos de alfiler o poros en la laca). Se otorgan 12 años de garantía en caso de corrosión perforante de la chapa metálica de la carrocería (que provoque peladuras de pintura, soldaduras defectuosas de estructura, ampollas de óxido, oxidación interna y corrosión de dentro hacia fuera de los paneles).
+4.4.2 Exclusiones de la garantía de pintura: Casos de corrosión de fuera hacia dentro (provocada por arañazos o golpes externos); corrosión localizada en los bajos del vehículo; óxido en zonas que no sean chapa metálica (elementos plásticos, molduras, cromados); daños causados por factores externos (granizo, inundaciones, lluvia ácida, excrementos de aves, contaminación química o férrica industrial); impactos de objetos extraños (piedras de la carretera, roces de aparcamiento); daños derivados de un almacenamiento, transporte o utilización incorrectos (como el estacionamiento prolongado al aire libre a largo plazo bajo condiciones extremas sin protección); piezas que hayan sido reparadas o repintadas tras un accidente en talleres no oficiales; modificaciones de carrocería para fines especiales; retrasos negligentes del cliente en la limpieza de agentes corrosivos; defectos menores superficiales (suciedad leve, microrayas, poros mínimos) que puedan ser eliminados mediante un proceso estándar de encerado y pulido en el concesionario y que no se hubieran detectado o reportado en el PDI.
 
-SECCIÓN IX - AUDITORÍAS
-OMODA/JAECOO se reserva el derecho de realizar auditorías de los procesos de garantía, pudiendo aplicar penalizaciones en casos de incumplimientos de procesos o políticas.
+SECCIÓN V - PROCESO DE LIQUIDACIÓN Y TRAMITACIÓN DE RECLAMACIONES
+5.1 Verificación previa: El tramitador de garantías debe comprobar obligatoriamente en el sistema que el vehículo se encuentra dentro del periodo de garantía (por fecha y kilómetros) antes de iniciar cualquier reparación.
+5.2 Descripción del defecto: Registrar la reclamación de manera literal, detallada y objetiva en el sistema (indicando velocidad a la que ocurre, temperatura exterior, estado de la carretera, etc.). Esta descripción debe coincidir fielmente con lo redactado en la Orden de Reparación (OR) firmada por el cliente. La descripción del receptor debe comenzar estrictamente con alguna de las siguientes estructuras de texto: "Cliente comenta", "Cliente manifiesta", "Según cliente" o "Cliente se queja". Esto es obligatorio para no dar por sentada la existencia del defecto técnico antes de que el técnico realice la diagnosis oficial.
+5.3 Diagnosis técnica: Comprobar físicamente la existencia de la anomalía tras verificar la queja del cliente. Es obligatorio que en el sistema de gestión del taller conste registrado al menos un fichaje digital de diagnóstico y otro fichaje independiente de desmontaje/montaje mediante el reloj de fichaje digital por parte del técnico asignado.
+5.4 Evidencias y adjuntos obligatorios: Las evidencias deben ser claras, nítidas y concisas. En caso de ruidos o fallos intermitentes, es obligatorio adjuntar un vídeo con audio claro. En caso de roturas o defectos visuales, imágenes enfocadas con escala. En caso de anomalías eléctricas o de software, es obligatorio adjuntar el informe completo de la herramienta de diagnosis oficial mostrando los códigos de error (DTC) o capturas de pruebas con utillaje físico (multímetro/osciloscopio). Documentos contractuales obligatorios a adjuntar escaneados en cada reclamación:
+- Orden de Reparación (OR) original de apertura escaneada, debidamente cumplimentada y con la firma física del Cliente.
+- Evidencias técnicas de la anomalía (fotos, vídeos o informes de diagnosis).
+- Fotografía nítida del número de bastidor (VIN) troquelado en el vehículo.
+- Fotografía del cuadro de instrumentos mostrando los kilómetros exactos del vehículo al entrar al taller.
+5.5 Trabajos subcontratados externos: Los servicios externos (como trabajos de tapicería, rectificados de culata, reparaciones especializadas de llantas, etc.) podrán reclamarse a la marca mediante el proceso de aprobación previa (pre-reclamación) en el sistema. Los importes abonables estarán sujetos al coste neto real de la factura del subcontratado, pero bajo ningún concepto podrán exceder el precio máximo por hora o baremo establecido para ese tipo de trabajo por OMODA/JAECOO. Si el trabajo requiere piezas de repuesto, estas deberán ser suministradas obligatoriamente por el Servicio de Posventa oficial desde su stock homologado.
+5.6 Operaciones que requieren Aprobación Previa Obligatoria (Pre-reclamación): Es obligatorio e inexcusable solicitar y obtener una autorización previa de Central a través del sistema antes de iniciar la reparación en los siguientes escenarios:
+- Cualquier operación o conjunto de operaciones cuyo importe total estimado (materiales + mano de obra) supere los 1.000 €.
+- Cualquier operación que requiera la intervención de un trabajo subcontratado externo.
+- Absolutamente todas las reparaciones que impliquen trabajos de carrocería o pintura estructural en garantía.
 
-SECCIÓN X - DATOS DE CONTACTO
-Para cualquier consulta o incidencia relacionada con la garantía contactar con: garantias@omodaes.com
+SECCIÓN VI - PLAZOS DE PRESENTACIÓN DE RECLAMACIONES
+6.1.1 Plazo ordinario de presentación: Las reclamaciones de garantía deben ser enviadas a través del sistema en un plazo máximo improrrogable de 7 días hábiles tras la finalización física de la reparación (tomando como referencia la fecha y hora del último fichaje digital del técnico en la OR). Toda reclamación que sea devuelta o rechazada temporalmente por los auditores de la marca para subsanar errores debe ser respondida, corregida y reenviada por el taller en un plazo máximo de 5 días hábiles.
+6.1.2 Plazo tras aceptación de Pre-reclamación: Si la operación disponía de una aprobación previa autorizada, el taller dispone de un plazo ampliado de hasta 10 días hábiles desde la finalización de la reparación para subir la reclamación definitiva al sistema. En caso de sufrir retrasos críticos por la llegada de los recambios desde la central, el taller debe documentarlo y contactar inmediatamente con la MARCA para congelar el plazo.
+6.1.3 Anomalías de carácter especial (Seguridad y Motor): Durante los primeros 6 meses de vida o uso del vehículo desde su entrega, cualquier anomalía detectada de carácter especial que esté directamente relacionada con la seguridad activa/pasiva de los ocupantes o con fallos graves del grupo motopropulsor (motor/transmisión) debe ser registrada obligatoriamente en el sistema dentro de las 24 horas posteriores a su identificación por el técnico. No se admitirá a trámite ninguna reclamación económica si no se cumple este pre-registro de seguridad. Una vez enviado este pre-registro de 24h, el taller deberá enviar la reclamación económica definitiva en el periodo habitual de los 3 días hábiles posteriores.
+
+SECCIÓN VII - POLÍTICA DE COMPENSACIÓN ECONÓMICA Y TARIFAS
+7.1 Conceptos abonables: La MARCA compensará al taller los gastos justificados de materiales (recambios), el tiempo de mano de obra según baremo oficial, los materiales auxiliares directos necesarios y la correspondiente Comisión por Gestión de recambios.
+7.1.1 Compensación de Subcontratados: Se abonará el coste neto real de la factura del proveedor externo sin sobrepasar los límites de la marca y adjuntando la factura original escaneada.
+7.2 Cálculo de la Mano de Obra (UT): El tiempo de las operaciones se mide en Unidades de Tiempo ("UT"). La norma explícita e invariable de la marca establece que 1 hora completa equivale a 100 UT (es decir, 1 hora = 100 UT). El importe de mano de obra se calcula multiplicando las UT del baremo entre 100 y multiplicándolo por la tarifa horaria aprobada del taller. 
+Fórmula matemática de ejemplo: Si un taller tiene una tarifa aprobada de 30 €/hora y realiza una operación de baremo estipulada en 110 UT, el importe total a percibir por mano de obra se calcula mediante la fórmula:
+$$\text{Importe Mano de Obra} = \left(\frac{110}{100}\right) \times 30 = 33\text{ €}$$
+
+7.2.1 Proceso de determinación de la tarifa horaria: El Servicio de Posventa debe cumplimentar y enviar el formulario oficial de estudio de tarifa horaria con una antelación mínima de 3 meses antes del cumplimiento de la anualidad de su contrato, o en cualquier momento en que sea expresamente solicitado por los auditores de la marca. Si el taller no presenta este estudio documentado en los plazos exigidos, OMODA/JAECOO estipulará de forma unilateral y fija la tarifa aplicable. Dicha tarifa debe estar basada y justificada rigurosamente en la tarifa real que el taller cobra habitualmente a sus clientes particulares de la calle (clientes comerciales/PVP). Si se detectan discrepancias o falsedad documental en las facturas cliente aportadas, la MARCA se reserva el derecho de modificar retroactivamente la tarifa y recuperar los excesos abonados.
+7.2.2 Investigación de mercado: El formulario de solicitud de tarifa debe incluir obligatoriamente una investigación de precios de mercado detallando la información pública de tarifas de mano de obra de al menos 2 empresas de la competencia directa de su zona geográfica que den servicio a vehículos de marcas similares. La MARCA analizará la documentación y establecerá la tarifa definitiva informando oficialmente al concesionario en un plazo máximo de un mes.
+7.2.3 Cálculo matemático de la tasa de mano de obra en garantía: Para calcular la tasa base, se tomará como referencia estricta el precio medio neto cobrado en las últimas 20 facturas consecutivas abonadas por clientes particulares (PVP) aplicando los descuentos comerciales habituales. A esta tasa base calculada se le aplicará un porcentaje corrector y se le podrán sumar incentivos o pluses económicos variables basados en el cumplimiento de los indicadores clave de rendimiento (KPI), tales como el "Warranty Claim Rate" (calidad y ratio de aprobación de reclamaciones a la primera). 
+Fórmula conceptual del cálculo de tasa: 
+$$\text{Tasa de Mano de Obra en Garantía} = \%\text{PVP Medio Neto} + \text{Warranty Claim Rate}$$
+Para aquellos servicios oficiales de nueva apertura que no dispongan de un histórico de 20 facturas cliente consecutivas, la MARCA calculará una tarifa provisional basándose en su PVP declarado y realizando una media ponderada con el mercado de la zona.
+7.3 Comisión de Gestión de Recambios: Se reconocerá al taller un concepto de comisión por gestión equivalente a un incremento del 10% sobre el coste del material de recambio original sustituido, estableciéndose un tope máximo absoluto de abono de 85 € por cada reclamación de garantía aprobada.
+7.5 Periodo de liquidación y objeciones: El proceso de consolidación y compensación económica se realizará de forma mensualizada, revisando y aprobando las reclamaciones del mes inmediatamente anterior. Una vez emitido el extracto mensual por la marca, el taller dispone de un plazo máximo improrrogable de 3 días hábiles para presentar objeciones o reclamar discrepancias en los importes; pasado ese plazo, el extracto se considerará definitivo y cerrado.
+
+SECCIÓN VIII - GESTIÓN Y CUSTODIA DE PIEZAS SUSTITUIDAS
+8.1 Derechos de la MARCA: OMODA/JAECOO ostenta el derecho de propiedad absoluto sobre todas las piezas y componentes que hayan sido sustituidos en garantía y abonados al taller. La MARCA tiene pleno derecho a: verificar y registrar las piezas físicamente en el almacén de chatarra del taller en cualquier momento; exigir el envío físico de determinadas piezas a la central para su análisis de ingeniería; ordenar la destrucción física certificada de las mismas; auditar y evaluar los procedimientos de almacenamiento, etiquetado y destrucción del taller.
+8.2 Deberes del taller: Almacenar, custodiar con diligencia o destruir las piezas siguiendo estrictamente las instrucciones escritas de la marca y cumpliendo escrupulosamente con las leyes medioambientales y de reciclaje locales. Cooperar activamente con los ingenieros de calidad en el análisis de componentes defectuosos. El taller tiene la obligación de destruir físicamente las piezas una vez haya expirado el periodo obligatorio de retención. Dispone del derecho a solicitar por escrito una autorización de conservación excepcional de una pieza específica con fines exclusivamente pedagógicos o de formación interna de sus técnicos.
+8.3 Normas de almacenamiento en taller
+8.3.1 Requisitos del almacén de piezas sustituidas: Los Servicios de Posventa deberán habilitar obligatoriamente dentro de sus instalaciones un espacio físico específico, cerrado y seguro para almacenar las piezas sustituidas en garantía. Este espacio habilitado debe estar perfectamente identificado y señalizado de forma visible con el logotipo oficial de OMODA/JAECOO. Debe disponer de estanterías, contenedores y menaje organizativo acorde al volumen habitual de recambios del taller. Las piezas deben estar almacenadas y divididas de forma estricta por meses de aprobación y cada pieza individual debe estar perfectamente identificada teniendo adherida de forma física e inseparable una copia de la reclamación de garantía impresa o una etiqueta identificativa con el VIN, número de OR y código de pieza.
+8.3.2 Período obligatorio de almacenamiento de seguridad: Todas las piezas sustituidas deben conservarse bajo estricta custodia durante un período obligatorio mínimo de 3 meses, a contar exactamente desde la fecha en que la reclamación de garantía fue aprobada económicamente en el sistema por la marca. Si el almacén del taller sufre una saturación crítica de espacio, el jefe de taller podrá solicitar de manera excepcional y por escrito a Central una autorización de destrucción anticipada. Bajo ninguna circunstancia se permite que las piezas permanezcan almacenadas en el taller por un periodo superior a los 7 meses desde su sustitución.
+
+SECCIÓN IX - AUDITORÍAS Y PENALIZACIONES
+OMODA/JAECOO se reserva el derecho de realizar auditorías e inspecciones físicas o virtuales de todos los procesos, fichajes, almacenamiento de piezas y facturaciones de garantía de los talleres en cualquier momento. El incumplimiento de cualquiera de los procesos, la falta de firmas en las OR, la ausencia de fichajes digitales, el almacenamiento incorrecto de piezas o la detección de datos falsificados facultará a la MARCA a aplicar penalizaciones económicas inmediatas, retirar el derecho a la garantía de las reparaciones afectadas y realizar cargos de devolución de importes ya abonados.
+
+SECCIÓN X - DATOS DE CONTACTO OFICIALES DE CENTRAL
+Para cualquier consulta técnica, duda de cobertura o incidencia con la plataforma del sistema de garantías, contactar exclusivamente a través del correo electrónico: garantias@omodaes.com
 
 -------------------------------------------------------------------------------
-DOCUMENTO 2: SOLUCIONES DE MOVILIDAD / VEHÍCULOS DE CORTESÍA
+PARTE 2: GUÍA DE SOLUCIONES DE MOVILIDAD / VEHÍCULOS DE CORTESÍA
 -------------------------------------------------------------------------------
 
-NÚMERO DE VEHÍCULOS DE CORTESÍA POR CONCESIONARIO
-El número de vehículos de cortesía será estrictamente proporcional al número de técnicos de OMODA por concesionario según la siguiente tabla:
-- 1 Técnico = 1 Vehículo de cortesía
-- 2 Técnicos = 2 Vehículos de cortesía
-- 3 Técnicos = 3 Vehículos de cortesía
-- 4 Técnicos = 4 Vehículos de cortesía
-- N Técnicos = N Vehículos de cortesía (N = Número de técnicos / vehículos de cortesía).
+NÚMERO DE VEHÍCULOS DE CORTESÍA AUTORIZADOS POR FLOTA
+El dimensionamiento de la flota de vehículos de cortesía propios de cada concesionario oficial está ligado de forma estrictamente proporcional al número de técnicos mecánicos productivos contratados y asignados en exclusiva a la marca OMODA en dicho taller, calculándose de forma invariable en base a la siguiente tabla de equivalencias:
+- 1 Técnico Mecánico OMODA = 1 Vehículo de cortesía en flota.
+- 2 Técnicos Mecánicos OMODA = 2 Vehículos de cortesía en flota.
+- 3 Técnicos Mecánicos OMODA = 3 Vehículos de cortesía en flota.
+- 4 Técnicos Mecánicos OMODA = 4 Vehículos de cortesía en flota.
+- N Técnicos Mecánicos OMODA = N Vehículos de cortesía en flota (Fórmula matemática directa: $N \text{ Técnicos} = N \text{ Vehículos de cortesía de asignación obligatoria}$).
 
-REQUISITOS OBLIGATORIOS
-- Aplicable solo para vehículos OMODA en periodo de garantía que se encuentren en un Concesionario Oficial OMODA.
-- Los vehículos de cortesía de la flota del concesionario deberán ser obligatoriamente de la marca OMODA o JAECOO.
-- Antigüedad y kilometraje: Deben tener menos de 1 año o menos de 20.000 km.
-- Seguro: Asegurados a todo riesgo (sin franquicia, salvo en caso de negligencia del cliente).
-- Estado antes de la entrega: Presión de neumáticos, líquidos revisados, limpios y sin daños. Depósito de combustible lleno o nivel de batería al 100%. El cliente debe devolverlo en las mismas condiciones exactas.
-- Capacidad de ampliación: Los concesionarios deben tener un acuerdo firmado con una empresa de RAC (Rent-A-Car) cercana para ampliar el servicio cuando la demanda lo requiera.
+REQUISITOS OBLIGATORIOS DE LA FLOTA Y CONDICIONES DE ENTREGA
+- El servicio de asignación de un vehículo de cortesía con cargo a la marca será única y exclusivamente aplicable para clientes con vehículos de la marca OMODA que se encuentren dentro de su periodo de garantía legal o comercial vigente, y que estén físicamente depositados para su reparación en las instalaciones de un Concesionario Oficial OMODA de España.
+- Los vehículos destinados a la flota de cortesía del taller deben ser obligatoriamente modelos de las marcas oficiales OMODA o JAECOO.
+- Límites de antigüedad y uso: Los coches de cortesía deben mantener una antigüedad estrictamente inferior a 1 año desde su matriculación y un kilometraje total acumulado inferior a los 20.000 kilómetros. En el momento en que un coche cumpla 1 año o llegue a 20.000 km, debe ser sustituido y retirado de la flota de cortesía.
+- Cobertura de Seguro: Todos los vehículos de la flota deben estar asegurados con una póliza a Todo Riesgo Completa y sin ningún tipo de franquicia económica para el cliente (la única excepción de cobro al cliente será en casos de negligencia grave, conducción temeraria demostrada o mal uso del coche certificado por la autoridad).
+- Inspección previa a la entrega al cliente: Antes de poner el coche de cortesía a disposición del usuario, el personal del taller debe revisar de forma obligatoria la presión de los neumáticos, comprobar los niveles de líquidos, verificar la limpieza extrema tanto interior como exterior y certificar que no presenta daños de carrocería. El vehículo debe entregarse obligatoriamente con el depósito de combustible completamente lleno o con el nivel de carga de la batería de alta tensión al 100%. El cliente asume la obligación contractual de devolver el vehículo en las mismas condiciones exactas de limpieza y llenado de fluidos/energía.
+- Capacidad de ampliación externa (Convenios RAC): Cada concesionario oficial tiene la obligación de mantener un acuerdo comercial o convenio firmado con una empresa externa de alquiler de coches o RAC (Rent-A-Car) de cercanía para poder absorber de forma inmediata los picos de demanda y garantizar soluciones de movilidad complementarias a los clientes si su flota propia de cortesía está totalmente ocupada.
 
-CONDICIONES GENERALES Y COBERTURA
-El vehículo de cortesía NO será autorizado por OMODA en los siguientes casos:
-- Accidente.
-- Operaciones de mantenimiento regular.
-- Reparaciones cubiertas en garantía cuya duración estimada sea MENOR a 4 horas (< 4h).
-- Reparaciones no cubiertas por la garantía.
-- Retraso en el suministro de recambios que NO inmovilicen el vehículo.
-- Campañas de mejora OMODA (salvo que se especifique lo contrario).
-* Casos especiales: Si por naturaleza requieren tratamiento especial, contactar inmediatamente con el CAC de OMODA para su evaluación.
+CONDICIONES GENERALES DE EXCLUSIÓN (Casos NO autorizados)
+La marca OMODA denegará el abono y no autorizará bajo ningún concepto la cesión de un vehículo de cortesía en los siguientes escenarios de taller:
+- Vehículos que entren al taller a causa de un accidente de tráfico o siniestro de carrocería (asuntos a gestionar a través del seguro del cliente).
+- Operaciones de mantenimiento regular preventivo, revisiones periódicas oficiales o cambios de consumibles programados.
+- Reparaciones amparadas en garantía cuya duración estimada de tiempo según el baremo de tiempos oficiales (UT) sea estrictamente inferior a 4 horas (< 4 horas de trabajo técnico).
+- Cualquier tipo de reparación mecánica o de carrocería que no esté cubierta por la garantía oficial de la marca.
+- Retrasos puntuales en el suministro logístico de recambios siempre y cuando dicha falta de pieza NO inmovilice el vehículo y el cliente pueda seguir circulando con su coche de forma segura.
+- Realización de Campañas Técnicas de Mejora oficiales de OMODA (salvo que la circular específica de la campaña dicte expresamente lo contrario de forma excepcional).
+* Gestión de casos especiales: Si un caso presenta características de extrema gravedad, vulnerabilidad del cliente o requiere un tratamiento especial fuera de norma, el jefe de taller debe contactar inmediatamente con el Centro de Atención al Cliente (CAC) de OMODA para su evaluación humanaizada individualizada.
 
-SUGERENCIA DE USO POR CANAL (SEGÚN DURACIÓN CALCULADA)
-- Reparación de corta duración (unos 3 días o menos): Vehículo de cortesía OMODA o JAECOO propio del taller.
-- Reparación de larga duración (Mayor a 3 días): 1º RAC del concesionario / 2º Allianz.
-- Regla de Segmento RAC: En caso de usar canal RAC, el vehículo de sustitución debe pertenecer obligatoriamente al mismo segmento (Ejemplo: Vehículo en taller OMODA 5 = Vehículo de sustitución Segmento C).
+ASIGNACIÓN OPTIMIZADA DE CANALES SEGÚN LA DURACIÓN ESTIMADA
+Para optimizar los costes de la red y la disponibilidad, se estipula la siguiente segmentación de uso por canales de movilidad según el tiempo de inmovilización calculado en la diagnosis:
+- Reparaciones de corta duración (Estimación de inmovilización de 3 días naturales o menos): Se debe utilizar de forma prioritaria un vehículo de cortesía OMODA o JAECOO propio de la flota interna del taller del concesionario.
+- Reparaciones de larga duración (Estimación de inmovilización superior a los 3 días naturales): Se autoriza el paso a canales externos de movilidad. El orden de prioridad de uso será: 1º Utilizar el canal de vehículos RAC (Rent-A-Car) bajo convenio del concesionario / 2º Derivar al canal de asistencia de Allianz si cumple condiciones.
+- Regla Estricta de Segmento para RAC: En caso de tener que recurrir al canal de alquiler externo RAC, el vehículo asignado al cliente debe pertenecer obligatoriamente al mismo segmento comercial que el coche del cliente que está averiado en el taller (Ejemplo práctico e invariable: Si el vehículo en reparación es un OMODA 5, el coche de alquiler sustitutivo debe pertenecer obligatoriamente al Segmento C; no se abonarán facturas de segmentos superiores).
 
-MATRIZ DE COBERTURA Y FLUJOS DE ENTRADA AL TALLER
-El abono está sujeto a una pre-diagnosis obligatoria en un máximo de 24 horas. Los escenarios se dividen en:
+MATRIZ TÉCNICA DE COBERTURA, FLUJOS DE ENTRADA Y TARIFAS DE ABONO DIARIO
+Para que el coste de la solución de movilidad sea abonado al concesionario, es una condición obligatoria realizar y registrar una pre-diagnosis técnica del vehículo averiado en un plazo máximo máximo de 24 horas laborables desde su entrada. El flujo lógico de autorizaciones se divide estrictamente en dos escenarios según el estado del coche:
 
-Escenario A: Vehículo es remolcado en grúa al taller o entra por sus propios medios E INMOVILIZA el vehículo (Ej. no puede ser conducido por ley local, seguridad o fallos que causen mayores daños).
-- Procedimiento: Pre-diagnosis máximo en 24h. Vehículo de cortesía autorizado desde las 0h si el tiempo de reparación es >= 4h.
-- Plazo: Preaprobado máximo de 5 + 2 días (los +2 días se aplican solo si hay días no laborales en medio de la prestación; Ej. Alquiler un jueves y devolución el miércoles siguiente = 5+2 días). Seguimiento del CAC desde el día 1. Aprobación obligatoria para cualquier extensión.
-- Canales e importes de abono diarios al concesionario:
-  1. OMODA propio (marcar casillas OMODA + CONCESIONARIO): 29 €/día.
-  2. JAECOO propio (marcar casillas JAECOO + CONCESIONARIO): 35 €/día.
-  3. RAC de concesionario categoría OMODA (marcar solo casilla OMODA): 22 €/día.
-  4. RAC de concesionario categoría JAECOO (marcar solo casilla JAECOO): 28 €/día.
-  5. Allianz: Cubre prestaciones de más de 1 día (>1 día) gestionado por Allianz.
-- Factura a cargo de: OMODA.
+ESCENARIO A: El Vehículo entra en grúa (remolcado por Asistencia/Allianz) o llega por sus propios medios E INMOVILIZA por completo el coche.
+* Definición de Inmovilizado: El vehículo no puede ser conducido de forma segura debido a fallos mecánicos graves, testigos rojos encendidos, averías que impidan la marcha por las leyes de tráfico locales o fallos latentes que causen daños mayores mayores si el motor continúa funcionando.
+- Procedimiento operativo: Realizar pre-diagnosis obligatoria en un plazo máximo de 24 horas. El vehículo de cortesía queda autorizado con cargo a la marca desde la hora cero (0h) siempre y cuando el tiempo de reparación diagnosticado sea igual o superior a 4 horas (>= 4h).
+- Plazo temporal de cobertura: Se concede un plazo preaprobado automático máximo de 5 + 2 días naturales (Los +2 días adicionales se aplican única y exclusivamente si existen días no laborales o fines de semana de por medio durante el periodo de la prestación del coche; Ejemplo visual del flujo: Si el coche de cortesía se alquila un jueves y la devolución final se realiza el miércoles de la semana siguiente, el sistema computa el periodo como 5 días laborables + 2 días de fin de semana = 7 días totales preaprobados). El Centro de Atención al Cliente (CAC) de la marca realizará un seguimiento de control estricto desde el día 1 de la inmovilización. Cualquier necesidad de extensión o prórroga de días exige una solicitud de aprobación previa obligatoria antes del vencimiento.
+- Canales autorizados e Importes de Abono Diario al Concesionario (Sujeto a auditoría de casillas):
+  1. Uso de vehículo OMODA propio de la flota del taller: Se deben marcar simultáneamente en el formulario informático las casillas “OMODA” y “CONCESIONARIO”. Importe de abono fijo: 29 € por día natural.
+  2. Uso de vehículo JAECOO propio de la flota del taller: Se deben marcar simultáneamente en el formulario informático las casillas “JAECOO” y “CONCESIONARIO”. Importe de abono fijo: 35 € por día natural.
+  3. Uso de coche externo de Alquiler RAC del concesionario de categoría tipo OMODA: Se debe marcar única y exclusivamente la casilla “OMODA”. Importe de abono fijo: 22 € por día natural.
+  4. Uso de coche externo de Alquiler RAC del concesionario de categoría tipo JAECOO: Se debe marcar única y exclusivamente la casilla “JAECOO”. Importe de abono fijo: 28 € por día natural.
+  5. Canal ALLIANZ: Se debe marcar de forma exclusiva la casilla “ALLIANZ”. Cubre prestaciones de coche de sustitución para periodos superiores a 1 día (> 1 día) gestionados y coordinados de forma directa a través de la plataforma de asistencia de Allianz (para vehículos que han entrado al taller a través de su grúa de asistencia).
+- Responsable económico de la Factura: OMODA España asume el coste total del abono diario.
 
-Escenario B: Vehículo entra en taller por sus propios medios y NO INMOVILIZA el vehículo (Avería mecánica / Testigo encendido).
-- Procedimiento: Asignar cita en un máximo de 3 días laborables o realizar diagnosis en el momento. Informar al cliente. Vehículo de cortesía autorizado desde las 0h si el tiempo de reparación es >= 4h y tras la pre-diagnosis (máximo 24h).
-- Plazo: Preaprobado máximo de 3 + 2 días. Aprobación obligatoria para extensión o solución alternativa de movilidad (Taxi, etc.).
-- Canales e importes de abono diarios al concesionario: Mismas tarifas que Escenario A (OMODA 29€, JAECOO 35€, RAC OMODA 22€, RAC JAECOO 28€).
-- Factura a cargo de: DEALER (Concesionario) o OMODA según el cumplimiento de condiciones auditadas.
+ESCENARIO B: El Vehículo entra en taller por sus propios medios y NO INMOVILIZA el coche.
+* Definición de NO Inmovilizado: El vehículo presenta una avería mecánica leve, un testigo de advertencia ámbar encendido o un fallo de confort, pero puede seguir circulando de forma autónoma y segura sin riesgo para los ocupantes ni para la mecánica del vehículo.
+- Procedimiento operativo: El asesor de servicio debe asignar al cliente una cita programada de taller en un plazo máximo máximo de 3 días laborables, o bien realizar una diagnosis rápida en el mismo momento de la llegada si hay disponibilidad. Informar de los tiempos al cliente. El vehículo de cortesía se autorizará desde la hora cero (0h) si, tras realizar la pre-diagnosis obligatoria (máximo 24h), se certifica que el tiempo de reparación neto de la avería en garantía es igual o superior a las 4 horas (>= 4h de mano de obra).
+- Plazo temporal de cobertura: Se concede un plazo preaprobado automático máximo de 3 + 2 días naturales. Cualquier extensión de este plazo o la necesidad de proponer una solución alternativa de movilidad (como bonos de taxi o transporte público) exige una aprobación previa obligatoria de Central.
+- Canales autorizados e Importes de Abono Diario al Concesionario: Se aplican exactamente las mismas tarifas fijas diarias que en el Escenario A (OMODA propio: 29€/día; JAECOO propio: 35€/día; RAC OMODA: 22€/día; RAC JAECOO: 28€/día).
+- Responsable económico de la Factura: El coste diario de la prestación será cargado a la cuenta del DEALER (Concesionario) o será asumido por OMODA dependiendo estrictamente del cumplimiento y validación de las condiciones internas auditadas (cumplimiento de plazos de cita, realización de pre-diagnosis en 24h y justificación técnica de la reparación).
 
-COMO GESTIONAR EL PAGO Y LA TRAMITACIÓN EN SISTEMA
-El pago se lleva a cabo a través del sistema de garantías a la devolución del coche de cortesía.
-1. Crear una reclamación para la garantía del vehículo original en reparación.
-2. Crear una reclamación tipo "Gesto Comercial" (o Atención Comercial) y tipificarla obligatoriamente usando los códigos de la siguiente tabla:
-- Código VSR: Tipo Reparación
-- Código VSP: Tipo Recambios
-- Código VSC: Tipo Campaña
-- Código VSG: Tipo Atención Comercial
-- Código VSO: Tipo Otros
-3. Documentación obligatoria adjunta: Se debe adjuntar obligatoriamente el contrato de cesión/alquiler del coche firmado por el cliente. Las cesiones preaprobadas serán auditadas para comprobar fichajes de taller, procesos internos y fechas de préstamos. Los días se calculan en días naturales (Ej: Inicio el día 13 y fin el día 16 = 4 días: 13, 14, 15 y 16).
+TRAMITACIÓN EN EL SISTEMA DE GARANTÍAS Y PROCESO DE PAGO
+El abono económico de los días de vehículo de cortesía al concesionario se realiza de forma digital a través de la plataforma del sistema de garantías una vez que el cliente ha devuelto físicamente el coche de sustitución al taller.
+1. El tramitador debe crear e introducir en primer lugar la reclamación ordinaria de garantía correspondiente a la avería mecánica del vehículo original del cliente que ha sido reparado.
+2. Posteriormente, para reclamar el coste de la movilidad, se debe crear una segunda reclamación específica vinculada obligatoriamente al mismo bastidor (VIN) del vehículo original del cliente. Esta reclamación debe ser de tipo "Gesto Comercial" (o Atención Comercial) y se debe tipificar de forma obligatoria utilizando los códigos de la siguiente tabla oficial de Central:
+- Código VSR: Reclamación vinculada a tipo Reparación Mecánica Prolongada.
+- Código VSP: Reclamación vinculada a retrasos por suministro de Recambios/Piezas.
+- Código VSC: Reclamación vinculada a Campañas de la marca que exijan retención de coche.
+- Código VSG: Reclamación vinculada a Atención Comercial o Gestos de Cortesía Especiales.
+- Código VSO: Reclamación vinculada a Otros motivos de movilidad no clasificados.
+3. Documentación e información obligatoria a adjuntar escaneada en el sistema: Es un requisito contractual e indispensable para que se apruebe el pago adjuntar una copia legible del Contrato de Cesión o Contrato de Alquiler del coche de cortesía, el cual debe estar debidamente cumplimentado y firmado con firma manuscrita o digital por el cliente final. Todas las cesiones cargadas en el sistema serán auditadas de forma automatizada y manual para cruzar y comprobar los fichajes reales del técnico en el taller, las fechas de apertura/cierre de la OR, los números de pedido de piezas y las fechas exactas de entrega y devolución impresas en el contrato del préstamo. El cómputo de los días a abonar se realiza de forma estricta por días naturales (Ejemplo conceptual: Si el contrato de cesión indica como fecha de inicio el día 13 del mes y como fecha de devolución el día 16 del mismo mes, el sistema calculará y abonará un total de 4 días naturales de prestación: los días 13, 14, 15 y 16 completos).
 
-PROCESO DE SOLICITUD DE AMPLIACIÓN O CANCELACIÓN
-Toda gestión requiere enviar por email el Formulario de Solicitud de Vehículo de Sustitución cumplimentado a: atencionalcliente@omodaes.com y marcasconstructoras.es@allianz.com.
+PROCESO DE SOLICITUD DE AMPLIACIONES DE DÍAS O CANCELACIONES
+Cualquier modificación sobre los plazos temporales preaprobados por el sistema exige el envío formal por correo electrónico del Formulario de Solicitud de Vehículo de Sustitución oficial (debidamente cumplimentado en todos sus campos técnicos) de forma simultánea a las siguientes dos direcciones de correo electrónico de Central:
+- Correo Central de la Marca: atencionalcliente@omodaes.com
+- Correo de Gestión de Seguros: marcasconstructoras.es@allianz.com
 
-* Solicitud de Ampliación de días: Debe enviarse como mínimo 24 horas antes del vencimiento del plazo preaprobado inicial. Si se solicita en el último día o no está debidamente justificada, los días de extensión NO serán abonados. Información general requerida en el email para la ampliación:
-- VIN, Matrícula y modelo del vehículo en reparación.
-- Información del vehículo de cortesía: Modelo, matrícula y fecha de comienzo.
-- Contrato de cesión firmado por el cliente.
-- En caso de incidencia de recambios: Número y fecha del pedido con los números de referencia de pieza (Pedido VOR).
-- En caso de incidencia técnica: Número de ticket técnico y fecha de apertura del ticket.
-- Cualquier otra documentación que justifique el retraso.
-* Solicitud de Cancelación: En caso de que la reparación finalice antes de la fecha previamente estimada, se debe enviar la notificación de cancelación inmediatamente.
+* Reglas para la Solicitud de Ampliación de días: El correo electrónico con el formulario y las justificaciones debe ser enviado con una antelación mínima obligatoria de 24 horas antes del vencimiento exacto del plazo preaprobado inicial (o de la última prórroga autorizada). Si el taller envía la solicitud de ampliación durante el último día de la prestación, fuera de horas laborables o si la causa del retraso no está debidamente justificada con evidencias, los días de extensión acumulados NO serán abonados bajo ningún concepto por la marca, corriendo el coste total a cargo del concesionario. Información técnica obligatoria que debe incluir de forma explícita el texto del email de ampliación:
+- Identificación completa del vehículo del cliente: Número de bastidor (VIN) de 17 caracteres, Matrícula oficial y Modelo comercial exacto en reparación.
+- Datos del vehículo de cortesía asignado: Modelo, Matrícula y fecha/hora exacta de comienzo del préstamo.
+- Adjunto escaneado del Contrato de cesión original firmado por el cliente.
+- Si el motivo del retraso es una incidencia de recambios (Falta de Stock): Indicar de forma obligatoria el Número oficial del pedido de recambios, la fecha en que se realizó el pedido y los números de referencia técnicos de las piezas afectadas (Debe ser un pedido de tipo VOR / Urgente).
+- Si el motivo del retraso es una incidencia técnica compleja: Indicar de forma obligatoria el Número de Ticket Técnico de asistencia abierto con la central y la fecha exacta en la que se abrió dicho ticket de consulta.
+- Adjuntar cualquier otra documentación técnica o pericial que justifique de forma sólida el retraso en la entrega del coche al cliente.
+* Reglas para la Notificación de Cancelación: En caso de que los técnicos del taller consigan solucionar la avería y finalizar la reparación antes de la fecha previamente estimada y autorizada, el tramitador del taller tiene la obligación de enviar de forma inmediata una notificación de cancelación de la solicitud de movilidad para congelar el contador de días naturales y liberar el vehículo en la plataforma del sistema.
 ===============================================================================
