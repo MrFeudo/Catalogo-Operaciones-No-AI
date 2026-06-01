@@ -206,7 +206,7 @@ st.sidebar.markdown(txt["menu_titulo"])
 
 opcion_menu = st.sidebar.radio(
     txt["menu_radio"],
-    [txt["menu_taller"], txt["menu_precios"], txt["menu_solicitar"]]
+    [txt["menu_taller"], txt["menu_precios"], txt["menu_solicitar"], "🧠 Consultorio Técnico IA"]
 )
 
 # ==========================================
@@ -668,3 +668,29 @@ if check_password():
                 if st.button("🗑️ Limpiar Histórico Local", use_container_width=True):
                     st.session_state.lista_solicitudes = []
                     st.rerun()
+
+# ==========================================
+# PANTALLA: CONSULTORIO TÉCNICO IA
+# ==========================================
+if opcion_menu == "🧠 Consultorio Técnico IA":
+    st.title("🧠 Consultorio Técnico Inteligente")
+    st.write("Introduce los síntomas o la descripción de la avería de forma libre. La IA de OMODA & JAECOO analizará los datos para ofrecerte un pre-diagnóstico técnico.")
+
+    # Cuadro de texto amplio para el mecánico
+    descripcion_averia = st.text_area(
+        "Describe la avería o introduce los códigos de error (DTC):",
+        placeholder="Ej: El OMODA 5 hace un traqueteo metálico en la parte delantera derecha al girar a bajas revoluciones y ha encendido el testigo de motor...",
+        height=150
+    )
+
+    # Botón para lanzar la consulta
+    if st.button("Consultar con el Ingeniero IA"):
+        if descripcion_averia.strip() == "":
+            st.warning("Por favor, escribe algo sobre la avería antes de consultar.")
+        else:
+            with st.spinner("Conectando con el búnker de Google Cloud... Analizando avería..."):
+                resultado_diagnostico = consultar_ia_garantias(descripcion_averia)
+            
+            st.success("¡Análisis completado con éxito!")
+            st.markdown("### 📋 Informe Técnico Generado")
+            st.info(resultado_diagnostico)
