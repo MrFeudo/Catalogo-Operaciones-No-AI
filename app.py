@@ -4,6 +4,7 @@ import datetime
 import io
 import unicodedata
 from google import genai
+from google.genai import types
 from google.oauth2 import service_account
 
 def normalizar_texto(texto):
