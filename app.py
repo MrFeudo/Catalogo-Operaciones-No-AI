@@ -262,9 +262,9 @@ def consultar_ia_garantias(descripcion_averia):
     )
     
     return response.text
-        
-    except Exception as e:
-        return f"No se pudo conectar con el consultorio de IA. Error: {str(e)}"
+    
+except Exception as e:
+    return f"No se pudo conectar con el consultorio de IA. Error: {str(e)}"
 
 # ==========================================
 # 4. SISTEMA DE SEGURIDAD CONTRASEÑA
