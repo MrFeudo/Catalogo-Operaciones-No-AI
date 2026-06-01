@@ -487,7 +487,7 @@ if check_password():
             operacion_solicitada = st.text_area(txt["form_op"], placeholder=txt["form_op_holder"]).strip()
             boton_enviar = st.form_submit_button(txt["form_btn"])
             
-            if boton_enviar:
+           if boton_enviar:
                 if not vin or not operacion_solicitada:
                     st.error(txt["err_campos"])
                 elif len(vin) != 17:
@@ -500,6 +500,9 @@ if check_password():
                         "Mercado", "CÓDIGO DE PRODUCTO", "REFERENCIA DE PIEZA", 
                         "OPERACIÓN QUE SE SOLICITA AÑADIR", "DEALER"
                     ]
+                    
+                    # Variable de control para saber si todo ha ido bien
+                    subida_exitosa = False
                     
                     # 1. Intentar conectar y leer el estado actual de la nube
                     try:
@@ -519,7 +522,6 @@ if check_password():
                         if df_cloud.empty or len(df_cloud.columns) < 2:
                             df_cloud = pd.DataFrame(columns=columnas_orden)
                         else:
-                            # Limpiar columnas fantasma que a veces genera la lectura inicial
                             df_cloud = df_cloud.dropna(how='all').loc[:, ~df_cloud.columns.str.contains('^Unnamed')]
                         
                         nuevo_sn = len(df_cloud) + 1
@@ -544,36 +546,38 @@ if check_password():
                         "DEALER": str(dealer)
                     }
                     
-                    # Guardamos siempre una copia de seguridad en la sesión local
-                    st.session_state.lista_solicitudes.append(nueva_solicitud)
-                    
                     # 3. Intentar subir los datos a Google Sheets
                     try:
                         df_nuevo = pd.DataFrame([nueva_solicitud])
-                        
-                        # Forzar a que ambos DataFrames tengan exactamente la misma estructura de columnas
                         df_nuevo = df_nuevo.reindex(columns=columnas_orden)
                         df_cloud = df_cloud.reindex(columns=columnas_orden)
                         
                         df_actualizado = pd.concat([df_cloud, df_nuevo], ignore_index=True)
                         
-                        # Intentar la actualización remota
                         if spreadsheet_url:
                             conn.update(
                                 spreadsheet=spreadsheet_url,
                                 data=df_actualizado
                             )
-                            st.success(f"🚀 ¡Operación técnica Nº {nuevo_sn} subida a Google Sheets con éxito!")
+                            # Si llega aquí, la escritura en la nube ha funcionado
+                            st.session_state.lista_solicitudes.append(nueva_solicitud)
+                            subida_exitosa = True
                         else:
-                            raise ValueError("No se pudo localizar la URL del 'spreadsheet' en st.secrets")
+                            raise ValueError("No se pudo localizar la URL de la hoja en st.secrets o tus secrets están vacíos.")
                             
                     except Exception as e:
-                        # Si falla, imprimimos el error real para saber exactamente qué pasa con la API de Google
+                        # CRÍTICO: Aquí retenemos el flujo. Al NO hacer rerun, el mensaje se queda fijo en pantalla
                         st.error(f"❌ Error de conexión con Google Sheets: {e}")
-                        st.warning("⚠️ Los datos se han retenido en la Caché Local inferior de la pantalla para evitar pérdidas.")
+                        st.info("💡 Por seguridad, hemos guardado esta línea en la tabla inferior (Caché Local) para que no la pierdas.")
+                        
+                        # Guardamos en local para que el usuario pueda trabajar offline si falla Google
+                        st.session_state.lista_solicitudes.append(nueva_solicitud)
                     
-                    st.rerun()
-
+                    # Solo recargamos la interfaz automáticamente si se guardó en la nube con éxito
+                    if subida_exitosa:
+                        st.success(f"🚀 ¡Operación técnica Nº {nuevo_sn} subida a Google Sheets con éxito!")
+                        st.rerun()
+                        
         # =========================================================================
         # VISTA DEL HISTÓRICO Y LOGÍSTICA DE REPORTES (Sincronizado de la Nube)
         # =========================================================================
