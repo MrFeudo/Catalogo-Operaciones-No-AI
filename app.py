@@ -677,6 +677,7 @@ if check_password():
                     st.session_state.lista_solicitudes = []
                     st.rerun()
 
+
 # ==========================================
 # PANTALLA: CONSULTORIO TÉCNICO IA
 # ==========================================
@@ -715,3 +716,5 @@ elif opcion_menu == "🧠 Consultorio Técnico IA":
                     "Para cualquier gestión oficial, resolución de dudas o autorización de reparaciones, "
                     "debes contactar con el departamento de garantías en: **garantias@omodaes.com**"
                 )
+
+
