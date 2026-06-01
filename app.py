@@ -3,6 +3,8 @@ import pandas as pd
 import datetime
 import io
 import unicodedata
+from google import genai
+from google.oauth2 import service_account
 
 def normalizar_texto(texto):
     texto = str(texto)
@@ -206,6 +208,44 @@ opcion_menu = st.sidebar.radio(
     txt["menu_radio"],
     [txt["menu_taller"], txt["menu_precios"], txt["menu_solicitar"]]
 )
+
+# ==========================================
+# FUNCIÓN DEL CONSULTORIO DE IA
+# ==========================================
+def consultar_ia_garantias(descripcion_averia):
+    """
+    Conecta con Gemini usando los secretos del robot para analizar la avería.
+    """
+    try:
+        # Recuperamos las credenciales del robot de tus secrets
+        creds_dict = st.secrets["connections"]["gsheets"]
+        google_creds = service_account.Credentials.from_service_account_info(creds_dict)
+        
+        # Conectamos con el cliente de IA de Google
+        client = genai.Client(credentials=google_creds)
+        
+        # Le damos un rol ultra profesional a Gemini
+        prompt = f"""
+        Eres un Ingeniero de Soporte Técnico Senior y Gestor de Garantías para OMODA y JAECOO España.
+        Un concesionario oficial acaba de introducir la siguiente descripción de una avería en el sistema:
+        "{descripcion_averia}"
+        
+        Por favor, genera un informe de validación técnica estructurado exactamente así:
+        - **Categoría del Sistema**: [Motor / Transmisión / Chasis y Suspensión / Sistema Eléctrico / Carrocería / Infoentretenimiento]
+        - **Criticidad**: [Baja / Media / Alta]
+        - **Traducción Técnica (EN)**: [Resume y traduce la avería al inglés técnico para HQ]
+        - **Sugerencia de Diagnóstico**: [Escribe 1 o 2 líneas técnicas con lo que el mecánico debería comprobar primero en el taller]
+        """
+        
+        # Llamamos al modelo Gemini 2.5 Flash
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt,
+        )
+        return response.text
+        
+    except Exception as e:
+        return f"No se pudo conectar con el consultorio de IA. Error: {str(e)}"
 
 # ==========================================
 # 4. SISTEMA DE SEGURIDAD CONTRASEÑA
