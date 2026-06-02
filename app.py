@@ -758,7 +758,6 @@ if check_password():
     # =========================================================================
     elif opcion_menu == "🧠 Consultorio Técnico IA":
         st.title("🤖 Consultor Técnico de Garantías (Inteligencia Artificial)")
-        st.write("Analiza de forma preliminar si una avería está cubierta según el manual de políticas oficial e identifica los pasos técnicos a seguir.")
         st.markdown("---")
 
         st.subheader("📝 Detalles de la Consulta")
@@ -768,24 +767,46 @@ if check_password():
             height=150
         )
         
-        imagen_subida = st.file_uploader("📸 Adjuntar evidencia o foto de la avería (Opcional):", type=["jpg", "jpeg", "png"])
+        # Cargador múltiple blindado a un máximo de 2 fotos y 20MB por archivo
+        archivos_imagenes = st.file_uploader(
+            "📸 Adjuntar evidencias o fotos de la avería (Máximo 2 imágenes - 20MB máx por archivo):", 
+            type=["jpg", "jpeg", "png"],
+            accept_multiple_files=True,
+            key="cargador_imagenes_taller"
+        )
         
+        # Validación de archivos antes de ejecutar la consulta
+        archivos_validos = []
+        peso_correcto = True
+        
+        if archivos_imagenes:
+            if len(archivos_imagenes) > 2:
+                st.error("❌ **Error**: El sistema solo acepta un máximo de 2 imágenes por consulta.")
+                peso_correcto = False
+            else:
+                for archivo in archivos_imagenes:
+                    # 20 MB = 20 * 1024 * 1024 bytes
+                    if archivo.size > 20 * 1024 * 1024:
+                        st.error(f"❌ **El archivo '{archivo.name}' supera el límite permitido de 20 MB.**")
+                        peso_correcto = False
+                
+                if peso_correcto:
+                    archivos_validos = archivos_imagenes
+        
+        # Botón de envío
         if st.button("🔍 Enviar Consulta a la IA", type="primary", use_container_width=True):
             if not descripcion_averia.strip():
                 st.error("⚠️ Por favor, introduce una descripción de la avería antes de realizar la consulta.")
+            elif archivos_imagenes and len(archivos_imagenes) > 2:
+                st.error("❌ Corrige la cantidad de imágenes antes de continuar.")
+            elif archivos_imagenes and not peso_correcto:
+                st.error("❌ Una o más imágenes superan los 20 MB. Reduce su tamaño antes de enviar.")
             else:
                 with st.spinner("🧠 Analizando la documentación oficial y generando el informe técnico..."):
-                    bytes_imagen = None
-                    if imagen_subida is not None:
-                        bytes_imagen = imagen_subida.read()
+                    # Si hay archivos válidos, se los pasamos directamente a la función
+                    parametro_imagenes = archivos_validos if archivos_validos else None
                     
-                    resultado = consultar_ia_garantias(descripcion_averia, bytes_imagen)
-                    
-                    st.markdown("### 📋 Informe de Diagnóstico Generado")
-                    st.markdown(resultado)
-                    st.success("✅ Análisis preliminar finalizado.")
-
-
+                    resultado = consultar_ia_garantias(descripcion_averia, parametro_imagenes)
                     
                     st.markdown("### 📋 Informe de Diagnóstico Generado")
                     st.markdown(resultado)
