@@ -767,33 +767,7 @@ if check_password():
                     st.markdown(resultado)
                     st.success("✅ Análisis preliminar finalizado.")
 
-    # =========================================================================
-    # PANTALLA 4: CONSULTORIO IA DE GARANTÍAS
-    # =========================================================================
-    elif opcion_menu == "🧠 Consultorio Técnico IA":
-        st.title("🤖 Consultor Técnico de Garantías (Inteligencia Artificial)")
-        st.write("Analiza de forma preliminar si una avería está cubierta según el manual de políticas oficial e identifica los pasos técnicos a seguir.")
-        st.markdown("---")
 
-        st.subheader("📝 Detalles de la Consulta")
-        descripcion_averia = st.text_area(
-            "Descripción de la avería o síntomas del vehículo:",
-            placeholder="Ejemplo: Cliente reporta ruido metálico al girar el volante a la izquierda en OMODA 5. El amortiguador muestra signos de fuga leve...",
-            height=150
-        )
-        
-        imagen_subida = st.file_uploader("📸 Adjuntar evidencia o foto de la avería (Opcional):", type=["jpg", "jpeg", "png"])
-        
-        if st.button("🔍 Enviar Consulta a la IA", type="primary", use_container_width=True):
-            if not descripcion_averia.strip():
-                st.error("⚠️ Por favor, introduce una descripción de la avería antes de realizar la consulta.")
-            else:
-                with st.spinner("🧠 Analizando la documentación oficial y generando el informe técnico..."):
-                    bytes_imagen = None
-                    if imagen_subida is not None:
-                        bytes_imagen = imagen_subida.read()
-                    
-                    resultado = consultar_ia_garantias(descripcion_averia, bytes_imagen)
                     
                     st.markdown("### 📋 Informe de Diagnóstico Generado")
                     st.markdown(resultado)
