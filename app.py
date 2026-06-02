@@ -257,7 +257,7 @@ def consultar_ia_garantias(descripcion_averia, archivo_imagen=None):
             "sé especialmente estricto evaluando si el daño pudo ser causado por el transporte o si es un defecto de origen oculto "
             "debajo de guarnecidos/consolas.\n"
             "4. **Redirección Obligatoria**: Ante cualquier mínima duda, caso ambiguo, falta de información visual clara "
-            "o para la confirmación del diagnóstico final, debes instruir al usuario de forma prioritaria a **abrir un ticket en la "
+            "o para la confirmation del diagnóstico final, debes instruir al usuario de forma prioritaria a **abrir un ticket en la "
             "plataforma oficial de gestión** o a ponerse en contacto con el departamento técnico a través de "
             "soportetecnico@omodaes.com o garantias@omodaes.com."
         )
@@ -315,15 +315,16 @@ def consultar_ia_garantias(descripcion_averia, archivo_imagen=None):
             return "⚠️ La IA procesó la solicitud pero no devolvió ningún texto en el informe. Revisa los filtros de contenido."
 
     except Exception as e:
-        # Fallback de seguridad en texto para evitar el error 'None' en la interfaz de Streamlit
-        return (
-            f"❌ **Error al procesar la consulta en la API de Gemini**:\n"
-            f"```text\n{str(e)}\n
-```\n"
+        # Fallback de seguridad estructurado línea a línea para respetar la indentación del código
+        mensaje_error = (
+            "❌ **Error al procesar la consulta en la API de Gemini**:\n"
+            f"```text\n{str(e)}\n```\n\n"
             "Por seguridad y para no demorar la asistencia, remite el caso manualmente abriendo un ticket o enviando un correo a:\n"
             "- 📧 **Soporte Técnico**: soportetecnico@omodaes.com\n"
             "- 📧 **Departamento de Garantías**: garantias@omodaes.com"
         )
+        return mensaje_error
+
 # ==========================================
 # 4. SISTEMA DE SEGURIDAD CONTRASEÑA
 # ==========================================
