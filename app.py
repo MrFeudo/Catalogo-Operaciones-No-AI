@@ -694,63 +694,69 @@ if check_password():
                     st.session_state.lista_solicitudes = []
                     st.rerun()
 
-    # ==========================================
-    # PANTALLA 4: CONSULTORIO TÉCNICO IA
-    # ==========================================
-    elif opcion_menu == "🧠 Consultorio Técnico IA":
-        st.title("🧠 Consultorio Técnico de Garantías")
-        st.write("Introduce los síntomas o la descripción de la avería de forma libre. Sube imágenes si lo necesitas para un pre-diagnóstico preciso.")
+# ==========================================
+# FUNCIÓN DEL CONSULTORIO DE IA (CORREGIDA)
+# ==========================================
+def consultar_ia_garantias(descripcion_averia, archivo_imagen=None):
+    """
+    Lee la política local y procesa la consulta con Gemini usando las credenciales del robot.
+    Soporta opcionalmente una imagen en formato binario mediante types.Part.from_bytes.
+    """
+    try:
+        # 1. Recuperamos credenciales del búnker
+        from google import genai
+        from google.genai import types
+        
+        creds_dict = st.secrets["connections"]["gsheets"]
+        google_creds = service_account.Credentials.from_service_account_info(creds_dict)
+        client = genai.Client(credentials=google_creds)
 
-        col_img, col_txt = st.columns([1, 2])
-        with col_img:
-            archivo_subido = st.file_uploader("📸 Foto de la avería (Opcional)", type=["jpg", "jpeg", "png"])
-        with col_txt:
-            descripcion_averia = st.text_area(
-                "Describe la avería o la duda a consultar:",
-                placeholder="Ej: El OMODA 5 hace un traqueteo metálico en la parte delantera derecha al girar a bajas revoluciones...",
-                height=150
-            )
+        # 2. Intentamos cargar la política
+        try:
+            with open("Politica_conocimiento.txt", "r", encoding="utf-8") as f:
+                politica_texto = f.read()
+        except FileNotFoundError:
+            politica_texto = "Política no encontrada. Siga los estándares generales de garantía."
 
-        if st.button("Consultar con el Ingeniero IA"):
-            # Validación: Comprobamos que al menos tenga texto o una imagen para no mandar una consulta vacía
-            if not descripcion_averia.strip() and archivo_subido is None:
-                st.warning("⚠️ Por favor, escribe una descripción o sube una imagen antes de consultar.")
-            else:
-                with st.spinner("Analizando manuales, imágenes y políticas de cobertura oficial..."):
-                    
-                    imagen_bytes = None
-                    # Si sube foto, la reducimos en memoria para proteger tu saldo
-                    if archivo_subido is not None:
-                        try:
-                            from PIL import Image
-                            import io
-                            img = Image.open(archivo_subido)
-                            img.thumbnail((1024, 1024))  # Redimensión inteligente para ahorrar tokens
-                            buf = io.BytesIO()
-                            img.save(buf, format="JPEG", quality=85)
-                            imagen_bytes = buf.getvalue()
-                        except Exception as err_img:
-                            st.error(f"Error al procesar la imagen: {err_img}")
-
-                    # Llamamos a tu función externa pasándole los parámetros correspondientes
-                    resultado_diagnostico = consultar_ia_garantias(
-                        descripcion_averia=descripcion_averia.strip(), 
-                        archivo_imagen=imagen_bytes
-                    )
-                
-                # Mostramos el informe final generado por el modelo 3.5 Flash
-                st.success("¡Análisis de política completado!")
-                st.markdown("### 📋 Informe de Validación Técnica")
-                st.info(resultado_diagnostico)
-
-        # Aviso Legal destacado y desvío a canales oficiales
-        st.divider()
-        st.warning("⚠️ **¿Dudas con el diagnóstico o avería compleja?**")
-        st.markdown(
-            "Esta IA es una herramienta de apoyo y su diagnóstico es **puramente orientativo**. "
-            "Si la avería es compleja, crítica o el resultado no es concluyente, **no procedas sin autorización**. "
-            "Contacta directamente con nuestro equipo oficial para abrir un caso técnico:\n\n"
-            "- 📧 **Correo de soporte técnico:** soportetecnico@omodaes.com\n"
-            "- 📧 **Departamento de garantías:** garantias@omodaes.com\n"
-            "- 🎫 **Acción:** Abre un ticket de soporte técnico en nuestra plataforma."
+        # 3. Configuración del prompt con el conocimiento (RAG básico)
+        prompt_sistema = (
+            "Eres un Ingeniero de Garantías Senior para OMODA & JAECOO. "
+            "Usa estrictamente esta política para responder:\n"
+            f"{politica_texto}\n\n"
         )
+
+        # Estructuramos la lista de contenidos de forma limpia para Pydantic
+        contenidos = []
+        
+        # SI HAY IMAGEN: La empaquetamos usando la estructura oficial que exige google-genai
+        if archivo_imagen is not None:
+            part_imagen = types.Part.from_bytes(
+                data=archivo_imagen,
+                mime_type="image/jpeg",
+            )
+            contenidos.append(part_imagen)
+            
+        # Añadimos la pregunta o descripción técnica del mecánico
+        prompt_usuario = (
+            f"Avería reportada por el taller: '{descripcion_averia}'\n\n"
+            "Genera un informe detallado con:\n"
+            "1. Categoría de la avería.\n"
+            "2. Criticidad.\n"
+            "3. ¿Entra en Garantía según la política oficial? (Justifica explícitamente).\n"
+            "4. Sugerencia de diagnóstico y pasos técnicos a seguir en el taller."
+        )
+        contenidos.append(prompt_usuario)
+
+        # 4. Llamada al modelo oficial de pago (Gemini 3.5 Flash)
+        response = client.models.generate_content(
+            model='gemini-3.5-flash',
+            contents=contenidos,
+            config=types.GenerateContentConfig(
+                system_instruction=prompt_sistema,
+                temperature=0.3
+            )
+        )
+        return response.text
+
+    except Exception as e:
+        return f"Error en el consultorio de IA: {str(e)}"
