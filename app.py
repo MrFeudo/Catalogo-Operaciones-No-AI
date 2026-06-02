@@ -714,17 +714,22 @@ if check_password():
                     st.session_state.lista_solicitudes = []
                     st.rerun()
 
-    # =========================================================================
-    # PANTALLA 4: CONSULTORIO IA DE GARANTÍAS
+# =========================================================================
+    # PANTALLA 4: CONSULTORIO IA DE GARANTÍAS (VERSION DEFINITIVA)
     # =========================================================================
     elif opcion_menu == "🧠 Consultorio Técnico IA":
         st.title("🤖 Consultor Técnico de Garantías (Inteligencia Artificial)")
+        st.write("Analiza de forma preliminar si una avería está cubierta según el manual de políticas oficial e identifica los pasos técnicos a seguir.")
         st.markdown("---")
+
+        # Inicializamos la variable en la sesión para que el informe no se borre al refrescar
+        if "resultado_consultorio" not in st.session_state:
+            st.session_state.resultado_consultorio = None
 
         st.subheader("📝 Detalles de la Consulta")
         descripcion_averia = st.text_area(
             "Descripción de la avería o síntomas del vehículo:",
-            placeholder="Ejemplo: Cliente reporta ruido metálico al girar el volante a la izquierda en OMODA 5. El amortiguador muestra signos de fuga leve...",
+            placeholder="Ejemplo: Cliente reporta ruido metálico al girar el volante a la izquierda en OMODA 5...",
             height=150
         )
         
@@ -736,7 +741,6 @@ if check_password():
             key="cargador_imagenes_taller"
         )
         
-        # Validación de archivos antes de ejecutar la consulta
         archivos_validos = []
         peso_correcto = True
         
@@ -746,11 +750,9 @@ if check_password():
                 peso_correcto = False
             else:
                 for archivo in archivos_imagenes:
-                    # 20 MB = 20 * 1024 * 1024 bytes
                     if archivo.size > 20 * 1024 * 1024:
                         st.error(f"❌ **El archivo '{archivo.name}' supera el límite permitido de 20 MB.**")
                         peso_correcto = False
-                
                 if peso_correcto:
                     archivos_validos = archivos_imagenes
         
@@ -761,14 +763,28 @@ if check_password():
             elif archivos_imagenes and len(archivos_imagenes) > 2:
                 st.error("❌ Corrige la cantidad de imágenes antes de continuar.")
             elif archivos_imagenes and not peso_correcto:
-                st.error("❌ Una o más imágenes superan los 20 MB. Reduce su tamaño antes de enviar.")
+                st.error("❌ Una o más imágenes superan los 20 MB.")
             else:
                 with st.spinner("🧠 Analizando la documentación oficial y generando el informe técnico..."):
-                    # Si hay archivos válidos, se los pasamos directamente a la función
                     parametro_imagenes = archivos_validos if archivos_validos else None
-                    
-                    resultado = consultar_ia_garantias(descripcion_averia, parametro_imagenes)
-                    
-                    st.markdown("### 📋 Informe de Diagnóstico Generado")
-                    st.markdown(resultado)
-                    st.success("✅ Análisis preliminar finalizado.")
+                    # Guardamos el resultado en el estado de la sesión
+                    st.session_state.resultado_consultorio = consultar_ia_garantias(descripcion_averia, parametro_imagenes)
+
+        # RENDERIZADO PERSISTENTE (Fuera del botón para que no desaparezca nada)
+        if st.session_state.resultado_consultorio:
+            st.markdown("### 📋 Informe de Diagnóstico Generado")
+            st.markdown(st.session_state.resultado_consultorio)
+            st.success("✅ Análisis preliminar finalizado.")
+            
+            st.markdown("<br>", unsafe_allow_html=True)
+            
+            # 💛 EL DISCLAIMER EN AMARILLO FIJO Y RESALTADO ABAJO DEL TODO
+            st.warning("""
+            #### ⚠️ NOTA OBLIGATORIA DE CENTRAL
+            Este informe constituye una **valoración preliminar e informativa** basada exclusivamente en los síntomas y evidencias gráficas aportadas por el taller. 
+            
+            Para validar definitivamente el diagnóstico técnico, proceder con la autorización de la reparación bajo garantía o reportar de forma oficial un fallo de fabricación de origen, **es obligatorio abrir un canal oficial en la plataforma aportando el bastidor (VIN) completo**:
+            
+            * 🛠️ **¿Dudas sobre el diagnóstico técnico o el proceso de reparación?** Abra un **Ticket de Asistencia Técnica** en el sistema o envíe un correo detallado a: [soportetecnico@omodaes.com](mailto:soportetecnico@omodaes.com)
+            * 📝 **¿Consultas sobre los plazos de cobertura de garantía o tramitación?** Contacte de forma directa con el departamento administrativo en: [garantias@omodaes.com](mailto:garantias@omodaes.com)
+            """)
