@@ -213,229 +213,13 @@ opcion_menu = st.sidebar.radio(
 # ==========================================
 # FUNCIÓN DEL CONSULTORIO DE IA (CORREGIDA)
 # ==========================================
-import streamlit as st
-import pandas as pd
-import datetime
-import io
-import unicodedata
-from google import genai
-from google.genai import types
-from google.oauth2 import service_account
-
-def normalizar_texto(texto):
-    texto = str(texto)
-    return ''.join(c for c in unicodedata.normalize('NFD', texto) if unicodedata.category(c) != 'Mn').lower()
-
-st.set_page_config(page_title="Buscador Técnico OMODA & JAECOO", layout="wide")
-
-# =========================================================================
-# 1. INICIALIZACIÓN ABSOLUTA DEL SESSION STATE (Para evitar AttributeError)
-# =========================================================================
-if "lista_solicitudes" not in st.session_state:
-    st.session_state.lista_solicitudes = []
-
-if "authenticated" not in st.session_state:
-    st.session_state.authenticated = False
-
-if "idioma" not in st.session_state:
-    st.session_state.idioma = "Español"
-
-# URL Directa (Raw) al archivo Excel en GitHub
-URL_GITHUB_EXCEL = "https://github.com/MrFeudo/Catalogo-Operaciones/raw/0d67464a70c2267e0f58aabe31f4530976f1aae8/DMS_Active_Spare_Parts.xlsx"
-
-# =========================================================================
-# 2. DICCIONARIO DE TRADUCCIÓN (Internacionalización - i18n para TFM)
-# =========================================================================
-IDIOMAS = {
-    "Español": {
-        "menu_titulo": "### 🗺️ Menú de Navegación",
-        "menu_radio": "Selecciona una herramienta:",
-        "menu_taller": "📋 Tiempos de Taller",
-        "menu_precios": "💰 Precios de Recambios",
-        "menu_solicitar": "📝 Solicitar Operación",
-        "pass_titulo": "🔐 Acceso Red de Dealers",
-        "pass_input": "Introduce la contraseña de acceso:",
-        "pass_boton": "Entrar",
-        "pass_error": "❌ Contraseña incorrecta",
-        "taller_titulo": "🚗 Catálogo Operaciones de mano de obra",
-        "taller_sub": "Consulta piezas, modelos y tiempos asignados directamente desde el DMS.",
-        "f_modelo": "1. Filtrar por Modelo:",
-        "f_pieza": "2. Buscar por Nombre o Código de pieza:",
-        "f_operacion": "3. Buscar por tipo de operación (ej: Remove, Paint...):",
-        "f_mercado_taller": "Filtrar por Mercado / Organización (Taller):",
-        "f_estado_taller": "Filtrar por Estado de Operación (Taller):",
-        "res_taller": "### 📋 Resultados encontrados: {} operaciones",
-        "warn_taller": "⚠️ No se encontraron operaciones con los criterios seleccionados.",
-        "err_taller": "Error al procesar la base de datos de tiempos: {}",
-        "precios_titulo": "💰 Maestro de Tarifas y Precios de Recambios",
-        "precios_sub": "Consulta oficializada de precios y tarifas de distribución vigentes.",
-        "f_buscar_recambio": "🔍 Buscar por Código de recambio o Descripción de pieza:",
-        "f_mercado_precios": "Filtrar por Mercado / Organización:",
-        "f_tarifa": "Filtrar por Tipo de Tarifa:",
-        "res_precios": "### 📦 {} referencias de recambios localizadas",
-        "warn_precios": "⚠️ No se encontraron recambios con los criterios seleccionados.",
-        "err_precios": "Error al procesar el maestro de precios: {}",
-        "todos": "Todos",
-        "todas": "Todas",
-        "filtro_modelo": "Filtrar por Modelo:",
-        "solicitar_titulo": "📝 Solicitud de Operaciones Adicionales de Mano de Obra",
-        "solicitar_sub": "Utilice este formulario para solicitar el alta de nuevas operaciones o precios en el maestro de HQ.",
-        "form_sub": "Datos de la Solicitud (Campos obligatorios *)",
-        "form_marca": "Marca del vehículo *",
-        "form_modelo": "INTRODUCIR MODELO *",
-        "form_vin": "INTRODUCIR VIN (Bastidor) *",
-        "form_vin_holder": "17 caracteres",
-        "form_dealer": "DEALER (Concesionario) *",
-        "form_hq_code": "CÓDIGO DE PRODUCTO (Asignado por HQ)",
-        "form_ref": "REFERENCIA DE PIEZA (Opcional)",
-        "form_ref_holder": "Ej. 7365747465AA",
-        "form_op": "OPERACIÓN QUE SE SOLICITA AÑADIR *",
-        "form_op_holder": "Describa detalladamente la operación técnica o falta de precio que requiere el taller...",
-        "form_btn": "Enviar Solicitud a Central",
-        "err_campos": "❌ Por favor, rellene todos los campos obligatorios (*).",
-        "err_vin_corto": "❌ El VIN introducido es demasiado corto. Revíselo.",
-        "success_sheet": "✅ ¡Solicitud registrada con éxito! Los datos se han volcado a la plantilla de Central.",
-        "warn_contingencia": "⚠️ Formulario correcto, guardado en modo de contingencia local."
-    },
-    "English": {
-        "menu_titulo": "### 🗺️ Navigation Menu",
-        "menu_radio": "Select a tool:",
-        "menu_taller": "📋 Workshop Times",
-        "menu_precios": "💰 Spare Parts Prices",
-        "menu_solicitar": "📝 Request Operation",
-        "pass_titulo": "🔐 Dealer Network Access",
-        "pass_input": "Enter access password:",
-        "pass_boton": "Login",
-        "pass_error": "❌ Incorrect password",
-        "taller_titulo": "🚗 Labor Operations Catalog",
-        "taller_sub": "Consult parts, models, and assigned times directly from the DMS.",
-        "f_modelo": "1. Filter by Model:",
-        "f_pieza": "2. Search by Part Name or Code:",
-        "f_operacion": "3. Search by operation type (e.g., Remove, Paint...):",
-        "f_mercado_taller": "Filter by Market / Organization (Workshop):",
-        "f_estado_taller": "Filter by Operation Status (Workshop):",
-        "res_taller": "### 📋 Results found: {} operations",
-        "warn_taller": "⚠️ No operations found matching the selected criteria.",
-        "err_taller": "Error processing workshop times database: {}",
-        "precios_titulo": "💰 Master Rate & Spare Parts Prices",
-        "precios_sub": "Official consultation of current prices and distribution rates.",
-        "f_buscar_recambio": "🔍 Search by Part Code or Description:",
-        "f_mercado_precios": "Filter by Market / Organization:",
-        "f_tarifa": "Filter by Rate Type:",
-        "res_precios": "### 📦 {} spare parts references located",
-        "warn_precios": "⚠️ No spare parts found matching the selected criteria.",
-        "err_precios": "Error processing master price list: {}",
-        "todos": "All",
-        "todas": "All",
-        "filtro_modelo": "Filter by Model:",
-        "solicitar_titulo": "📝 Request for Additional Labor Operations",
-        "solicitar_sub": "Use this form to request new operations or prices to be added to HQ master list.",
-        "form_sub": "Request Details (* Required fields)",
-        "form_marca": "Vehicle Brand *",
-        "form_modelo": "ENTER MODEL *",
-        "form_vin": "ENTER VIN (Chassis) *",
-        "form_vin_holder": "17 characters",
-        "form_dealer": "DEALER *",
-        "form_hq_code": "PRODUCT CODE (Assigned by HQ)",
-        "form_ref": "PART REFERENCE (Optional)",
-        "form_ref_holder": "e.g., 7365747465AA",
-        "form_op": "OPERATION REQUESTED TO BE ADDED *",
-        "form_op_holder": "Describe in detail the technical operation or missing price required by the workshop...",
-        "form_btn": "Send Request to HQ",
-        "err_campos": "❌ Please fill in all required fields (*).",
-        "err_vin_corto": "❌ The entered VIN is too short. Please check it.",
-        "success_sheet": "✅ Request successfully registered! Data transferred to the HQ template.",
-        "warn_contingencia": "⚠️ Form valid, saved in local contingency mode."
-    },
-    "Chinese (中文)": {
-        "menu_titulo": "### 🗺️ 导航菜单",
-        "menu_radio": "选择工具:",
-        "menu_taller": "📋 车间工时",
-        "menu_precios": "💰 零配件价格",
-        "menu_solicitar": "📝 请求操作",
-        "pass_titulo": "🔐 经销商网络访问",
-        "pass_input": "输入访问密码:",
-        "pass_boton": "登录",
-        "pass_error": "❌ 密码错误",
-        "taller_titulo": "🚗 工时操作目录",
-        "taller_sub": "直接从 DMS 查询零件、车型和分配的时间。",
-        "f_modelo": "1. 按车型筛选:",
-        "f_pieza": "2. 按零件名称或代码搜索:",
-        "f_operacion": "3. 按操作类型搜索 (例如: Remove, Paint...):",
-        "f_mercado_taller": "按市场 / 组织筛选 (车间):",
-        "f_estado_taller": "按操作状态筛选 (车间):",
-        "res_taller": "### 📋 找到的结果: {} 个操作",
-        "warn_taller": "⚠️ 未找到符合选择条件的工时操作。",
-        "err_taller": "处理车间工时数据库时出错: {}",
-        "precios_titulo": "💰 零售价与零配件价格总表",
-        "precios_sub": "官方查询现行价格及分销费率。",
-        "f_buscar_recambio": "🔍 按零件代码或描述搜索:",
-        "f_mercado_precios": "按市场 / 组织筛选:",
-        "f_tarifa": "按费率类型筛选:",
-        "res_precios": "### 📦 已定位 {} 个零配件参考",
-        "warn_precios": "⚠️ 未找到符合选择条件的零配件。",
-        "err_precios": "处理价格总表时出错: {}",
-        "todos": "全部",
-        "todas": "全部",
-        "filtro_modelo": "按车型过滤:",
-        "solicitar_titulo": "📝 申请新增工时操作",
-        "solicitar_sub": "使用此表单申请在总部(HQ)主数据中添加新工时操作 or 价格。",
-        "form_sub": "申请信息 (* 为必填项)",
-        "form_marca": "车辆品牌 *",
-        "form_modelo": "输入车型 *",
-        "form_vin": "输入 VIN (车架号) *",
-        "form_vin_holder": "17位字符",
-        "form_dealer": "经销商 *",
-        "form_hq_code": "产品代码 (由总部分配)",
-        "form_ref": "零件编号 (选填)",
-        "form_ref_holder": "例如: 7365747465AA",
-        "form_op": "申请添加的操作内容 *",
-        "form_op_holder": "请详细描述车间所需的工时操作 or 缺失的价格...",
-        "form_btn": "发送申请至总部",
-        "err_campos": "❌ 请填写所有必填项 (*)。",
-        "err_vin_corto": "❌ 输入的 VIN 太短，请检查。",
-        "success_sheet": "✅ 申请登记成功！数据已同步至总部模板。",
-        "warn_contingencia": "⚠️ 表单正确，已保存至本地应急模式。"
-    }
-}
-
-# ==========================================
-# 3. BARRA LATERAL: LOGO + SELECCIÓN IDIOMA + MENÚ
-# ==========================================
-try:
-    st.sidebar.image("logo_empresa.png", use_container_width=True)
-except Exception:
-    st.sidebar.write("🏢 **OMODA & JAECOO**")
-
-st.sidebar.markdown("---")
-
-idioma_seleccionado = st.sidebar.selectbox(
-    "🌐 Language / Idioma / 语言:",
-    ["Español", "English", "Chinese (中文)"],
-    index=["Español", "English", "Chinese (中文)"].index(st.session_state.idioma)
-)
-st.session_state.idioma = idioma_seleccionado
-txt = IDIOMAS[st.session_state.idioma]
-
-st.sidebar.markdown("---")
-st.sidebar.markdown(txt["menu_titulo"])
-
-opcion_menu = st.sidebar.radio(
-    txt["menu_radio"],
-    [txt["menu_taller"], txt["menu_precios"], txt["menu_solicitar"], "🧠 Consultorio Técnico IA"]
-)
-
-# ==========================================
-# FUNCIÓN DEL CONSULTORIO DE IA (CORREGIDA)
-# ==========================================
 def consultar_ia_garantias(descripcion_averia, archivo_imagen=None):
     """
     Procesa la consulta técnica de forma efímera utilizando el nuevo SDK oficial 
     google-genai y el modelo gemini-2.5-flash.
     
-    Optimiza el tamaño de la imagen para reducir drásticamente el consumo de tokens,
-    potencia el análisis visual/multimodal (RAG) y redirige de forma estricta 
-    al sistema de tickets oficial.
+    Elimina introducciones innecesarias para maximizar el ahorro de tokens, 
+    antepone el disclaimer de central y separa estrictamente los canales de soporte.
     """
     try:
         import io
@@ -448,7 +232,6 @@ def consultar_ia_garantias(descripcion_averia, archivo_imagen=None):
         if "GEMINI_API_KEY" not in st.secrets:
             return "⚠️ **Error de Configuración**: No se ha encontrado la clave 'GEMINI_API_KEY' en los secretos de Streamlit (st.secrets)."
             
-        # Inicialización del cliente con el nuevo estándar de Google
         client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
         # 2. Carga del archivo local de política de conocimiento
@@ -463,6 +246,10 @@ def consultar_ia_garantias(descripcion_averia, archivo_imagen=None):
             "Eres un Ingeniero de Garantías Senior para OMODA & JAECOO España, experto en análisis técnico de "
             "automoción y valoración de siniestros/averías en preentrega y posventa.\n\n"
             
+            "REGLA CRÍTICA DE EMISIÓN DE TOKENS: Sé extremadamente directo. Prohibido incluir saludos como 'Estimado taller', "
+            "prohibido incluir introducciones corteses o frases de transición. Empieza tu respuesta DIRECTAMENTE con la "
+            "NOTA OBLIGATORIA DE CENTRAL que te pide el usuario, sin añadir ni una sola palabra antes.\n\n"
+            
             "Tus directrices principales son:\n"
             f"1. **Conocimiento Oficial**: Usa estrictamente esta política de conocimiento adjunta:\n{politica_texto}\n"
             "2. **Análisis Multimodal Crítico**: Analiza con total minuciosidad cualquier imagen adjunta. Busca "
@@ -471,15 +258,11 @@ def consultar_ia_garantias(descripcion_averia, archivo_imagen=None):
             "3. **Criterio de Preentrega**: Si el caso menciona que es un vehículo nuevo en fase de preentrega, "
             "sé especialmente estricto evaluando si el daño pudo ser causado por el transporte o si es un defecto de origen oculto "
             "debajo de guarnecidos/consolas.\n"
-            "4. **Redirección Obligatoria y Canales Correctos**: Ante cualquier caso ambiguo, falta de información o duda "
-            "en la confirmación del diagnóstico final, debes instruir de forma estricta y prioritaria al taller sobre a qué departamento "
-            "dirigirse según la naturaleza de su consulta:\n"
-            "   - **Dudas del Diagnóstico Técnico o Reparación**: Si hay dudas sobre la causa técnica de la avería, cómo solucionar el "
-            "fallo o cómo realizar la reparación en el taller, indícales taxativamente que deben **abrir un ticket de asistencia técnica** "
-            "o escribir al correo oficial de **Soporte Técnico** (soportetecnico@omodaes.com).\n"
-            "   - **Dudas de Cobertura o Tramitación**: Si la consulta se centra en si la pieza entra o no en garantía, en los plazos "
-            "de reclamación o en el procedimiento administrativo para reportar el caso, indícales que deben contactar con el "
-            "departamento de **Garantías** (garantias@omodaes.com)."
+            "4. **CRITERIO CRÍTICO DE REDIRECCIÓN (CANALES SEPARADOS)**:\n"
+            "   - **Dudas de Diagnóstico Técnico o Reparación**: Si el caso presenta dudas sobre la causa de la avería, cómo solucionarla, "
+            "o el proceso técnico de reparación, el canal obligatorio es abrir un **Ticket de Asistencia Técnica** o escribir a soportetecnico@omodaes.com.\n"
+            "   - **Dudas de Cobertura o Tramitación**: Si la duda es sobre si el componente entra en garantía, plazos administrativos, "
+            "o el proceso de reclamación, el canal obligatorio es dirigirse al departamento de **Garantías** (garantias@omodaes.com)."
         )
 
         # 4. Construcción efímera de la lista de contenidos (Multimodal)
@@ -488,60 +271,59 @@ def consultar_ia_garantias(descripcion_averia, archivo_imagen=None):
         if archivo_imagen is not None:
             # COMPRESIÓN AL VUELO: Abrimos la imagen en memoria RAM
             imagen_pil = Image.open(io.BytesIO(archivo_imagen))
-            
-            # Redimensionamos a un máximo de 1024px para mantener el detalle técnico y destruir el exceso de tokens costosos
+            # Redimensionamos a un máximo de 1024px para mantener el detalle y ahorrar tokens (2 céntimos por consulta)
             imagen_pil.thumbnail((1024, 1024))
             contenidos.append(imagen_pil)
             
-        # Formulación estructurada de la pregunta del usuario
+        # Formulación estructurada exigiendo el Disclaimer ARRIBA DEL TODO y sin rodeos
         prompt_usuario = (
             f"Caso reportado por el taller:\n'{descripcion_averia}'\n\n"
-            "Evalúa la descripción anterior junto con la evidencia fotográfica aportada (si la hay) y genera un "
-            "informe técnico detallado estructurado exactamente en los siguientes puntos:\n\n"
+            "Genera el informe técnico estructurado omitiendo cualquier saludo o introducción. "
+            "Es OBLIGATORIO que tu respuesta comience exactamente con este bloque:\n\n"
             
+            "⚠️ **NOTA OBLIGATORIA DE CENTRAL**:\n"
+            "«⚠️ **NOTA OBLIGATORIA DE CENTRAL**: Este informe es una valoración preliminar basada en la descripción y/o imagen de diagnosis aportada. "
+            "Para validar definitivamente el diagnóstico, proceder con la autorización de la reparación bajo garantía o reportar un fallo de fabricación de origen, "
+            "deben abrir un canal de comunicación oficial aportando el número de bastidor (VIN) completo:\n"
+            "- **Para dudas sobre el diagnóstico técnico o el proceso de reparación**: Abra un **Ticket de Asistencia Técnica** en la plataforma o escriba a soportetecnico@omodaes.com.\n"
+            "- **Para consultas sobre la cobertura de la garantía o tramitación administrativa**: Contacte directamente con el departamento de garantías en garantias@omodaes.com.»\n\n"
+            "--- (Línea de separación de contenido) ---\n\n"
+            
+            "A continuación, desarrolla en profundidad los siguientes apartados:\n\n"
             "**1. EVALUACIÓN Y CATEGORÍA TÉCNICA**\n"
-            "- Determina el componente afectado, su criticidad y el tipo de fallo aparente (eléctrico, mecánico, estético).\n\n"
-            
-            "**2. ANÁLISIS DE LA EVIDENCIA VISUAL (FOTO)**\n"
-            "- Describe detalladamente qué se observa en la imagen (ej. si hay marcas de desmontaje forzado, rotura limpia, "
-            "defecto de fabricación, etc.). Si no hay foto, indica que se requiere soporte gráfico.\n\n"
-            
-            "**3. DICTAMEN PRELIMINAR DE GARANTÍA**\n"
-            "- ¿Es viable la cobertura según la política oficial? Justifica tu respuesta citando las directrices (ej. plazos de preentrega, "
-            "daños no reconocidos en transporte si no se vio a tiempo, o si por el contrario al estar oculto bajo la consola aplica defecto de fábrica).\n\n"
-            
-            "**4. ACCIÓN REQUERIDA Y DIAGNÓSTICO**\n"
-            "- Pasos técnicos sugeridos para el taller.\n"
-            "- *NOTA OBLIGATORIA*: Informa explícitamente al taller de que este informe es preliminar, para validar el diagnóstico, "
-            "proceder con la reparación o reportar el fallo de fábrica, deben **abrir un ticket de asistencia técnica** o escribir a "
-            "soportetecnico@omodaes.com / garantias@omodaes.com (Según la naturaleza de la pregunta) aportando el número de bastidor (VIN)."
+            "- Identifica detalladamente el componente afectado, evalúa su nivel de criticidad y tipifica de forma razonada la naturaleza del fallo (eléctrico, mecánico o estético).\n\n"
+            "**2. ANÁLISIS EXHAUSTIVO DE LA EVIDENCIA VISUAL (FOTO)**\n"
+            "- Describe minuciosamente todo lo que se aprecia en la imagen adjunta (marcas de desmontaje forzado, rotura limpia, defecto de fabricación, etc.). Si no hay foto, detalla qué comprobaciones visuales específicas o capturas debe aportar el mecánico para esclarecer el origen.\n\n"
+            "**3. DICTAMEN PRELIMINAR DE COBERTURA DE GARANTÍA**\n"
+            "- Evalúa de forma argumentada si la avería es susceptible de cobertura basándote explícitamente en la política oficial (ej. si al ser una preentrega el daño estaba oculto bajo guarnecidos/consolas y no pudo detectarse en la recepción del transporte).\n\n"
+            "**4. ACCIÓN REQUERIDA Y PROTOCOLO DE TRABAJO**\n"
+            "- Detalla cronológicamente la sugerencia de pasos técnicos detallados que debe seguir el operario en el taller para verificar la avería."
         )
         contenidos.append(prompt_usuario)
 
-        # 5. Llamada directa y veloz al modelo gemini-3.5-flash
+        # 5. LLAMADA CORREGIDA: Se usa el modelo real gemini-2.5-flash y temperatura estable para redacción completa
         response = client.models.generate_content(
-            model='gemini-3.5-flash',
+            model='gemini-2.5-flash',
             contents=contenidos,
             config=types.GenerateContentConfig(
                 system_instruction=prompt_sistema,
-                temperature=0.3
+                temperature=0.6
             )
         )
         
-        # Validamos que la respuesta contenga texto válido antes de retornar
         if response.text:
             return response.text
         else:
             return "⚠️ La IA procesó la solicitud pero no devolvió ningún texto en el informe. Revisa los filtros de contenido."
 
     except Exception as e:
-        # Fallback de seguridad estructurado línea a línea para respetar la indentación del código
+        # Fallback de seguridad estructurado línea a línea respetando la indentación
         mensaje_error = (
             "❌ **Error al procesar la consulta en la API de Gemini**:\n"
             f"```text\n{str(e)}\n```\n\n"
-            "Por seguridad y para no demorar la asistencia, remite el caso manualmente abriendo un ticket o enviando un correo a:\n"
-            "- 📧 **Soporte Técnico**: soportetecnico@omodaes.com\n"
-            "- 📧 **Departamento de Garantías**: garantias@omodaes.com"
+            "Por seguridad y para no demorar la asistencia, remite el caso manualmente abriendo un ticket según corresponda:\n"
+            "- 🛠️ **Dudas de Diagnóstico/Reparación**: Abrir ticket técnico o escribir a soportetecnico@omodaes.com\n"
+            "- 📝 **Dudas de Cobertura/Tramitación**: Escribir a garantias@omodaes.com"
         )
         return mensaje_error
 
