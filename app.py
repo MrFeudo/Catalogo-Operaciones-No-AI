@@ -214,9 +214,7 @@ opcion_menu = st.sidebar.radio(
     key="menu_navegacion_app"
 )
 
-# ==========================================
-# FUNCIÓN DEL CONSULTORIO DE IA (CORREGIDA)
-# ==========================================
+
 # ==========================================
 # FUNCIÓN DEL CONSULTORIO DE IA (MULTIMEDIA OPTIMIZADA)
 # ==========================================
@@ -225,32 +223,28 @@ def consultar_ia_garantias(descripcion_averia, archivo_imagen=None):
     Procesa la consulta técnica de forma efímera utilizando el nuevo SDK oficial 
     google-genai y el modelo gemini-2.5-flash.
     
-    Elimina introducciones innecesarias para maximizar el ahorro de tokens, 
-    antepone el disclaimer de central y procesa en bucle de forma eficiente 
-    un máximo de 2 imágenes comprimidas en memoria RAM.
+    Elimina introducciones innecesarias para maximizar el ahorro de tokens y
+    se centra exclusivamente en la estructura limpia de los 4 puntos técnicos.
     """
     try:
-        # 1. Validación de la API Key en los secretos de Streamlit
         if "GEMINI_API_KEY" not in st.secrets:
             return "⚠️ **Error de Configuración**: No se ha encontrado la clave 'GEMINI_API_KEY' en los secretos de Streamlit (st.secrets)."
             
         client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
-        # 2. Carga del archivo local de política de conocimiento
         try:
             with open("Politica_conocimiento.txt", "r", encoding="utf-8") as f:
                 politica_texto = f.read()
         except FileNotFoundError:
             politica_texto = "Política oficial no disponible de forma local. Siga los estándares generales de garantía de OMODA & JAECOO."
 
-        # 3. Configuración de las instrucciones del sistema (System Instruction)
         prompt_sistema = (
             "Eres un Ingeniero de Garantías Senior para OMODA & JAECOO España, experto en análisis técnico de "
             "automoción y valoración de siniestros/averías en preentrega y posventa.\n\n"
             
             "REGLA CRÍTICA DE EMISIÓN DE TOKENS: Sé extremadamente directo. Prohibido incluir saludos como 'Estimado taller', "
-            "prohibido incluir introducciones corteses o frases de transición. Empieza tu respuesta DIRECTAMENTE con la "
-            "NOTA OBLIGATORIA DE CENTRAL que te pide el usuario, sin añadir ni una sola palabra antes.\n\n"
+            "prohibido incluir introducciones corteses o frases de transición. Empieza tu respuesta DIRECTAMENTE con el "
+            "punto '1. EVALUACIÓN Y CATEGORÍA TÉCNICA', sin añadir ni una sola palabra antes.\n\n"
             
             "Tus directrices principales son:\n"
             f"1. **Conocimiento Oficial**: Usa estrictamente esta política de conocimiento adjunta:\n{politica_texto}\n"
@@ -259,56 +253,33 @@ def consultar_ia_garantias(descripcion_averia, archivo_imagen=None):
             "fugas de fluidos, o defectos de ensamblaje en fábrica (como conectores mal encajados o pinzados de origen).\n"
             "3. **Criterio de Preentrega**: Si el caso menciona que es un vehículo nuevo en fase de preentrega, "
             "sé especialmente estricto evaluando si el daño pudo ser causado por el transporte o si es un defecto de origen oculto "
-            "debajo de guarnecidos/consolas.\n"
-            "4. **CRITERIO CRÍTICO DE REDIRECCIÓN (CANALES SEPARADOS)**:\n"
-            "   - **Dudas de Diagnóstico Técnico o Reparación**: Si el caso presenta dudas sobre la causa de la avería, cómo solucionarla, "
-            "o el proceso técnico de reparación, el canal obligatorio es abrir un **Ticket de Asistencia Técnica** o escribir a soportetecnico@omodaes.com.\n"
-            "   - **Dudas de Cobertura o Tramitación**: Si la duda es sobre si el componente entra en garantía, plazos administrativos, "
-            "o el proceso de reclamación, el canal obligatorio es dirigirse al departamento de **Garantías** (garantias@omodaes.com)."
+            "debajo de guarnecidos/consolas."
         )
 
-        # 4. Construcción efímera de la lista de contenidos (Multimodal - Soporta hasta 2 imágenes)
         contenidos = []
         
         if archivo_imagen is not None:
-            # Si el usuario sube varios archivos, Streamlit los devuelve como una lista. Si es uno, lo metemos en lista.
             lista_archivos = archivo_imagen if isinstance(archivo_imagen, list) else [archivo_imagen]
-            
-            # Iteramos procesando estrictamente un máximo de 2 imágenes para controlar los costos
             for archivo in lista_archivos[:2]:
-                # COMPRESIÓN AL VUELO: Leemos los bytes del búfer y abrimos la imagen en memoria RAM
                 imagen_pil = Image.open(io.BytesIO(archivo.read() if hasattr(archivo, 'read') else archivo))
-                # Redimensionamos a un máximo de 1024px para destruir el exceso de tokens y mantener nitidez
                 imagen_pil.thumbnail((1024, 1024))
                 contenidos.append(imagen_pil)
             
-        # Formulación estructurada exigiendo el Disclaimer ARRIBA DEL TODO y sin rodeos
         prompt_usuario = (
             f"Caso reportado por el taller:\n'{descripcion_averia}'\n\n"
             "Genera el informe técnico estructurado omitiendo cualquier saludo o introducción. "
-            "Es OBLIGATORIO que tu respuesta comience exactamente con este bloque:\n\n"
-            
-            "⚠️ **NOTA OBLIGATORIA DE CENTRAL**:\n"
-            "«⚠️ **NOTA OBLIGATORIA DE CENTRAL**: Este informe es una valoración preliminar basada en la descripción y/o imagen de diagnosis aportada. "
-            "Para validar definitivamente el diagnóstico, proceder con la autorización de la reparación bajo garantía o reportar un fallo de fabricación de origen, "
-            "deben abrir un canal de comunicación oficial aportando el número de bastidor (VIN) completo:\n"
-            "- **Para dudas sobre el diagnóstico técnico o el proceso de reparación**: Abra un **Ticket de Asistencia Técnica** en la plataforma o escriba a soportetecnico@omodaes.com.\n"
-            "- **Para consultas sobre la cobertura de la garantía o tramitación administrativa**: Contacte directamente con el departamento de garantías en garantias@omodaes.com.»\n\n"
-            "--- (Línea de separación de contenido) ---\n\n"
-            
-            "A continuación, desarrolla en profundidad los siguientes apartados:\n\n"
+            "Desarrolla en profundidad los siguientes apartados exactamente en este orden:\n\n"
             "**1. EVALUACIÓN Y CATEGORÍA TÉCNICA**\n"
             "- Identifica detalladamente el componente afectado, evalúa su nivel de criticidad y tipifica de forma razonada la naturaleza del fallo (eléctrico, mecánico o estético).\n\n"
             "**2. ANÁLISIS EXHAUSTIVO DE LA EVIDENCIA VISUAL (FOTOS)**\n"
             "- Describe minuciosamente todo lo que se aprecia en las evidencias adjuntas (pueden ser hasta 2 imágenes). Analiza detalles como marcas de desmontaje forzado, rotura limpia, defecto de fabricación o capturas de pantallas de diagnosis. Si no hay fotos, detalla qué comprobaciones visuales específicas o capturas debe aportar el mecánico para esclarecer el origen.\n\n"
             "**3. DICTAMEN PRELIMINAR DE COBERTURA DE GARANTÍA**\n"
-            "- Evalúa de forma argumentada si la avería es susceptible de cobertura basándote explícitamente en la política oficial (ej. si al ser una preentrega el daño estaba oculto bajo guarnecidos/consolas y no pudo detectarse en la recepción del transporte).\n\n"
+            "- Evalúa de forma argumentada si la avería es susceptible de cobertura basándote explícitamente en la política oficial (ej. si al ser una preentrega el daño estaba oculto bajo guarnecidos/consolas y no pudo detectarse en la recepción del transporte). Importante, daño de transporte que llegue así a puerto, se cubre en garantía\n\n"
             "**4. ACCIÓN REQUERIDA Y PROTOCOLO DE TRABAJO**\n"
             "- Detalla cronológicamente la sugerencia de pasos técnicos detallados que debe seguir el operario en el taller para verificar la avería."
         )
         contenidos.append(prompt_usuario)
 
-        # 5. LLAMADA DE BAJO COSTE: Se usa el modelo real gemini-2.5-flash y temperatura 0.6
         response = client.models.generate_content(
             model='gemini-3.5-flash',
             contents=contenidos,
@@ -318,21 +289,10 @@ def consultar_ia_garantias(descripcion_averia, archivo_imagen=None):
             )
         )
         
-        if response.text:
-            return response.text
-        else:
-            return "⚠️ La IA procesó la solicitud pero no devolvió ningún texto en el informe. Revisa los filtros de contenido."
+        return response.text if response.text else "⚠️ La IA procesó la solicitud pero no devolvió ningún texto."
 
     except Exception as e:
-        # Fallback de seguridad estructurado línea a línea respetando la indentación
-        mensaje_error = (
-            "❌ **Error al procesar la consulta en la API de Gemini**:\n"
-            f"```text\n{str(e)}\n```\n\n"
-            "Por seguridad y para no demorar la asistencia, remite el caso manualmente abriendo un ticket según corresponda:\n"
-            "- 🛠️ **Dudas de Diagnóstico/Reparación**: Abrir ticket técnico o escribir a soportetecnico@omodaes.com\n"
-            "- 📝 **Dudas de Cobertura/Tramitación**: Escribir a garantias@omodaes.com"
-        )
-        return mensaje_error
+        return f"❌ **Error al procesar la consulta en la API de Gemini**:\n```text\n{str(e)}\n```"
 
 # ==========================================
 # 4. SISTEMA DE SEGURIDAD CONTRASEÑA
