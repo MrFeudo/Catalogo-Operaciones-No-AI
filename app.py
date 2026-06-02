@@ -211,19 +211,23 @@ opcion_menu = st.sidebar.radio(
 )
 
 # ==========================================
-# FUNCIÓN DEL CONSULTORIO DE IA
+# FUNCIÓN DEL CONSULTORIO DE IA (MODIFICADA)
 # ==========================================
-def consultar_ia_garantias(descripcion_averia):
+def consultar_ia_garantias(descripcion_averia, archivo_imagen=None):
     """
     Lee la política local y procesa la consulta con Gemini usando las credenciales del robot.
+    Soporta opcionalmente una imagen en formato binario.
     """
     try:
         # 1. Recuperamos credenciales del búnker
+        from google import genai
+        from google.genai import types
+        
         creds_dict = st.secrets["connections"]["gsheets"]
         google_creds = service_account.Credentials.from_service_account_info(creds_dict)
         client = genai.Client(credentials=google_creds)
 
-        # 2. Intentamos cargar la política (ajusta el nombre si es .txt o .xlsx)
+        # 2. Intentamos cargar la política
         try:
             with open("Politica_conocimiento.txt", "r", encoding="utf-8") as f:
                 politica_texto = f.read()
@@ -237,15 +241,31 @@ def consultar_ia_garantias(descripcion_averia):
             f"{politica_texto}\n\n"
         )
 
+        # Estructuramos los contenidos dinámicamente
+        contenidos = []
+        
+        # Si el mecánico subió una imagen, la añadimos primero para que la IA la analice
+        if archivo_imagen is not None:
+            contenidos.append({
+                "mime_type": "image/jpeg",
+                "data": archivo_imagen
+            })
+            
+        # Añadimos la pregunta del mecánico
         prompt_usuario = (
-            f"Avería reportada: '{descripcion_averia}'\n\n"
-            "Genera un informe con: 1. Categoría, 2. Criticidad, 3. ¿Entra en Garantía? (Justifica), 4. Sugerencia de diagnóstico."
+            f"Avería reportada por el taller: '{descripcion_averia}'\n\n"
+            "Genera un informe detallado con:\n"
+            "1. Categoría de la avería.\n"
+            "2. Criticidad.\n"
+            "3. ¿Entra en Garantía según la política oficial? (Justifica explícitamente).\n"
+            "4. Sugerencia de diagnóstico y pasos técnicos a seguir en el taller."
         )
+        contenidos.append(prompt_usuario)
 
-        # 4. Llamada al modelo
+        # 4. Llamada al modelo oficial de pago (Gemini 3.5 Flash)
         response = client.models.generate_content(
             model='gemini-3.5-flash',
-            contents=prompt_usuario,
+            contents=contenidos,
             config=types.GenerateContentConfig(
                 system_instruction=prompt_sistema,
                 temperature=0.3
@@ -675,65 +695,62 @@ if check_password():
                     st.rerun()
 
     # ==========================================
-    # PANTALLA 4: CONSULTORIO TÉCNICO IA (¡Perfectamente alineado!)
+    # PANTALLA 4: CONSULTORIO TÉCNICO IA
     # ==========================================
     elif opcion_menu == "🧠 Consultorio Técnico IA":
         st.title("🧠 Consultorio Técnico de Garantías")
         st.write("Introduce los síntomas o la descripción de la avería de forma libre. Sube imágenes si lo necesitas para un pre-diagnóstico preciso.")
 
-        # 1. Carga multimodal en dos columnas
         col_img, col_txt = st.columns([1, 2])
         with col_img:
             archivo_subido = st.file_uploader("📸 Foto de la avería (Opcional)", type=["jpg", "jpeg", "png"])
         with col_txt:
             descripcion_averia = st.text_area(
                 "Describe la avería o la duda a consultar:",
-                placeholder="Ej: El OMODA 5 hace un traqueteo metálico en la parte delantera derecha...",
+                placeholder="Ej: El OMODA 5 hace un traqueteo metálico en la parte delantera derecha al girar a bajas revoluciones...",
                 height=150
             )
 
-        # 2. Botón e integración directa con las credenciales de Gemini
         if st.button("Consultar con el Ingeniero IA"):
-            if descripcion_averia.strip() == "" and archivo_subido is None:
+            # Validación: Comprobamos que al menos tenga texto o una imagen para no mandar una consulta vacía
+            if not descripcion_averia.strip() and archivo_subido is None:
                 st.warning("⚠️ Por favor, escribe una descripción o sube una imagen antes de consultar.")
             else:
-                with st.spinner("Analizando información con el modelo oficial..."):
-                    try:
-                        # Preparamos los datos estructurados para enviar a la API
-                        contenido_consulta = [descripcion_averia]
-                        
-                        if archivo_subido is not None:
-                            # Optimizador de imagen en memoria (Ahorro de tokens)
+                with st.spinner("Analizando manuales, imágenes y políticas de cobertura oficial..."):
+                    
+                    imagen_bytes = None
+                    # Si sube foto, la reducimos en memoria para proteger tu saldo
+                    if archivo_subido is not None:
+                        try:
                             from PIL import Image
                             import io
                             img = Image.open(archivo_subido)
-                            img.thumbnail((1024, 1024))
+                            img.thumbnail((1024, 1024))  # Redimensión inteligente para ahorrar tokens
                             buf = io.BytesIO()
                             img.save(buf, format="JPEG", quality=85)
-                            
-                            contenido_consulta.append({
-                                "mime_type": "image/jpeg",
-                                "data": buf.getvalue()
-                            })
+                            imagen_bytes = buf.getvalue()
+                        except Exception as err_img:
+                            st.error(f"Error al procesar la imagen: {err_img}")
 
-                        # Invocación directa usando el objeto 'model' configurado al inicio de tu app
-                        response = model.generate_content(contenido_consulta)
-                        
-                        st.success("¡Análisis completado con éxito!")
-                        st.subheader("📋 Informe de Validación Técnica")
-                        st.info(response.text)
-                        
-                    except Exception as e:
-                        st.error(f"⚠️ Error al procesar la consulta en el plan de pago: {e}")
-                        st.info("Asegúrate de que el objeto 'model' esté correctamente inicializado con genai.GenerativeModel al principio del script.")
+                    # Llamamos a tu función externa pasándole los parámetros correspondientes
+                    resultado_diagnostico = consultar_ia_garantias(
+                        descripcion_averia=descripcion_averia.strip(), 
+                        archivo_imagen=imagen_bytes
+                    )
+                
+                # Mostramos el informe final generado por el modelo 3.5 Flash
+                st.success("¡Análisis de política completado!")
+                st.markdown("### 📋 Informe de Validación Técnica")
+                st.info(resultado_diagnostico)
 
-        # 3. Aviso Legal y derivación correcta a soporte técnico
+        # Aviso Legal destacado y desvío a canales oficiales
         st.divider()
         st.warning("⚠️ **¿Dudas con el diagnóstico o avería compleja?**")
         st.markdown(
             "Esta IA es una herramienta de apoyo y su diagnóstico es **puramente orientativo**. "
             "Si la avería es compleja, crítica o el resultado no es concluyente, **no procedas sin autorización**. "
             "Contacta directamente con nuestro equipo oficial para abrir un caso técnico:\n\n"
-            "- 📧 **Correo de soporte:** soportetecnico@omodaes.com\n"
+            "- 📧 **Correo de soporte técnico:** soportetecnico@omodaes.com\n"
+            "- 📧 **Departamento de garantías:** garantias@omodaes.com\n"
             "- 🎫 **Acción:** Abre un ticket de soporte técnico en nuestra plataforma."
         )
