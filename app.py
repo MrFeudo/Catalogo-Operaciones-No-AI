@@ -264,7 +264,7 @@ def consultar_ia_garantias(descripcion_averia, archivo_imagen=None):
 
         # 4. Llamada al modelo oficial de pago (Gemini 3.5 Flash)
         response = client.models.generate_content(
-            model='gemini-3.5-flash',
+            model='gemini-3.1-flash-image',
             contents=contenidos,
             config=types.GenerateContentConfig(
                 system_instruction=prompt_sistema,
