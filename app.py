@@ -269,7 +269,7 @@ def consultar_ia_garantias(descripcion_averia, archivo_imagen=None):
 
         # Uso correcto del modelo multimodal optimizado (gemini-2.5-flash)
         response = client.models.generate_content(
-            model='gemini-3.1-flash-image',
+            model='gemini-3.5-flash',
             contents=contenidos,
             config=types.GenerateContentConfig(
                 system_instruction=prompt_sistema,
