@@ -226,7 +226,6 @@ def consultar_ia_garantias(descripcion_averia, archivo_imagen=None):
         from PIL import Image
         from google import genai
         from google.genai import types
-        import streamlit as st
         
         # 1. Validación de la API Key en los secretos de Streamlit
         if "GEMINI_API_KEY" not in st.secrets:
