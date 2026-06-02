@@ -216,26 +216,33 @@ opcion_menu = st.sidebar.radio(
 # ==========================================
 # FUNCIÓN DEL CONSULTORIO DE IA (CORREGIDA)
 # ==========================================
+# ==========================================
+# FUNCIÓN DEL CONSULTORIO DE IA (MULTIMEDIA OPTIMIZADA)
+# ==========================================
 def consultar_ia_garantias(descripcion_averia, archivo_imagen=None):
     """
     Procesa la consulta técnica de forma efímera utilizando el nuevo SDK oficial 
     google-genai y el modelo gemini-2.5-flash.
     
     Elimina introducciones innecesarias para maximizar el ahorro de tokens, 
-    antepone el disclaimer de central y separa estrictamente los canales de soporte.
+    antepone el disclaimer de central y procesa en bucle de forma eficiente 
+    un máximo de 2 imágenes comprimidas en memoria RAM.
     """
     try:
+        # 1. Validación de la API Key en los secretos de Streamlit
         if "GEMINI_API_KEY" not in st.secrets:
             return "⚠️ **Error de Configuración**: No se ha encontrado la clave 'GEMINI_API_KEY' en los secretos de Streamlit (st.secrets)."
             
         client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
+        # 2. Carga del archivo local de política de conocimiento
         try:
             with open("Politica_conocimiento.txt", "r", encoding="utf-8") as f:
                 politica_texto = f.read()
         except FileNotFoundError:
             politica_texto = "Política oficial no disponible de forma local. Siga los estándares generales de garantía de OMODA & JAECOO."
 
+        # 3. Configuración de las instrucciones del sistema (System Instruction)
         prompt_sistema = (
             "Eres un Ingeniero de Garantías Senior para OMODA & JAECOO España, experto en análisis técnico de "
             "automoción y valoración de siniestros/averías en preentrega y posventa.\n\n"
@@ -259,13 +266,22 @@ def consultar_ia_garantias(descripcion_averia, archivo_imagen=None):
             "o el proceso de reclamación, el canal obligatorio es dirigirse al departamento de **Garantías** (garantias@omodaes.com)."
         )
 
+        # 4. Construcción efímera de la lista de contenidos (Multimodal - Soporta hasta 2 imágenes)
         contenidos = []
         
         if archivo_imagen is not None:
-            imagen_pil = Image.open(io.BytesIO(archivo_imagen))
-            imagen_pil.thumbnail((1024, 1024))
-            contenidos.append(imagen_pil)
+            # Si el usuario sube varios archivos, Streamlit los devuelve como una lista. Si es uno, lo metemos en lista.
+            lista_archivos = archivo_imagen if isinstance(archivo_imagen, list) else [archivo_imagen]
             
+            # Iteramos procesando estrictamente un máximo de 2 imágenes para controlar los costos
+            for archivo in lista_archivos[:2]:
+                # COMPRESIÓN AL VUELO: Leemos los bytes del búfer y abrimos la imagen en memoria RAM
+                imagen_pil = Image.open(io.BytesIO(archivo.read() if hasattr(archivo, 'read') else archivo))
+                # Redimensionamos a un máximo de 1024px para destruir el exceso de tokens y mantener nitidez
+                imagen_pil.thumbnail((1024, 1024))
+                contenidos.append(imagen_pil)
+            
+        # Formulación estructurada exigiendo el Disclaimer ARRIBA DEL TODO y sin rodeos
         prompt_usuario = (
             f"Caso reportado por el taller:\n'{descripcion_averia}'\n\n"
             "Genera el informe técnico estructurado omitiendo cualquier saludo o introducción. "
@@ -282,8 +298,8 @@ def consultar_ia_garantias(descripcion_averia, archivo_imagen=None):
             "A continuación, desarrolla en profundidad los siguientes apartados:\n\n"
             "**1. EVALUACIÓN Y CATEGORÍA TÉCNICA**\n"
             "- Identifica detalladamente el componente afectado, evalúa su nivel de criticidad y tipifica de forma razonada la naturaleza del fallo (eléctrico, mecánico o estético).\n\n"
-            "**2. ANÁLISIS EXHAUSTIVO DE LA EVIDENCIA VISUAL (FOTO)**\n"
-            "- Describe minuciosamente todo lo que se aprecia en la imagen adjunta (marcas de desmontaje forzado, rotura limpia, defecto de fabricación, etc.). Si no hay foto, detalla qué comprobaciones visuales específicas o capturas debe aportar el mecánico para esclarecer el origen.\n\n"
+            "**2. ANÁLISIS EXHAUSTIVO DE LA EVIDENCIA VISUAL (FOTOS)**\n"
+            "- Describe minuciosamente todo lo que se aprecia en las evidencias adjuntas (pueden ser hasta 2 imágenes). Analiza detalles como marcas de desmontaje forzado, rotura limpia, defecto de fabricación o capturas de pantallas de diagnosis. Si no hay fotos, detalla qué comprobaciones visuales específicas o capturas debe aportar el mecánico para esclarecer el origen.\n\n"
             "**3. DICTAMEN PRELIMINAR DE COBERTURA DE GARANTÍA**\n"
             "- Evalúa de forma argumentada si la avería es susceptible de cobertura basándote explícitamente en la política oficial (ej. si al ser una preentrega el daño estaba oculto bajo guarnecidos/consolas y no pudo detectarse en la recepción del transporte).\n\n"
             "**4. ACCIÓN REQUERIDA Y PROTOCOLO DE TRABAJO**\n"
@@ -291,6 +307,7 @@ def consultar_ia_garantias(descripcion_averia, archivo_imagen=None):
         )
         contenidos.append(prompt_usuario)
 
+        # 5. LLAMADA DE BAJO COSTE: Se usa el modelo real gemini-2.5-flash y temperatura 0.6
         response = client.models.generate_content(
             model='gemini-2.5-flash',
             contents=contenidos,
@@ -306,6 +323,7 @@ def consultar_ia_garantias(descripcion_averia, archivo_imagen=None):
             return "⚠️ La IA procesó la solicitud pero no devolvió ningún texto en el informe. Revisa los filtros de contenido."
 
     except Exception as e:
+        # Fallback de seguridad estructurado línea a línea respetando la indentación
         mensaje_error = (
             "❌ **Error al procesar la consulta en la API de Gemini**:\n"
             f"```text\n{str(e)}\n```\n\n"
