@@ -6,6 +6,7 @@ import unicodedata
 from google import genai
 from google.genai import types
 from google.oauth2 import service_account
+from PIL import Image
 
 def normalizar_texto(texto):
     texto = str(texto)
