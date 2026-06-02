@@ -14,7 +14,7 @@ def normalizar_texto(texto):
 st.set_page_config(page_title="Buscador Técnico OMODA & JAECOO", layout="wide")
 
 # =========================================================================
-# 1. INICIALIZACIÓN ABSOLUTA DEL SESSION STATE (Para evitar AttributeError)
+# 1. INICIALIZACIÓN ABSOLUTA DEL SESSION STATE
 # =========================================================================
 if "lista_solicitudes" not in st.session_state:
     st.session_state.lista_solicitudes = []
@@ -75,7 +75,7 @@ IDIOMAS = {
         "form_ref": "REFERENCIA DE PIEZA (Opcional)",
         "form_ref_holder": "Ej. 7365747465AA",
         "form_op": "OPERACIÓN QUE SE SOLICITA AÑADIR *",
-        "form_op_holder": "Describa detalladamente la operación técnica o falta de precio que requiere el taller...",
+        "form_op_holder": "Describa detalladamente la operation técnica o falta de precio que requiere el taller...",
         "form_btn": "Enviar Solicitud a Central",
         "err_campos": "❌ Por favor, rellene todos los campos obligatorios (*).",
         "err_vin_corto": "❌ El VIN introducido es demasiado corto. Revíselo.",
@@ -194,20 +194,23 @@ except Exception:
 
 st.sidebar.markdown("---")
 
+# CORRECCIÓN DE SEGURIDAD: Añadimos 'key' explícita para evitar duplicación de ID en recargas
 idioma_seleccionado = st.sidebar.selectbox(
     "🌐 Language / Idioma / 语言:",
     ["Español", "English", "Chinese (中文)"],
-    index=["Español", "English", "Chinese (中文)"].index(st.session_state.idioma)
+    index=["Español", "English", "Chinese (中文)"].index(st.session_state.idioma),
+    key="selector_idioma_global"
 )
 st.session_state.idioma = idioma_seleccionado
 txt = IDIOMAS[st.session_state.idioma]
 
 st.sidebar.markdown("---")
-st.sidebar.markdown(txt["menu_titulo"])
+st.sidebar.sidebar_markdown_target = st.sidebar.markdown(txt["menu_titulo"])
 
 opcion_menu = st.sidebar.radio(
     txt["menu_radio"],
-    [txt["menu_taller"], txt["menu_precios"], txt["menu_solicitar"], "🧠 Consultorio Técnico IA"]
+    [txt["menu_taller"], txt["menu_precios"], txt["menu_solicitar"], "🧠 Consultorio Técnico IA"],
+    key="menu_navegacion_app"
 )
 
 # ==========================================
@@ -222,20 +225,17 @@ def consultar_ia_garantias(descripcion_averia, archivo_imagen=None):
     antepone el disclaimer de central y separa estrictamente los canales de soporte.
     """
     try:
-        # 1. Validación de la API Key en los secretos de Streamlit
         if "GEMINI_API_KEY" not in st.secrets:
             return "⚠️ **Error de Configuración**: No se ha encontrado la clave 'GEMINI_API_KEY' en los secretos de Streamlit (st.secrets)."
             
         client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
-        # 2. Carga del archivo local de política de conocimiento
         try:
             with open("Politica_conocimiento.txt", "r", encoding="utf-8") as f:
                 politica_texto = f.read()
         except FileNotFoundError:
             politica_texto = "Política oficial no disponible de forma local. Siga los estándares generales de garantía de OMODA & JAECOO."
 
-        # 3. Configuración de las instrucciones del sistema (System Instruction)
         prompt_sistema = (
             "Eres un Ingeniero de Garantías Senior para OMODA & JAECOO España, experto en análisis técnico de "
             "automoción y valoración de siniestros/averías en preentrega y posventa.\n\n"
@@ -259,17 +259,13 @@ def consultar_ia_garantias(descripcion_averia, archivo_imagen=None):
             "o el proceso de reclamación, el canal obligatorio es dirigirse al departamento de **Garantías** (garantias@omodaes.com)."
         )
 
-        # 4. Construcción efímera de la lista de contenidos (Multimodal)
         contenidos = []
         
         if archivo_imagen is not None:
-            # COMPRESIÓN AL VUELO: Abrimos la imagen en memoria RAM
             imagen_pil = Image.open(io.BytesIO(archivo_imagen))
-            # Redimensionamos a un máximo de 1024px para mantener el detalle y ahorrar tokens (2 céntimos por consulta)
             imagen_pil.thumbnail((1024, 1024))
             contenidos.append(imagen_pil)
             
-        # Formulación estructurada exigiendo el Disclaimer ARRIBA DEL TODO y sin rodeos
         prompt_usuario = (
             f"Caso reportado por el taller:\n'{descripcion_averia}'\n\n"
             "Genera el informe técnico estructurado omitiendo cualquier saludo o introducción. "
@@ -295,7 +291,6 @@ def consultar_ia_garantias(descripcion_averia, archivo_imagen=None):
         )
         contenidos.append(prompt_usuario)
 
-        # 5. LLAMADA CORREGIDA: Se usa el modelo real gemini-2.5-flash y temperatura estable para redacción completa
         response = client.models.generate_content(
             model='gemini-2.5-flash',
             contents=contenidos,
@@ -311,7 +306,6 @@ def consultar_ia_garantias(descripcion_averia, archivo_imagen=None):
             return "⚠️ La IA procesó la solicitud pero no devolvió ningún texto en el informe. Revisa los filtros de contenido."
 
     except Exception as e:
-        # Fallback de seguridad estructurado línea a línea respetando la indentación
         mensaje_error = (
             "❌ **Error al procesar la consulta en la API de Gemini**:\n"
             f"```text\n{str(e)}\n```\n\n"
@@ -327,13 +321,14 @@ def consultar_ia_garantias(descripcion_averia, archivo_imagen=None):
 def check_password():
     if not st.session_state.authenticated:
         st.title(txt["pass_titulo"])
-        password = st.text_input(txt["pass_input"], type="password")
-        if st.button(txt["pass_boton"]):
+        # Añadimos key única al password input también para blindar el acceso contra duplicados
+        password = st.text_input(txt["pass_input"], type="password", key="pass_input_unico")
+        if st.button(txt["pass_boton"], key="pass_btn_unico"):
             if password == "DealersOJ2026":
                 st.session_state.authenticated = True
                 st.rerun()
             else:
-                st.error(txt["pass_error"])
+                st.error(txt["error_pass"] if "error_pass" in txt else txt.get("pass_error", "❌ Contraseña incorrecta"))
         return False
     return True
 
