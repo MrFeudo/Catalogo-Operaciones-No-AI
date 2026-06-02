@@ -215,59 +215,49 @@ opcion_menu = st.sidebar.radio(
 # ==========================================
 def consultar_ia_garantias(descripcion_averia, archivo_imagen=None):
     """
-    Lee la política local y procesa la consulta multimodal usando el modelo oficial gemini-2.5-flash.
-    Maneja la carga de imágenes mediante PIL para evitar conflictos con las restricciones de Pydantic.
+    Procesa la consulta optimizando el tamaño de la imagen para reducir 
+    drásticamente el consumo de tokens y el coste económico en Google Cloud.
     """
     try:
         import io
         from PIL import Image
         from google import genai
         from google.genai import types
+        import streamlit as st
         
-        # Validación de la API Key en los secretos
         if "GEMINI_API_KEY" not in st.secrets:
-            raise ValueError("No se ha configurado la clave 'GEMINI_API_KEY' en st.secrets.")
+            return "⚠️ **Error**: Falta GEMINI_API_KEY."
             
-        # Inicialización del cliente con la API Key
         client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
-        # Intentamos cargar la política local
         try:
             with open("Politica_conocimiento.txt", "r", encoding="utf-8") as f:
                 politica_texto = f.read()
         except FileNotFoundError:
-            politica_texto = "Política oficial no disponible de forma local. Siga los estándares generales de garantía de OMODA & JAECOO."
+            politica_texto = "Política oficial no disponible."
 
-        # Configuración del prompt del sistema (RAG)
         prompt_sistema = (
             "Eres un Ingeniero de Garantías Senior para OMODA & JAECOO España. "
-            "Usa estrictamente esta política oficial de conocimiento adjunta para dar tu respuesta:\n"
-            f"{politica_texto}\n\n"
-            "REGLA CRÍTICA IMPORTANTE: Si la avería propuesta no se puede resolver con total certeza mediante el texto provisto, "
-            "o si experimentas cualquier limitación técnica en tu análisis, debes indicarle de manera explícita y prioritaria al "
-            "usuario que debe redirigir su caso abriendo un ticket o enviando un correo al departamento oficial de Soporte Técnico "
-            "(soportetecnico@omodaes.com) o al departamento de Garantías (garantias@omodaes.com) para su aprobación definitiva."
+            f"Usa estrictamente esta política:\n{politica_texto}\n\n"
+            "Si el caso es ambiguo, redirige a soportetecnico@omodaes.com o garantias@omodaes.com."
         )
 
         contenidos = []
         
-        # Si el mecánico sube una foto, la procesamos como objeto de imagen nativo
         if archivo_imagen is not None:
+            # 🔄 COMPRESIÓN AL VUELO: Abrimos la imagen en memoria
             imagen_pil = Image.open(io.BytesIO(archivo_imagen))
+            
+            # Si la imagen es gigantesca, la bajamos a un tamaño máximo de 1024px
+            # Esto mantiene el detalle técnico pero destruye el exceso de tokens costosos
+            imagen_pil.thumbnail((1024, 1024))
+            
             contenidos.append(imagen_pil)
             
-        # Formulación estructurada de la pregunta
-        prompt_usuario = (
-            f"Avería reportada por el taller: '{descripcion_averia}'\n\n"
-            "Genera un informe detallado estructurado en los siguientes puntos:\n"
-            "1. Categoría de la avería.\n"
-            "2. Criticidad.\n"
-            "3. ¿Entra en Garantía según la política oficial? (Justifica explícitamente citando o apoyándote en las directrices del conocimiento).\n"
-            "4. Sugerencia de diagnóstico y pasos técnicos a seguir en el taller."
-        )
+        prompt_usuario = f"Avería reportada:\n'{descripcion_averia}'\n\nGenera el informe técnico estructurado."
         contenidos.append(prompt_usuario)
 
-        # Uso correcto del modelo multimodal optimizado (gemini-2.5-flash)
+        # Usamos gemini-2.5-flash que es la opción más económica y rápida
         response = client.models.generate_content(
             model='gemini-2.5-flash',
             contents=contenidos,
@@ -276,17 +266,11 @@ def consultar_ia_garantias(descripcion_averia, archivo_imagen=None):
                 temperature=0.3
             )
         )
-        return response.text
+        
+        return response.text if response.text else "⚠️ Respuesta vacía."
 
     except Exception as e:
-        # Fallback si falla la cuota de la API o la conexión
-        return (
-            f"⚠️ **Incidencia Técnica en el Consultorio de IA**: {str(e)}\n\n"
-            "No ha sido posible procesar la consulta automática en este momento. Por favor, remite el caso completo directamente "
-            "adjuntando los datos del vehículo y fotografías a nuestros canales oficiales:\n"
-            "- 📧 **Soporte Técnico**: soportetecnico@omodaes.com\n"
-            "- 📧 **Departamento de Garantías**: garantias@omodaes.com"
-        )
+        return f"❌ **Error en la API**: {str(e)}"
 # ==========================================
 # 4. SISTEMA DE SEGURIDAD CONTRASEÑA
 # ==========================================
