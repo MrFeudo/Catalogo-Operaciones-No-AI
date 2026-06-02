@@ -244,7 +244,7 @@ def consultar_ia_garantias(descripcion_averia):
 
         # 4. Llamada al modelo
         response = client.models.generate_content(
-            model='gemini-3.5-flash',
+            model='gemini-1.5-flash',
             contents=prompt_usuario,
             config=types.GenerateContentConfig(
                 system_instruction=prompt_sistema,
