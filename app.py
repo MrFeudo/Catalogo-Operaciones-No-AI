@@ -309,11 +309,11 @@ def consultar_ia_garantias(descripcion_averia, archivo_imagen=None):
 
         # 5. LLAMADA DE BAJO COSTE: Se usa el modelo real gemini-2.5-flash y temperatura 0.6
         response = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-3.5-flash',
             contents=contenidos,
             config=types.GenerateContentConfig(
                 system_instruction=prompt_sistema,
-                temperature=0.6
+                temperature=0.3
             )
         )
         
