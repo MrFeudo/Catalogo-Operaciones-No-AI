@@ -697,7 +697,7 @@ if check_password():
     # =========================================================================
     # PANTALLA 4: CONSULTORIO IA DE GARANTÍAS
     # =========================================================================
-    elif opcion_menu == txt["menu_ia"]:
+    elif opcion_menu == "🧠 Consultorio Técnico IA":
         st.title("🤖 Consultor Técnico de Garantías (Inteligencia Artificial)")
         st.write("Analiza de forma preliminar si una avería está cubierta según el manual de políticas oficial e identifica los pasos técnicos a seguir.")
         st.markdown("---")
