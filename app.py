@@ -285,7 +285,7 @@ def consultar_ia_garantias(descripcion_averia, archivo_imagen=None):
             contents=contenidos,
             config=types.GenerateContentConfig(
                 system_instruction=prompt_sistema,
-                temperature=0.3
+                temperature=0.99
             )
         )
         
