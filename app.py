@@ -694,41 +694,79 @@ if check_password():
                     st.session_state.lista_solicitudes = []
                     st.rerun()
 
+    # =========================================================================
+    # PANTALLA 4: CONSULTORIO IA DE GARANTÍAS
+    # =========================================================================
+    elif opcion_menu == txt["menu_ia"]:
+        st.title("🤖 Consultor Técnico de Garantías (Inteligencia Artificial)")
+        st.write("Analiza de forma preliminar si una avería está cubierta según el manual de políticas oficial e identifica los pasos técnicos a seguir.")
+        st.markdown("---")
+
+        st.subheader("📝 Detalles de la Consulta")
+        descripcion_averia = st.text_area(
+            "Descripción de la avería o síntomas del vehículo:",
+            placeholder="Ejemplo: Cliente reporta ruido metálico al girar el volante a la izquierda en OMODA 5. El amortiguador muestra signos de fuga leve...",
+            height=150
+        )
+        
+        imagen_subida = st.file_uploader("📸 Adjuntar evidencia o foto de la avería (Opcional):", type=["jpg", "jpeg", "png"])
+        
+        if st.button("🔍 Enviar Consulta a la IA", type="primary", use_container_width=True):
+            if not descripcion_averia.strip():
+                st.error("⚠️ Por favor, introduce una descripción de la avería antes de realizar la consulta.")
+            else:
+                with st.spinner("🧠 Analizando la documentación oficial y generando el informe técnico..."):
+                    bytes_imagen = None
+                    if imagen_subida is not None:
+                        bytes_imagen = imagen_subida.read()
+                    
+                    resultado = consultar_ia_garantias(descripcion_averia, bytes_imagen)
+                    
+                    st.markdown("### 📋 Informe de Diagnóstico Generado")
+                    st.markdown(resultado)
+                    st.success("✅ Análisis preliminar finalizado.")
+
 # ==========================================
 # FUNCIÓN DEL CONSULTORIO DE IA (CORREGIDA)
 # ==========================================
 def consultar_ia_garantias(descripcion_averia, archivo_imagen=None):
     """
-    Lee la política local y procesa la consulta con Gemini usando las credenciales del robot.
+    Lee la política local y procesa la consulta con Gemini usando el SDK oficial de google-genai.
     Soporta opcionalmente una imagen en formato binario mediante types.Part.from_bytes.
+    Redirige de forma transparente al buzón oficial en caso de incidencias.
     """
     try:
-        # 1. Recuperamos credenciales del búnker
         from google import genai
         from google.genai import types
         
-        creds_dict = st.secrets["connections"]["gsheets"]
-        google_creds = service_account.Credentials.from_service_account_info(creds_dict)
-        client = genai.Client(credentials=google_creds)
+        # Validación de la API Key en los secretos
+        if "GEMINI_API_KEY" not in st.secrets:
+            raise ValueError("No se ha configurado la clave 'GEMINI_API_KEY' en st.secrets.")
+            
+        # Inicialización correcta del cliente oficial con la API Key
+        client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
-        # 2. Intentamos cargar la política
+        # Intentamos cargar la política local
         try:
             with open("Politica_conocimiento.txt", "r", encoding="utf-8") as f:
                 politica_texto = f.read()
         except FileNotFoundError:
-            politica_texto = "Política no encontrada. Siga los estándares generales de garantía."
+            politica_texto = "Política oficial no disponible de forma local. Siga los estándares generales de garantía de OMODA & JAECOO."
 
-        # 3. Configuración del prompt con el conocimiento (RAG básico)
+        # Configuración del prompt del sistema (RAG)
         prompt_sistema = (
-            "Eres un Ingeniero de Garantías Senior para OMODA & JAECOO. "
-            "Usa estrictamente esta política para responder:\n"
+            "Eres un Ingeniero de Garantías Senior para OMODA & JAECOO España. "
+            "Usa estrictamente esta política oficial de conocimiento adjunta para dar tu respuesta:\n"
             f"{politica_texto}\n\n"
+            "REGLA CRÍTICA IMPORTANTE: Si la avería propuesta no se puede resolver con total certeza mediante el texto provisto, "
+            "o si experimentas cualquier limitación técnica en tu análisis, debes indicarle de manera explícita y prioritaria al "
+            "usuario que debe redirigir su caso abriendo un ticket o enviando un correo al departamento oficial de Soporte Técnico "
+            "(soportetecnico@omodaes.com) o al departamento de Garantías (garantias@omodaes.com) para su aprobación definitiva."
         )
 
-        # Estructuramos la lista de contenidos de forma limpia para Pydantic
         contenidos = []
         
-        # SI HAY IMAGEN: La empaquetamos usando la estructura oficial que exige google-genai
+        # Procesamiento de imagen si existe
         if archivo_imagen is not None:
             part_imagen = types.Part.from_bytes(
                 data=archivo_imagen,
@@ -736,20 +774,20 @@ def consultar_ia_garantias(descripcion_averia, archivo_imagen=None):
             )
             contenidos.append(part_imagen)
             
-        # Añadimos la pregunta o descripción técnica del mecánico
+        # Formulación estructurada de la pregunta
         prompt_usuario = (
             f"Avería reportada por el taller: '{descripcion_averia}'\n\n"
-            "Genera un informe detallado con:\n"
+            "Genera un informe detallado estructurado en los siguientes puntos:\n"
             "1. Categoría de la avería.\n"
             "2. Criticidad.\n"
-            "3. ¿Entra en Garantía según la política oficial? (Justifica explícitamente).\n"
+            "3. ¿Entra en Garantía según la política oficial? (Justifica explícitamente citando o apoyándote en las directrices del conocimiento).\n"
             "4. Sugerencia de diagnóstico y pasos técnicos a seguir en el taller."
         )
         contenidos.append(prompt_usuario)
 
-        # 4. Llamada al modelo oficial de pago (Gemini 3.5 Flash)
+        # Llamada al modelo oficial Gemini 2.5 / 3.5 Flash
         response = client.models.generate_content(
-            model='gemini-3.5-flash',
+            model='gemini-2.5-flash',
             contents=contenidos,
             config=types.GenerateContentConfig(
                 system_instruction=prompt_sistema,
@@ -759,4 +797,11 @@ def consultar_ia_garantias(descripcion_averia, archivo_imagen=None):
         return response.text
 
     except Exception as e:
-        return f"Error en el consultorio de IA: {str(e)}"
+        # Fallback de seguridad claro orientando al usuario a los canales institucionales de soporte
+        return (
+            f"⚠️ **Incidencia Técnica en el Consultorio de IA**: {str(e)}\n\n"
+            "No ha sido posible procesar la consulta automática en este momento. Por favor, remite el caso completo directamente "
+            "adjuntando los datos del vehículo y fotografías a nuestros canales oficiales:\n"
+            "- 📧 **Soporte Técnico**: soportetecnico@omodaes.com\n"
+            "- 📧 **Departamento de Garantías**: garantias@omodaes.com"
+        )
