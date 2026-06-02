@@ -210,7 +210,7 @@ st.sidebar.sidebar_markdown_target = st.sidebar.markdown(txt["menu_titulo"])
 
 opcion_menu = st.sidebar.radio(
     txt["menu_radio"],
-    [txt["menu_taller"], txt["menu_precios"], txt["menu_solicitar"], "🧠 Consultorio Técnico IA"],
+    [txt["menu_taller"], txt["menu_solicitar"], "🧠 Consultorio Técnico IA"],
     key="menu_navegacion_app"
 )
 
@@ -415,97 +415,6 @@ if check_password():
                 
         except Exception as e:
             st.error(txt["err_taller"].format(e))
-
-    # =========================================================================
-    # PANTALLA 2: PRECIOS DE RECAMBIOS
-    # =========================================================================
-    elif opcion_menu == txt["menu_precios"]:
-        
-        @st.cache_data
-        def load_prices_nueva_version():
-            df = pd.read_excel(URL_GITHUB_EXCEL, sheet_name="Parts price")
-            df.columns = df.columns.astype(str).str.strip()
-            
-            df = df.rename(columns={
-                'Model': 'Modelo',
-                'new_partscode': 'Código de Recambio',
-                'new_product_idname': 'Descripción de la Pieza',
-                'wholesale price (domestic)': 'Precio Mayorista Doméstico',
-                'transactioncurrencyidname': 'Moneda',
-                'new_pricetypename': 'Tipo de Tarifa',
-                'new_businessunit_idname': 'Mercado / Organización',
-                'statecodename': 'Estado'
-            })
-            
-            columnas_finales_precios = [
-                'Modelo', 'Código de Recambio', 'Descripción de la Pieza', 
-                'Precio Mayorista Doméstico', 'Moneda', 'Tipo de Tarifa', 
-                'Mercado / Organización', 'Estado'
-            ]
-            
-            df = df.fillna("")
-            df = df.replace("nan", "")
-            
-            columnas_visibles = [col for col in columnas_finales_precios if col in df.columns]
-            return df[columnas_visibles].reset_index(drop=True)
-
-        try:
-            prices_data = load_prices_nueva_version()
-            
-            st.title(txt["precios_titulo"])
-            st.write(txt["precios_sub"])
-            st.markdown("---")
-            
-            col_busc, col_org_p, col_tar, col_mod = st.columns([2, 1, 1, 1])
-            
-            with col_busc:
-                buscar_recambio = st.text_input(txt["f_buscar_recambio"], "").strip()
-                
-            with col_org_p:
-                mercados_disponibles = [txt["todos"]] + [str(m).strip() for m in prices_data['Mercado / Organización'].unique() if str(m).strip() != ""]
-                
-                indice_defecto = 0
-                for idx, m in enumerate(mercados_disponibles):
-                    if "spain" in m.lower() or "oj spain" in m.lower():
-                        indice_defecto = idx
-                        break
-                        
-                market_name = txt["f_mercado_precios"]
-                mercado_seleccionado = st.selectbox(market_name, mercados_disponibles, index=indice_defecto)
-                
-            with col_tar:
-                tarifas_disponibles = [txt["todas"]] + [str(t).strip() for t in prices_data['Tipo de Tarifa'].unique() if str(t).strip() != ""]
-                tarifa_seleccionada = st.selectbox(txt["f_tarifa"], tarifas_disponibles)
-
-            with col_mod:
-                modelos_disponibles = [txt["todos"]] + [str(mo).strip() for mo in prices_data['Modelo'].unique() if str(mo).strip() != ""]
-                modelo_seleccionado = st.selectbox(txt["filtro_modelo"], modelos_disponibles)
-
-            df_final_precios = prices_data.copy()
-
-            if modelo_seleccionado != txt["todos"]:
-                df_final_precios = df_final_precios[df_final_precios['Modelo'].astype(str).str.strip() == modelo_seleccionado]
-                
-            if mercado_seleccionado != txt["todos"]:
-                df_final_precios = df_final_precios[df_final_precios['Mercado / Organización'].astype(str).str.strip() == mercado_seleccionado]
-                
-            if tarifa_seleccionada != txt["todas"]:
-                df_final_precios = df_final_precios[df_final_precios['Tipo de Tarifa'].astype(str).str.strip() == tarifa_seleccionada]
-                
-            if buscar_recambio:
-                df_final_precios = df_final_precios[
-                    df_final_precios['Código de Recambio'].astype(str).str.contains(buscar_recambio, case=False) |
-                    df_final_precios['Descripción de la Pieza'].astype(str).str.contains(buscar_recambio, case=False)
-                ]
-
-            st.markdown(txt["res_precios"].format(len(df_final_precios)))
-            if not df_final_precios.empty:
-                st.dataframe(df_final_precios, use_container_width=True, hide_index=True)
-            else:
-                st.warning(txt["warn_precios"])
-                
-        except Exception as e:
-            st.error(txt["err_precios"].format(e))
 
     # =========================================================================
     # PANTALLA 3: SOLICITUD DE OPERACIONES ADICIONALES (CONEXIÓN GOOGLE SHEETS)
