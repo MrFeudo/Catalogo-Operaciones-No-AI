@@ -259,7 +259,7 @@ def consultar_ia_garantias(descripcion_averia, archivo_imagen=None):
 
         # Usamos gemini-2.5-flash que es la opción más económica y rápida
         response = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-3.5-flash',
             contents=contenidos,
             config=types.GenerateContentConfig(
                 system_instruction=prompt_sistema,
