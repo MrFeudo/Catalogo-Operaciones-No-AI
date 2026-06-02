@@ -271,19 +271,6 @@ def check_password():
         return False
     return True
 
-¡Visto! El misterio de la pantalla en blanco y los errores queda totalmente resuelto al analizar tu estructura. Tenías toda la razón con los espacios y la lógica de la "línea de tiempo".
-
-Estaban pasando tres problemas técnicos a la vez:
-
-La pantalla en blanco: El bloque de la pantalla de la IA estaba mal indentado (le faltaban espacios en el margen izquierdo). En Python, si un elif no está perfectamente alineado a la misma altura que los if previos, el programa se confunde y cuando seleccionas esa opción del menú, no ejecuta nada y deja la interfaz vacía.
-
-El error de inicialización: El botón llamaba a una función externa llamada consultar_ia_garantias(descripcion_averia) que no estaba usando las librerías modernas de Google ni el nuevo modelo multimodal que soporta imágenes.
-
-El fallo 404 de la captura: Estabas intentando invocar la versión antigua de la API de Google, lo que hacía saltar la alerta azul de modelo no encontrado.
-
-Aquí tienes el bloque de código completamente corregido, alineado y optimizado para que lo sustituyas directamente debajo de tu if check_password():. Ya incluye de paso el sistema multimodal para subir fotos (con reescalado automático para cuidar tu saldo de 20€) y apunta al modelo estable gemini-1.5-flash o gemini-2.5-flash según prefieras (te he dejado configurado gemini-1.5-flash para arrancar con total seguridad):
-
-Python
 if check_password():
     
     # =========================================================================
