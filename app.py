@@ -256,10 +256,15 @@ def consultar_ia_garantias(descripcion_averia, archivo_imagen=None):
             "3. **Criterio de Preentrega**: Si el caso menciona que es un vehículo nuevo en fase de preentrega, "
             "sé especialmente estricto evaluando si el daño pudo ser causado por el transporte o si es un defecto de origen oculto "
             "debajo de guarnecidos/consolas.\n"
-            "4. **Redirección Obligatoria**: Ante cualquier mínima duda, caso ambiguo, falta de información visual clara "
-            "o para la confirmation del diagnóstico final, debes instruir al usuario de forma prioritaria a **abrir un ticket en la "
-            "plataforma oficial de gestión** o a ponerse en contacto con el departamento técnico a través de "
-            "soportetecnico@omodaes.com o garantias@omodaes.com."
+            "4. **Redirección Obligatoria y Canales Correctos**: Ante cualquier caso ambiguo, falta de información o duda "
+            "en la confirmación del diagnóstico final, debes instruir de forma estricta y prioritaria al taller sobre a qué departamento "
+            "dirigirse según la naturaleza de su consulta:\n"
+            "   - **Dudas del Diagnóstico Técnico o Reparación**: Si hay dudas sobre la causa técnica de la avería, cómo solucionar el "
+            "fallo o cómo realizar la reparación en el taller, indícales taxativamente que deben **abrir un ticket de asistencia técnica** "
+            "o escribir al correo oficial de **Soporte Técnico** (soportetecnico@omodaes.com).\n"
+            "   - **Dudas de Cobertura o Tramitación**: Si la consulta se centra en si la pieza entra o no en garantía, en los plazos "
+            "de reclamación o en el procedimiento administrativo para reportar el caso, indícales que deben contactar con el "
+            "departamento de **Garantías** (garantias@omodaes.com)."
         )
 
         # 4. Construcción efímera de la lista de contenidos (Multimodal)
@@ -292,15 +297,15 @@ def consultar_ia_garantias(descripcion_averia, archivo_imagen=None):
             
             "**4. ACCIÓN REQUERIDA Y DIAGNÓSTICO**\n"
             "- Pasos técnicos sugeridos para el taller.\n"
-            "- *NOTA OBLIGATORIA*: Informa explícitamente al taller de que este informe es preliminar y que para validar el diagnóstico, "
+            "- *NOTA OBLIGATORIA*: Informa explícitamente al taller de que este informe es preliminar, para validar el diagnóstico, "
             "proceder con la reparación o reportar el fallo de fábrica, deben **abrir un ticket de asistencia técnica** o escribir a "
-            "soportetecnico@omodaes.com / garantias@omodaes.com aportando el número de bastidor (VIN)."
+            "soportetecnico@omodaes.com / garantias@omodaes.com (Según la naturaleza de la pregunta) aportando el número de bastidor (VIN)."
         )
         contenidos.append(prompt_usuario)
 
-        # 5. Llamada directa y veloz al modelo gemini-2.5-flash
+        # 5. Llamada directa y veloz al modelo gemini-3.5-flash
         response = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-3.5-flash',
             contents=contenidos,
             config=types.GenerateContentConfig(
                 system_instruction=prompt_sistema,
