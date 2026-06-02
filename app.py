@@ -222,11 +222,6 @@ def consultar_ia_garantias(descripcion_averia, archivo_imagen=None):
     antepone el disclaimer de central y separa estrictamente los canales de soporte.
     """
     try:
-        import io
-        from PIL import Image
-        from google import genai
-        from google.genai import types
-        
         # 1. Validación de la API Key en los secretos de Streamlit
         if "GEMINI_API_KEY" not in st.secrets:
             return "⚠️ **Error de Configuración**: No se ha encontrado la clave 'GEMINI_API_KEY' en los secretos de Streamlit (st.secrets)."
