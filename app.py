@@ -400,8 +400,8 @@ def check_password():
 
 if check_password():
     
-    # =========================================================================
-    # PANTALLA 1: TIEMPOS DE TALLER
+   # =========================================================================
+    # PANTALLA 1: TIEMPOS DE TALLER (CON ASISTENTE IA INTEGRADO)
     # =========================================================================
     if opcion_menu == txt["menu_taller"]:
         
@@ -440,6 +440,41 @@ if check_password():
             st.write(txt["taller_sub"])
             st.markdown("---")
 
+            # =================================================================
+            # 🤖 SECCIÓN A: ASISTENTE IA DE BÚSQUEDA BILINGÜE
+            # =================================================================
+            st.subheader("🤖 Asistente Virtual del Catálogo")
+            st.write("Escribe tu consulta en español. La IA traducirá los términos mecánicos y buscará coincidencias en el catálogo.")
+            
+            consulta_rapida = st.text_input(
+                "¿Qué operación, pieza o modelo necesitas localizar?",
+                placeholder="Ejemplo: cambiar pastillas de freno delanteras del omoda 5 / desmontar paragolpes jaecoo 7...",
+                key="campo_consulta_ia_excel"
+            )
+
+            if st.button("Buscar con IA", type="secondary", use_container_width=True):
+                if not consulta_rapida.strip():
+                    st.warning("⚠️ Introduce una descripción o término para realizar la búsqueda.")
+                else:
+                    with st.spinner("🔍 Traduciendo y escaneando el catálogo de operaciones..."):
+                        resultado_busqueda = buscador_inteligente_excel(consulta_rapida)
+                        
+                        st.markdown("#### ⚙️ Resultado de la Consulta:")
+                        if "❌ No se ha encontrado" in resultado_busqueda:
+                            st.error(resultado_busqueda)
+                        else:
+                            st.info(resultado_busqueda)
+                        
+                        # Forzamos refresco automático para pintar el consumo de tokens en la barra lateral
+                        st.rerun()
+
+            st.markdown("---")
+
+            # =================================================================
+            # 📊 SECCIÓN B: FILTROS Y TABLA TRADICIONAL (BÚSQUEDA MANUAL)
+            # =================================================================
+            st.subheader("📊 Catálogo Completo (Filtros Manuales)")
+            
             col1, col2, col3 = st.columns([1, 1.5, 1.5])
             with col1:
                 modelos_disponibles = [txt["todos"]] + list(data['Modelo'].dropna().unique())
