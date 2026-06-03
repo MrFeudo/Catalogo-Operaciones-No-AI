@@ -217,51 +217,54 @@ opcion_menu = st.sidebar.radio(
 def buscador_inteligente_excel(consulta_usuario, df_contexto):
     try:
         if "GEMINI_API_KEY" not in st.secrets:
-            return "⚠️ **Error**: No se ha encontrado la clave API."
+            return "⚠️ **Error**: No se ha encontrado la clave API en st.secrets."
             
         client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
-        # Para evitar que pete por exceso de texto, extraemos una muestra limpia y única de las primeras 150 operaciones 
-        # que coincidan vagamente con las palabras del usuario, o un resumen compacto.
+        # 🔍 FILTRO SEGURO Y LIJERO CON PYTHON ANTES DE IR A LA IA
         try:
-            # Buscamos coincidencias básicas para reducir el tamaño
-            palabras = [p for p in consulta_usuario.lower().split() if len(p) > 2]
+            # Limpiamos las palabras de la búsqueda para hacer un filtro por aproximación
+            palabras = [p.lower() for p in consulta_usuario.split() if len(p) > 2]
+            
             if palabras:
-                mascara = df_contexto.astype(str).relative_chunks = False
-                # Creamos un filtro rápido en el dataframe antes de enviárselo a la IA
-                condicion = df_contexto['Modelo'].str.contains('|'.join(palabras), case=False, na=False) | \
-                            df_contexto['Nombre de la Pieza'].str.contains('|'.join(palabras), case=False, na=False) | \
-                            df_contexto['Operación Técnica'].str.contains('|'.join(palabras), case=False, na=False)
+                # Buscamos de forma segura si alguna de las palabras clave coincide con el Modelo, Pieza u Operación
+                condicion = (
+                    df_contexto['Modelo'].astype(str).str.lower().str.contains('|'.join(palabras), na=False) |
+                    df_contexto['Nombre de la Pieza'].astype(str).str.lower().str.contains('|'.join(palabras), na=False) |
+                    df_contexto['Operación Técnica'].astype(str).str.lower().str.contains('|'.join(palabras), na=False)
+                )
                 df_recortado = df_contexto[condicion].head(80)
             else:
                 df_recortado = df_contexto.head(50)
                 
+            # Convertimos el extracto recortado a un texto limpio para el prompt
             resumen_excel = df_recortado[['Modelo', 'Nombre de la Pieza', 'Código de Referencia', 'Operación Técnica']].to_string(index=False)
         except Exception as e:
-            return f"❌ Error al procesar el filtro del catálogo: {str(e)}"
+            return f"❌ Error interno al filtrar el catálogo: {str(e)}"
 
+        # 🧠 PROMPT DE NAVEGACIÓN BILINGÜE OPTIMIZADO
         prompt_sistema = (
             "Eres el Asistente de Búsqueda del catálogo de operaciones de OMODA & JAECOO España.\n\n"
             "El usuario te va a preguntar en ESPAÑOL, pero el catálogo de operaciones adjunto abajo está en INGLÉS. "
-            "Traduce mentalmente los términos (ej. 'pulir' -> 'polish/paint', 'paragolpes' -> 'bumper') y busca su correspondencia.\n\n"
-            "REGLAS:\n"
-            "1. Si encuentras operaciones en el listado que encajen con lo que pide (ej. pulir o pintar paneles), muéstraselas en una lista clara con su Código de Referencia.\n"
-            "2. Si la operación concreta NO EXISTE en el listado adjunto abajo para ese modelo, responde EXACTAMENTE esto:\n"
+            "Traduce mentalmente los términos técnicos (ej. 'pastillas' -> 'brake pads', 'paragolpes' -> 'bumper', 'pulir' -> 'polish/paint') y busca su correspondencia exacta.\n\n"
+            "REGLAS INEXCUSABLES:\n"
+            "1. Si encuentras operaciones en el listado adjunto que encajen con lo que pide el usuario, muéstraselas en una lista clara indicando el Modelo, la Operación y el Código de Referencia.\n"
+            "2. Si la operación concreta NO EXISTE de forma explícita en el listado adjunto abajo para ese modelo, responde EXACTAMENTE este mensaje:\n"
             "   '❌ No se ha encontrado esta operación en el catálogo oficial de la marca. Por favor, dirígete a la pestaña **📝 Solicitar Operación** en el menú lateral izquierdo para rellenar el formulario de solicitud y que Central pueda darla de alta.'\n"
-            "3. No inventes códigos ni nombres.\n\n"
-            f"--- EXTRACTO DEL CATÁLOGO --- \n{resumen_excel}"
+            "3. No inventes códigos ni nombres que no estén en el bloque de texto inferior.\n\n"
+            f"--- EXTRACTO DEL CATÁLOGO DE OPERACIONES --- \n{resumen_excel}"
         )
 
         response = client.models.generate_content(
             model='gemini-2.5-flash',
-            contents=[f"Consulta: '{consulta_usuario}'"],
+            contents=[f"Consulta en español del usuario: '{consulta_usuario}'"],
             config=types.GenerateContentConfig(
                 system_instruction=prompt_sistema,
                 temperature=0.1
             )
         )
         
-        # Actualización segura del chivato del sidebar
+        # Sincronización del chivato de tokens de tu barra lateral
         if "tokens_totales_input" not in st.session_state:
             st.session_state.tokens_totales_input = 0
             st.session_state.tokens_totales_output = 0
@@ -278,9 +281,9 @@ def buscador_inteligente_excel(consulta_usuario, df_contexto):
             st.session_state.dinero_total_gastado += coste
             st.session_state.ultima_consulta_info = f"Última: In: {t_input} | Out: {t_output} (+{coste:.5f}$)"
             
-        return response.text if response.text else "❌ No se encontraron resultados."
+        return response.text if response.text else "❌ La IA no devolvió ningún resultado."
     except Exception as e:
-        return f"❌ Error en el motor de la IA: {str(e)}"
+        return f"❌ Error en el motor de la IA de Gemini: {str(e)}"
         
 # =========================================================================
 # FUNCIÓN DEL CONSULTORIO DE IA (BLINDADA CONTRA ERRORES DE SESSION STATE)
