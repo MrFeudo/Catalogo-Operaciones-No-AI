@@ -232,10 +232,22 @@ def buscador_inteligente_excel(consulta_usuario, df_contexto):
         }
 
         componentes_piezas = {
+            # Sistema de Vapores / Cánister (EVAP)
+            "vapores": "canister", "canister": "canister", "solenoide": "solenoid", "valvula": "solenoid",
+            "tubo": "pipe", "manguito": "hose", "conducto": "pipe",
+            # Chasis, Carrocería y Electricidad
             "capo": "hood", "techo": "sunroof", "solar": "sunroof",
             "traccion": "traction", "alta tension": "high voltage", "bateria": "battery",
             "paragolpes": "bumper", "defensa": "bumper", "parachoques": "bumper",
             "freno": "brake", "pastillas": "pads", "faro": "headlamp", "piloto": "lamp"
+        }
+
+        # Mapeo de abreviaturas coloquiales de modelos
+        abreviaturas_modelos = {
+            "j5": "jaecoo 5", "jaecoo5": "jaecoo 5",
+            "j7": "jaecoo 7", "jaecoo7": "jaecoo 7",
+            "j8": "jaecoo 8", "jaecoo8": "jaecoo 8",
+            "o5": "omoda 5", "omoda5": "omoda 5", "o7": "omoda 7"
         }
 
         consulta_limpia = consulta_usuario.lower().replace("í", "i").replace("ó", "o").replace("á", "a").strip()
