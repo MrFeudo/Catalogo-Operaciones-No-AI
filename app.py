@@ -221,63 +221,40 @@ def buscador_inteligente_excel(consulta_usuario, df_contexto):
             
         client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
-        # 🔍 FILTRO INTELIGENTE: Clasificamos por modelo antes de llamar a la IA
+        # 📊 CONVERSIÓN TOTAL SIN FILTROS PREVIOS
         try:
-            consulta_limpia = consulta_usuario.lower()
-            df_recortado = pd.DataFrame()
-            
-            # Detectamos si el usuario menciona algún modelo clave de tu catálogo
-            if "omoda 5" in consulta_limpia or "omoda5" in consulta_limpia:
-                df_recortado = df_contexto[df_contexto['Modelo'].astype(str).str.lower().str.contains("omoda 5|omoda5", na=False)]
-            elif "jaecoo 7" in consulta_limpia or "jaecoo7" in consulta_limpia:
-                df_recortado = df_contexto[df_contexto['Modelo'].astype(str).str.lower().str.contains("jaecoo 7|jaecoo7", na=False)]
-            elif "jaecoo 8" in consulta_limpia or "jaecoo8" in consulta_limpia:
-                df_recortado = df_contexto[df_contexto['Modelo'].astype(str).str.lower().str.contains("jaecoo 8|jaecoo8", na=False)]
-            
-            # Si no detecta un modelo concreto o el filtro es vacío, buscamos por aproximación de componentes
-            if df_recortado.empty:
-                palabras = [p for p in consulta_limpia.split() if len(p) > 2 and p not in ["para", "con", "del", "que", "quiero"]]
-                if palabras:
-                    # Filtramos por aproximación flexible de texto
-                    condicion = df_contexto['Modelo'].astype(str).str.lower().str.contains('|'.join(palabras), na=False) | \
-                                df_contexto['Nombre de la Pieza'].astype(str).str.lower().str.contains('|'.join(palabras), na=False)
-                    df_recortado = df_contexto[condicion].head(100)
-                else:
-                    df_recortado = df_contexto.head(60)
-            else:
-                # Si hemos cazado el modelo, limitamos a las primeras 150 filas de ese coche para no saturar
-                df_recortado = df_recortado.head(150)
-                
-            resumen_excel = df_recortado[['Modelo', 'Nombre de la Pieza', 'Código de Referencia', 'Operación Técnica']].to_string(index=False)
+            # Pasamos las columnas clave de TODO el Excel. Gemini se encargará de filtrar y buscar de forma semántica.
+            resumen_excel = df_contexto[['Modelo', 'Nombre de la Pieza', 'Código de Referencia', 'Operación Técnica']].to_string(index=False)
         except Exception as e:
-            return f"❌ Error interno al procesar el filtro del catálogo: {str(e)}"
+            return f"❌ Error al procesar el catálogo: {str(e)}"
 
-        # 🧠 PROMPT DE SISTEMA: Traducción total garantizada
+        # 🧠 PROMPT CON SEMÁNTICA COMPLETA
         prompt_sistema = (
             "Eres el Asistente de Búsqueda del catálogo de operaciones de OMODA & JAECOO España.\n\n"
-            "CONTEXTO DE IDIOMA: El usuario te preguntará en ESPAÑOL (ej. 'pulido', 'pintura', 'freno'), pero tu catálogo de "
-            "operaciones de abajo está en INGLÉS. Tu trabajo es emparejar los conceptos por significado (ej. 'pulido' o 'pulir' -> 'polishing').\n\n"
-            "⚠️ REGLA CRÍTICA ESPECIAL (TIEMPOS ADICIONALES / MANUALES):\n"
-            "Si el usuario solicita añadir tiempo manualmente o una operación que no viene tabulada, ofrécele la operación 'Universal Work Item' "
+            "CONTEXTO DE IDIOMA Y MODELOS:\n"
+            "- El usuario te preguntará en ESPAÑOL y usará sinónimos coloquiales o técnicos (ej. 'pulir', 'pulido', 'brillo' -> 'polishing').\n"
+            "- El usuario puede escribir variaciones del modelo (ej. 'omoda 5 hibrido', 'omoda 5 hev', 'omoda c5'). Debes asociarlo inteligentemente con el modelo correcto del Excel (ej. 'OMODA 5 HEV').\n\n"
+            "⚠️ REGLA CRÍTICA ESPECIAL (TIEMPOS ADICIONALES):\n"
+            "Si solicitan añadir tiempo manualmente o una operación no tabulada, muéstrales la operación 'Universal Work Item' "
             "e indícales la nota de Central sobre la excepción del filtro 'Spain OJ'.\n\n"
             "REGLAS GENERALES:\n"
-            "1. Si encuentras operaciones que encajen conceptualmente con la traducción del usuario, muéstraselas en una lista con su Código de Referencia.\n"
-            "2. Si la operación solicitada NO EXISTE de ninguna forma en el catálogo para ese modelo, responde exactamente:\n"
+            "1. Busca en todo el catálogo adjunto abajo. Si encuentras la operación que encaje, lístala en Markdown con su Modelo, Nombre de la Pieza, Operación y su 'Código de Referencia' exacto.\n"
+            "2. Si tras buscar detalladamente la operación NO EXISTE en el catálogo para ese modelo, responde exactamente:\n"
             "   '❌ No se ha encontrado esta operación en el catálogo oficial de la marca. Por favor, dirígete a la pestaña **📝 Solicitar Operación** en el menú lateral izquierdo para rellenar el formulario de solicitud y que Central pueda darla de alta.'\n"
             "3. No inventes códigos ni nombres bajo ningún concepto.\n\n"
-            f"--- EXTRACTO DEL CATÁLOGO DE OPERACIONES --- \n{resumen_excel}"
+            f"--- CATÁLOGO COMPLETO DE OPERACIONES --- \n{resumen_excel}"
         )
 
         response = client.models.generate_content(
             model='gemini-2.5-flash',
-            contents=[f"Consulta del taller: '{consulta_usuario}'"],
+            contents=[f"Consulta del usuario: '{consulta_usuario}'"],
             config=types.GenerateContentConfig(
                 system_instruction=prompt_sistema,
-                temperature=0.1
+                temperature=0.1  # Mantenemos temperatura baja para evitar que alucine códigos
             )
         )
         
-        # Sincronización del estado de consumo
+        # Sincronización de métricas en la barra lateral
         if "tokens_totales_input" not in st.session_state:
             st.session_state.tokens_totales_input = 0
             st.session_state.tokens_totales_output = 0
