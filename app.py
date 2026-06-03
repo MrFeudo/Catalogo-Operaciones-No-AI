@@ -259,14 +259,14 @@ def buscador_inteligente_excel(consulta_usuario, df_contexto):
         palabras_texto = [p for p in consulta_limpia.split() if len(p) > 2 and p not in ["quiero", "para", "con", "del", "una", "uno"]]
         palabras_texto = [p for p in palabras_texto if not (p.isdigit() and len(p) == 1)]
 
-        # 🔍 2. MOTOR DE SCORE REVISADO CON BONUS DE INTERSECCIÓN
+        # 🔍 2. MOTOR DE SCORE COMPROBADO Y PROTEGIDO
         try:
             if any(tm in consulta_limpia for tm in ["manual", "adicional", "extra", "tiempo mas", "universal"]):
                 df_recortado = df_contexto[df_contexto['Operación Técnica'].astype(str).str.lower().str.contains("universal", na=False)].head(20)
             else:
                 df_base = df_contexto.copy()
                 
-                # Criba por marca
+                # Criba flexible por marca
                 if "omoda" in consulta_limpia:
                     df_base = df_base[df_base['Modelo'].astype(str).str.lower().str.contains("omoda", na=False)]
                 elif "jaecoo" in consulta_limpia:
@@ -274,27 +274,26 @@ def buscador_inteligente_excel(consulta_usuario, df_contexto):
 
                 df_base['score'] = 0
 
-                # 1. Puntuación por texto base
+                # 1. Puntuación de texto base
                 for palabra in palabras_texto:
                     df_base['score'] += df_base['Modelo'].astype(str).str.lower().str.contains(palabra, na=False).astype(int)
                     df_base['score'] += df_base['Nombre de la Pieza'].astype(str).str.lower().str.contains(palabra, na=False).astype(int)
                     df_base['score'] += df_base['Operación Técnica'].astype(str).str.lower().str.contains(palabra, na=False).astype(int)
 
-                # 2. Puntuación por acción detectada
+                # 2. Puntuación por acción
                 if acciones_detectadas:
                     regex_accion = '|'.join(acciones_detectadas)
                     match_accion = df_base['Operación Técnica'].astype(str).str.lower().str.contains(regex_accion, na=False)
                     df_base.loc[match_accion, 'score'] += 15
 
-                # 3. Puntuación por componente detectado
+                # 3. Puntuación por componente
                 if componentes_detectados:
                     regex_componente = '|'.join(componentes_detectados)
                     match_componente = df_base['Nombre de la Pieza'].astype(str).str.lower().str.contains(regex_componente, na=False) | \
                                        df_base['Operación Técnica'].astype(str).str.lower().str.contains(regex_componente, na=False)
                     df_base.loc[match_componente, 'score'] += 8
 
-                # 🔴 4. REGLA MAESTRA (EL SÚPER BONUS DE INTERSECCIÓN):
-                # Si una fila tiene la ACCIÓN Y EL COMPONENTE a la vez, se dispara arriba del todo obligatoriamente
+                # 4. Súper Bonus de Intersección (Acción + Componente juntos)
                 if acciones_detectadas and componentes_detectados:
                     regex_acc = '|'.join(acciones_detectadas)
                     regex_comp = '|'.join(componentes_detectados)
@@ -305,16 +304,24 @@ def buscador_inteligente_excel(consulta_usuario, df_contexto):
                     
                     df_base.loc[match_perfecto, 'score'] += 50
 
-                # Ordenamos y extraemos las mejores 50
+                # Extraemos las filas con puntuación
                 df_recortado = df_base[df_base['score'] > 0].sort_values(by='score', ascending=False).head(50)
+                
+                # 🔴 RED DE SEGURIDAD ANTIBLOQUEO: Si por culpa de los filtros duros el extracto se queda vacío,
+                # abrimos el colador por completo a todo el Excel para que Gemini tenga datos que leer obligatoriamente.
+                if df_recortado.empty:
+                    df_contexto['score_emergencia'] = 0
+                    for comp in (componentes_detectados if componentes_detectados else palabras_texto):
+                        df_contexto['score_emergencia'] += df_contexto['Nombre de la Pieza'].astype(str).str.lower().str.contains(comp, na=False).astype(int)
+                        df_contexto['score_emergencia'] += df_contexto['Operación Técnica'].astype(str).str.lower().str.contains(comp, na=False).astype(int)
+                    df_recortado = df_contexto[df_contexto['score_emergencia'] > 0].sort_values(by='score_emergencia', ascending=False).head(50)
+                    df_contexto.drop(columns=['score_emergencia'], errors='ignore')
+
                 df_base.drop(columns=['score'], errors='ignore')
 
             resumen_excel = df_recortado[['Modelo', 'Nombre de la Pieza', 'Código de Referencia', 'Operación Técnica']].to_string(index=False)
         except Exception as e:
             return f"❌ Error interno al filtrar el catálogo: {str(e)}"
-
-        if df_recortado.empty:
-            return "❌ No se ha encontrado esta operación en el catálogo oficial de la marca. Por favor, dirígete a la pestaña **📝 Solicitar Operación** en el menú lateral izquierdo para rellenar el formulario de solicitud y que Central pueda darla de alta."
 
         # 🧠 3. PROMPT PARA GEMINI
         prompt_sistema = (
