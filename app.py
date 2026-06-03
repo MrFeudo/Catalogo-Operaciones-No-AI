@@ -265,23 +265,30 @@ def consultar_ia_garantias(descripcion_averia, archivo_imagen=None):
                 imagen_pil.thumbnail((1024, 1024))
                 contenidos.append(imagen_pil)
             
-        prompt_usuario = (
+         prompt_usuario = (
             f"Caso reportado por el taller:\n'{descripcion_averia}'\n\n"
             "Genera el informe técnico estructurado omitiendo cualquier saludo o introducción. "
-            "Desarrolla en profundidad los siguientes apartados exactamente en este orden:\n\n"
+            "EsCRÍTICO que la respuesta NO sea un texto denso o en bloque. Usa Markdown de forma exhaustiva: "
+            "organiza la información con viñetas claras, negritas en los datos clave y tablas visuales para las evidencias.\n\n"
+            "Desarrolla en profundidad los siguientes apartados exactamente en este orden y con esta estructura:\n\n"
             "**1. EVALUACIÓN Y CATEGORÍA TÉCNICA**\n"
-            "- Identifica detalladamente el componente afectado, evalúa su nivel de criticidad y tipifica de forma razonada la naturaleza del fallo (eléctrico, mecánico o estético).\n\n"
+            "- Identifica detalladamente el componente afectado utilizando negritas.\n"
+            "- Evalúa de forma separada su nivel de criticidad (Bajo/Medio/Alto/Crítico) usando emoticonos (ej. 🔴, 🟡).\n"
+            "- Tipifica de forma razonada la naturaleza del fallo (eléctrico, mecánico o estético) y el porqué.\n\n"
             "**2. ANÁLISIS EXHAUSTIVO DE LA EVIDENCIA VISUAL (FOTOS)**\n"
-            "- Describe minuciosamente todo lo que se aprecia en las evidencias adjuntas (pueden ser hasta 2 imágenes). Analiza detalles como marcas de desmontaje forzado, rotura limpia, defecto de fabricación o capturas de pantallas de diagnosis. Si no hay fotos, detalla qué comprobaciones visuales específicas o capturas debe aportar el mecánico para esclarecer el origen.\n\n"
+            "- REGLA CRÍTICA: Si el taller NO ha adjuntado imágenes en la consulta, NO menciones que se han analizado fotos ni inventes descripciones. En su lugar, muestra DIRECTAMENTE una tabla en Markdown que detalle qué comprobaciones visuales específicas, fotos macro o capturas de pantallas de diagnosis debe aportar el mecánico obligatoriamente para esclarecer el origen y validar la reclamación.\n"
+            "- Si SÍ hay imágenes adjuntas, describe minuciosamente lo que se aprecia en ellas (marcas de desmontaje forzado, rotura limpia, defecto de fabricación, etc.).\n\n"
             "**3. DICTAMEN PRELIMINAR DE COBERTURA DE GARANTÍA**\n"
-            "- Evalúa de forma argumentada si la avería es susceptible de cobertura basándote explícitamente en la política oficial (ej. si al ser una preentrega el daño estaba oculto bajo guarnecidos/consolas y no pudo detectarse en la recepción del transporte). Importante, daño de transporte que llegue así a puerto, se cubre en garantía\n\n"
+            "- Evalúa de forma argumentada si la avería es susceptible de cobertura basándote explícitamente en la política oficial adjunta.\n"
+            "- Aplica la regla especial: los daños de transporte que lleguen así a puerto o que estuvieran ocultos bajo guarnecidos/consolas y no pudieron detectarse en la recepción inicial, SÍ se cubren en garantía.\n"
+            "- Especifica si el caso requiere pre-autorización por superar los límites de coste económicos estándar.\n\n"
             "**4. ACCIÓN REQUERIDA Y PROTOCOLO DE TRABAJO**\n"
-            "- Detalla cronológicamente la sugerencia de pasos técnicos detallados que debe seguir el operario en el taller para verificar la avería."
+            "- Detalla cronológicamente (usando una lista numerada: 1., 2., 3...) el protocolo de pasos técnicos detallados que debe seguir el operario en el taller para verificar, diagnosticar o solucionar la avería de forma profesional."
         )
         contenidos.append(prompt_usuario)
 
         response = client.models.generate_content(
-            model='gemini-3.5-flash',
+            model='gemini-2.5-flash',
             contents=contenidos,
             config=types.GenerateContentConfig(
                 system_instruction=prompt_sistema,
