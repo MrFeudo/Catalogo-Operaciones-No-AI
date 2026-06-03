@@ -221,66 +221,64 @@ def buscador_inteligente_excel(consulta_usuario, df_contexto):
             
         client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
-        # 🎯 1. DICCIONARIO CORREGIDO (Clasificado por raíces y términos compuestos)
+        # 🎯 1. DICCIONARIO EVOLUCIONADO (Raíces, Sinónimos y Electrificación)
         sinonimos_posventa = {
+            # Tecnologías de propulsión
+            "hibrido": "hev", "enchufable": "phev", "electrico": "bev", "ev": "bev",
+            # Baterías y Alta Tensión
+            "traccion": "traction", "alta tension": "high voltage", "bateria": "battery",
+            # Mecánica y Estética común
             "pulir": "polishing", "pulido": "polishing", "abrillantar": "polishing",
             "pintar": "paint", "pintura": "paint", "paragolpes": "bumper",
             "defensa": "bumper", "parachoques": "bumper", "freno": "brake",
             "pastillas": "pads", "faro": "headlamp", "piloto": "lamp",
-            "hibrido": "hev", "mantenimiento": "maintenance", "revision": "maintenance",
-            "aceite": "oil", "filtro": "filter", "embrague": "clutch",
-            "caja": "transmission", "cambio": "transmission", "ruido": "noise"
+            "mantenimiento": "maintenance", "revision": "maintenance"
         }
 
-        # Limpieza básica de la consulta original
-        consulta_limpia = consulta_usuario.lower().replace("í", "i").replace("ó", "o").strip()
+        # Limpieza absoluta de la consulta del usuario
+        consulta_limpia = consulta_usuario.lower().replace("í", "i").replace("ó", "o").replace("á", "a").strip()
         
-        # Generamos los términos en inglés que corresponden a lo que el usuario ha escrito
-        terminos_ingles = []
-        for esp, eng in sinonimos_posventa.items():
-            if esp in consulta_limpia:
-                terminos_ingles.append(eng)
+        # Separamos las palabras ignorando conectores genéricos y números sueltos de un solo dígito (como el '5' o '7')
+        palabras_usuario = [p for p in consulta_limpia.split() if len(p) > 2 and p not in ["quiero", "para", "con", "del", "una", "uno"]]
+        palabras_usuario = [p for p in palabras_usuario if not (p.isdigit() and len(p) == 1)]
 
-        # 🔍 2. FILTRADO INTELIGENTE AVANZADO EN PYTHON
+        # Añadimos las traducciones automáticas al saco de palabras de búsqueda
+        palabras_busqueda = list(palabras_usuario)
+        for p in palabras_usuario:
+            if p in sinonimos_posventa:
+                palabras_busqueda.append(sinonimos_posventa[p])
+
+        # 🔍 2. FILTRADO POR COINCIDENCIA FLEXIBLE (Puntuación de Filas)
         try:
-            # Regla de oro para tiempos manuales
-            terminos_manuales = ["manual", "adicional", "extra", "tiempo mas", "añadir horas", "universal"]
-            if any(tm in consulta_limpia for tm in terminos_manuales):
-                condicion = df_contexto['Operación Técnica'].astype(str).str.lower().str.contains("universal", na=False)
-                df_recortado = df_contexto[condicion].head(20)
+            # Regla de oro automática para tiempos manuales adicionales
+            if any(tm in consulta_limpia for tm in ["manual", "adicional", "extra", "tiempo mas", "universal"]):
+                df_recortado = df_contexto[df_contexto['Operación Técnica'].astype(str).str.lower().str.contains("universal", na=False)].head(20)
             else:
-                # Combinamos palabras clave detectadas (español + traducción inglesa)
-                palabras_clave = terminos_ingles + [p for p in consulta_limpia.split() if len(p) > 2 and p not in ["quiero", "para", "con", "del", "una", "uno"]]
+                # Puntuamos cada fila del Excel según cuántas palabras clave contiene
+                regex_busqueda = '|'.join(palabras_busqueda)
                 
-                # 🔴 CRÍTICO: Eliminamos números sueltos como el '5' o '7' que corrompen el filtro regular
-                palabras_clave = [p for p in palabras_clave if not (p.isdigit() and len(p) == 1)]
-
-                if palabras_clave:
-                    # Buscaremos filas que contengan prioritariamente los términos mecánicos principales (ej: polishing, brake, pads...)
-                    conceptos_mecanicos = [p for p in palabras_clave if p in sinonimos_posventa.values() or p in sinonimos_posventa.keys()]
-                    
-                    if conceptos_mecanicos:
-                        regex_mecanica = '|'.join(conceptos_mecanicos)
-                        condicion = (
-                            df_contexto['Nombre de la Pieza'].astype(str).str.lower().str.contains(regex_mecanica, na=False) |
-                            df_contexto['Operación Técnica'].astype(str).str.lower().str.contains(regex_mecanica, na=False)
-                        )
-                        df_recortado = df_contexto[condicion]
-                        
-                        # Si además de la pieza/operación se especifica un modelo (ej: omoda, jaecoo), afinamos el tiro
-                        if "omoda" in consulta_limpia:
-                            df_recortado = df_recortado[df_recortado['Modelo'].astype(str).str.lower().str.contains("omoda", na=False)]
-                        elif "jaecoo" in consulta_limpia:
-                            df_recortado = df_recortado[df_recortado['Modelo'].astype(str).str.lower().str.contains("jaecoo", na=False)]
-                            
-                        df_recortado = df_recortado.head(50)
-                    else:
-                        # Si solo ponen texto genérico, hacemos un filtro básico por aproximación
-                        regex_genérica = '|'.join(palabras_clave)
-                        condicion = df_contexto['Operación Técnica'].astype(str).str.lower().str.contains(regex_genérica, na=False)
-                        df_recortado = df_contexto[condicion].head(40)
-                else:
-                    df_recortado = df_contexto.head(20)
+                # Criba rápida inicial para no procesar todo el DataFrame si es enorme
+                # Filtramos las filas que tengan al menos una mención a los modelos o componentes principales
+                marcas_modelos = ["omoda", "jaecoo"]
+                filtro_marca = "|".join([m for m in marcas_modelos if m in consulta_limpia])
+                
+                df_base = df_contexto
+                if filtro_marca:
+                    df_base = df_contexto[df_contexto['Modelo'].astype(str).str.lower().str.contains(filtro_marca, na=False)]
+                
+                # Buscamos coincidencias de texto en las columnas clave
+                coincidencias = (
+                    df_base['Modelo'].astype(str).str.lower().str.contains(regex_busqueda, na=False).astype(int) +
+                    df_base['Nombre de la Pieza'].astype(str).str.lower().str.contains(regex_busqueda, na=False).astype(int) +
+                    df_base['Operación Técnica'].astype(str).str.lower().str.contains(regex_busqueda, na=False).astype(int)
+                )
+                
+                # Ordenamos las filas poniendo arriba las que más palabras clave coincidentes tengan
+                df_base['score'] = coincidencias
+                df_recortado = df_base[df_base['score'] > 0].sort_values(by='score', ascending=False).head(60)
+                
+                # Limpiamos la columna auxiliar para no ensuciar el output
+                df_base.drop(columns=['score'], errors='ignore')
 
             resumen_excel = df_recortado[['Modelo', 'Nombre de la Pieza', 'Código de Referencia', 'Operación Técnica']].to_string(index=False)
         except Exception as e:
@@ -292,13 +290,13 @@ def buscador_inteligente_excel(consulta_usuario, df_contexto):
         # 🧠 3. PROMPT DE TRADUCCIÓN SEMÁNTICA PARA GEMINI
         prompt_sistema = (
             "Eres el Asistente de Búsqueda del catálogo de operaciones de OMODA & JAECOO España.\n\n"
-            "Analiza el extracto del catálogo que tienes abajo y busca las operaciones que coincidan con la petición del usuario.\n"
-            "Ten en cuenta que el usuario escribe en español (ej: 'pulir') y los textos del catálogo están en inglés ('polishing').\n\n"
+            "Analiza el extracto ordenado del catálogo que tienes abajo y localiza las operaciones que coincidan con la petición del usuario.\n"
+            "Ten en cuenta las equivalencias de tecnologías eléctricas y componentes (ej: 'batería de tracción' o 'batería eléctrico' -> 'traction battery').\n\n"
             "REGLAS:\n"
             "1. Muestra en una lista limpia en Markdown los resultados válidos indicando el Modelo, la Operación Técnica y su 'Código de Referencia' exacto.\n"
-            "2. Si el concepto exacto solicitado no se encuentra dentro del bloque de texto inferior, responde con el mensaje estricto de derivación al formulario.\n"
+            "2. Si el concepto solicitado no se encuentra dentro del bloque de texto inferior, responde con el mensaje estricto de derivación al formulario.\n"
             "3. Prohibido inventar códigos.\n\n"
-            f"--- EXTRACTO DEL CATÁLOGO --- \n{resumen_excel}"
+            f"--- EXTRACTO RELEVANTE DEL CATÁLOGO --- \n{resumen_excel}"
         )
 
         response = client.models.generate_content(
