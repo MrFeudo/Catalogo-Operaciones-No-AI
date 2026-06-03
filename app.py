@@ -255,7 +255,7 @@ def buscador_inteligente_excel(consulta_usuario):
 
         # 3. Llamada al modelo con temperatura ínfima (0.1) para evitar alucinaciones
         response = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-3.5-flash',
             contents=[f"Consulta del taller en español: '{consulta_usuario}'"],
             config=types.GenerateContentConfig(
                 system_instruction=prompt_sistema,
