@@ -304,8 +304,11 @@ def buscador_inteligente_excel(consulta_usuario, df_contexto):
         palabras_regex = list(set(palabras_regex)) # Eliminamos duplicados
 
         # 🔍 2. NUEVO MOTOR DE RELEVANCIA MULTI-CAPA (Puntuación Inteligente)
+       # =====================================================================
+        # 🔍 2. MOTOR DE BÚSQUEDA TOTALMENTE ABIERTO (SIN CRIBAS INVOLUNTARIAS)
+        # =====================================================================
         try:
-            # Control inmediato de la regla maestra de tiempos manuales adicionales
+            # Control de tiempos manuales adicionales
             terminos_manuales = ["manual", "adicional", "extra", "tiempo mas", "añadir horas", "universal", "marron", "baremo no"]
             if any(tm in consulta_limpia for tm in terminos_manuales):
                 df_recortado = df_contexto[df_contexto['Operación Técnica'].astype(str).str.lower().str.contains("universal", na=False)].head(20)
@@ -313,34 +316,40 @@ def buscador_inteligente_excel(consulta_usuario, df_contexto):
                 df_base = df_contexto.copy()
                 df_base['score'] = 0
 
+                # Filtrado por marca principal para limpiar volumen, pero permitiendo cualquier modelo/motor
+                if "omoda" in consulta_limpia:
+                    df_base = df_base[df_base['Modelo'].astype(str).str.lower().str.contains("omoda", na=False)]
+                elif "jaecoo" in consulta_limpia:
+                    df_base = df_base[df_base['Modelo'].astype(str).str.lower().str.contains("jaecoo", na=False)]
+
                 if palabras_regex:
+                    # Unimos todas las raíces traducidas en una expresión regular abierta
                     regex_final = '|'.join(palabras_regex)
                     
-                    # Buscamos de forma masiva en las tres columnas clave del catálogo
+                    # Buscamos abiertamente en las columnas del catálogo sin restringir por motor
                     match_mod = df_base['Modelo'].astype(str).str.lower().str.contains(regex_final, na=False).astype(int)
                     match_pie = df_base['Nombre de la Pieza'].astype(str).str.lower().str.contains(regex_final, na=False).astype(int)
                     match_ope = df_base['Operación Técnica'].astype(str).str.lower().str.contains(regex_final, na=False).astype(int)
                     
-                    # Ponderamos los puntos: Que coincida la operación o pieza vale muchísimo más
+                    # Puntuamos las filas para ordenar por relevancia
                     df_base['score'] += match_mod * 2
                     df_base['score'] += match_pie * 5
                     df_base['score'] += match_ope * 8
 
-                    # 🔴 REGLA ANTIBLOQUEO DE MOTORIZACIONES:
-                    # Si el usuario metió "electrico" o "bev" pero busca una pieza que da 0 filas en ese motor,
-                    # guardamos las filas que sí coincidan por componente (aunque sean del térmico o híbrido)
-                    df_recortado = df_base[df_base['score'] > 0].sort_values(by='score', ascending=False).head(50)
+                    # 🔴 CAMBIO CLAVE: Nos quedamos con las 80 mejores filas con puntuación.
+                    # Al subir el límite a 80, nos aseguramos de que entren todas las variantes de motor (Térmico, HEV, BEV) de golpe.
+                    df_recortado = df_base[df_base['score'] > 0].sort_values(by='score', ascending=False).head(80)
                 else:
-                    df_recortado = df_base.head(20)
+                    df_recortado = df_base.head(30)
 
-                # 🔴 RED DE SEGURIDAD ABSOLUTA (Si el filtro da cero, forzamos volcado por marca para que la IA decida)
+                # 🔴 RED DE SEGURIDAD ABSOLUTA (Si el score falla, vuelca la marca completa para que la IA elija)
                 if df_recortado.empty:
                     if "omoda" in consulta_limpia:
                         df_recortado = df_contexto[df_contexto['Modelo'].astype(str).str.lower().str.contains("omoda", na=False)].head(80)
                     elif "jaecoo" in consulta_limpia:
                         df_recortado = df_contexto[df_contexto['Modelo'].astype(str).str.lower().str.contains("jaecoo", na=False)].head(80)
                     else:
-                        df_recortado = df_contexto.head(40)
+                        df_recortado = df_contexto.head(50)
 
                 df_base.drop(columns=['score'], errors='ignore')
 
@@ -348,6 +357,62 @@ def buscador_inteligente_excel(consulta_usuario, df_contexto):
         except Exception as e:
             return f"❌ Error interno al procesar el filtro de relevancia: {str(e)}"
 
+        # =====================================================================
+        # 🧠 3. PROMPT MAESTRO ULTRA-FLEXIBLE PARA GEMINI (DAR TODO)
+        # =====================================================================
+        prompt_sistema = (
+            "Eres el Buscador Inteligente Avanzado del catálogo oficial de OMODA & JAECOO España.\n\n"
+            "MISION DE ANÁLISIS ABIERTO:\n"
+            "- El usuario es personal de taller y va a mil por hora. Te va a pedir piezas mezclando motorizaciones o de forma genérica.\n"
+            "- Tu objetivo es mostrar TODAS las operaciones válidas que encuentres en el extracto inferior relacionadas con el componente solicitado.\n\n"
+            "🔴 REGLA DE APERTURA TOTAL POR MOTORIZACIONES:\n"
+            "- No restrinjas los resultados. Si el usuario te pide la batería de un modelo (ej: Omoda 5) y en el extracto te aparecen las operaciones "
+            "tanto de la versión térmica, de la híbrida (HEV) como de la eléctrica (BEV), MUESTRA TODAS LAS VARIANTES desglosadas limpiamente.\n"
+            "- Deja que el operario de taller vea las diferentes opciones en la lista para que él elija la que corresponde al coche que tiene físicamente en el elevador.\n\n"
+            "GUÍA DE TRADUCCIÓN RÁPIDA:\n"
+            "1. POSICIONES:\n"
+            "   - 'FR' = Front (Delantero) | 'RR' = Rear (Trasero)\n"
+            "   - 'LH' = Left Hand (Izquierdo) | 'RH' = Right Hand (Derecho)\n"
+            "2. ACCIONES:\n"
+            "   - 'Remove and reinstall' / 'Replace' = Cambiar, sustituir, reemplazo, desmontar y montar, reinstalar.\n"
+            "   - 'Lubrication' = Engrasar, lubricar, mantenimiento.\n"
+            "   - 'Polishing' / 'Polish' = Pulir, pulido, abrillantar.\n\n"
+            "REGLAS DE SALIDA:\n"
+            "1. Devuelve los resultados organizados en una lista Markdown limpia, clara y fácil de leer en la tablet del taller.\n"
+            "2. Si el componente solicitado no tiene ninguna relación con lo que hay en el extracto inferior, saca el mensaje oficial de derivación al formulario.\n"
+            "3. Queda totalmente prohibido inventar códigos de referencia.\n\n"
+            f"--- EXTRACTO DE AMPLIO ESPECTRO DEL CATÁLOGO --- \n{resumen_excel}"
+        )
+
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=[f"Consulta del operario de taller: '{consulta_usuario}'"],
+            config=types.GenerateContentConfig(
+                system_instruction=prompt_sistema,
+                temperature=0.1
+            )
+        )
+        
+        # Sincronización de tokens del sidebar
+        if "tokens_totales_input" not in st.session_state:
+            st.session_state.tokens_totales_input = 0
+            st.session_state.tokens_totales_output = 0
+            st.session_state.dinero_total_gastado = 0.0
+            st.session_state.ultima_consulta_info = "Ninguna consulta."
+
+        if response.text and response.usage_metadata:
+            t_input = response.usage_metadata.prompt_token_count
+            t_output = response.usage_metadata.candidates_token_count
+            coste = ((t_input * 0.075) / 1_000_000) + ((t_output * 0.30) / 1_000_000)
+            
+            st.session_state.tokens_totales_input += t_input
+            st.session_state.tokens_totales_output += t_output
+            st.session_state.dinero_total_gastado += coste
+            st.session_state.ultima_consulta_info = f"Última: In: {t_input} | Out: {t_output} (+{coste:.5f}$)"
+            
+        return response.text if response.text else "❌ No se encontraron coincidencias."
+    except Exception as e:
+        return f"❌ Error en el motor de la IA de Gemini: {str(e)}"
         # 🧠 3. EL PROMPT MAESTRO (Instrucciones ultra-flexibles y resolución semántica para Gemini)
         prompt_sistema = (
             "Eres el Buscador Inteligente Avanzado del catálogo oficial de OMODA & JAECOO España.\n\n"
