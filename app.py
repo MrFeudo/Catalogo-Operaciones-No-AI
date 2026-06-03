@@ -216,7 +216,7 @@ opcion_menu = st.sidebar.radio(
 
 
 # =========================================================================
-# FUNCIÓN DEL CONSULTORIO DE IA (ESTRICTA, RESPALDADA Y DIRECTA AL GRANO)
+# FUNCIÓN DEL CONSULTORIO DE IA (BLINDADA CONTRA ERRORES DE SESSION STATE)
 # =========================================================================
 def consultar_ia_garantias(descripcion_averia, archivo_imagen=None):
     """
@@ -238,7 +238,7 @@ def consultar_ia_garantias(descripcion_averia, archivo_imagen=None):
 
         # PROMPT DE SISTEMA: Establece el tono imperativo, directo y la obligación de citar la política
         prompt_sistema = (
-            "Eres un Ingeniero de Garantías Senior para OMODA & JAECOO España. Tu tarea es emitir dictámenes definitivos.\n\n"
+            "Eres un Ingeniero de Garantías Senior para OMODA & JAECOO España. Your task is to issue definitive rulings.\n\n"
             "REGLAS CRÍTICAS DE ESTILO Y FORMATO:\n"
             "1. Frases cortas, cortantes y directas. Evita la paja y los párrafos densos. Usa Markdown exhaustivo (negritas y listas).\n"
             "2. Prohibido incluir cualquier tipo de saludo, introducción o transición. Empieza DIRECTAMENTE con el bloque del Dictamen Preliminar.\n"
@@ -286,7 +286,17 @@ def consultar_ia_garantias(descripcion_averia, archivo_imagen=None):
             )
         )
         
-        # Inyección de métricas en la sesión global para tu barra lateral
+        # 🛡️ INTERCEPCIÓN Y SEGURO DE INICIALIZACIÓN (Evita el fallo que te ha saltado)
+        if "tokens_totales_input" not in st.session_state:
+            st.session_state.tokens_totales_input = 0
+        if "tokens_totales_output" not in st.session_state:
+            st.session_state.tokens_totales_output = 0
+        if "dinero_total_gastado" not in st.session_state:
+            st.session_state.dinero_total_gastado = 0.0
+        if "ultima_consulta_info" not in st.session_state:
+            st.session_state.ultima_consulta_info = "Ninguna consulta en esta sesión."
+
+        # Inyección segura de métricas tras verificar que existen
         if response.text and response.usage_metadata:
             t_input = response.usage_metadata.prompt_token_count
             t_output = response.usage_metadata.candidates_token_count
