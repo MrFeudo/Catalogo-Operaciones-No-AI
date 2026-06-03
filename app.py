@@ -246,7 +246,7 @@ def buscador_inteligente_excel(consulta_usuario, df_contexto):
         )
 
         response = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-3.5-flash',
             contents=[f"Consulta del usuario: '{consulta_usuario}'"],
             config=types.GenerateContentConfig(
                 system_instruction=prompt_sistema,
