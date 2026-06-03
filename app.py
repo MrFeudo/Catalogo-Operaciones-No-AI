@@ -214,6 +214,75 @@ opcion_menu = st.sidebar.radio(
     key="menu_navegacion_app"
 )
 
+# =========================================================================
+# FUNCIÓN: BUSCADOR INTELIGENTE EN CATÁLOGO EXCEL (TRADUCCIÓN AUTOMÁTICA)
+# =========================================================================
+def buscador_inteligente_excel(consulta_usuario):
+    """
+    Descarga el catálogo de operaciones desde GitHub, traduce la consulta 
+    del usuario de español a inglés y busca códigos exactos sin inventar.
+    """
+    try:
+        if "GEMINI_API_KEY" not in st.secrets:
+            return "⚠️ **Error**: No se ha encontrado la clave API en st.secrets."
+            
+        client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
+
+        # 1. Descarga y limpieza del Excel desde el repositorio de GitHub
+        try:
+            df = pd.read_excel(URL_GITHUB_EXCEL)
+            # Filtramos solo las columnas necesarias para ahorrar tokens y evitar ruido
+            columnas_claves = [col for col in ["Model", "Component", "Operation", "Code"] if col in df.columns]
+            resumen_excel = df[columnas_claves].drop_duplicates().to_string(index=False)
+        except Exception as e:
+            return f"❌ Error al conectar con el catálogo de operaciones en GitHub: {str(e)}"
+
+        # 2. PROMPT DE DIRECCIÓN TÉCNICA Y TRADUCCIÓN BILINGÜE
+        prompt_sistema = (
+            "Eres el Asistente de Búsqueda del catálogo de operaciones de OMODA & JAECOO España.\n\n"
+            "⚠️ CONTEXTO CRÍTICO: El usuario te va a preguntar en ESPAÑOL, pero el catálogo de operaciones "
+            "adjunto abajo (columnas 'Component' y 'Operation') está redactado estrictamente en INGLÉS. "
+            "Tu tarea principal es traducir mentalmente los términos mecánicos del usuario (ej. 'paragolpes' -> 'bumper', "
+            "'pastillas de freno' -> 'brake pads', 'mantenimiento' -> 'maintenance', 'faro' -> 'headlamp') y "
+            "buscar su correspondencia exacta en el Excel.\n\n"
+            "REGLAS INEXCUSABLES DE COMPORTAMIENTO:\n"
+            "1. Si encuentras operaciones que coincidan, lístalas de forma limpia usando Markdown (Modelo, Operación en inglés y el 'Code').\n"
+            "2. Si la pieza, el modelo o la operación concreta NO EXISTE de forma explícita en el listado, responde EXACTAMENTE con este mensaje:\n"
+            "   '❌ No se ha encontrado esta operación en el catálogo oficial de la marca. Por favor, dirígete a la pestaña **📝 Solicitar Operación** en el menú lateral izquierdo para rellenar el formulario de solicitud y que Central pueda darla de alta.'\n"
+            "3. No inventes bajo ningún concepto códigos, letras ni nombres que no estén en el documento adjunto.\n\n"
+            f"--- CATÁLOGO REAL DE OPERACIONES (EN INGLÉS) ---\n{resumen_excel}"
+        )
+
+        # 3. Llamada al modelo con temperatura ínfima (0.1) para evitar alucinaciones
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=[f"Consulta del taller en español: '{consulta_usuario}'"],
+            config=types.GenerateContentConfig(
+                system_instruction=prompt_sistema,
+                temperature=0.1
+            )
+        )
+        
+        # Registro y blindaje del chivato de consumo de la barra lateral
+        if "tokens_totales_input" not in st.session_state:
+            st.session_state.tokens_totales_input = 0
+            st.session_state.tokens_totales_output = 0
+            st.session_state.dinero_total_gastado = 0.0
+            st.session_state.ultima_consulta_info = "Ninguna consulta en esta sesión."
+
+        if response.text and response.usage_metadata:
+            t_input = response.usage_metadata.prompt_token_count
+            t_output = response.usage_metadata.candidates_token_count
+            coste = ((t_input * 0.075) / 1_000_000) + ((t_output * 0.30) / 1_000_000)
+            
+            st.session_state.tokens_totales_input += t_input
+            st.session_state.tokens_totales_output += t_output
+            st.session_state.dinero_total_gastado += coste
+            st.session_state.ultima_consulta_info = f"Última: In: {t_input} | Out: {t_output} (+{coste:.5f}$)"
+            
+        return response.text if response.text else "⚠️ La IA no devolvió ninguna coincidencia."
+    except Exception as e:
+        return f"❌ Error en el motor de búsqueda de la IA: {str(e)}"
 
 # =========================================================================
 # FUNCIÓN DEL CONSULTORIO DE IA (BLINDADA CONTRA ERRORES DE SESSION STATE)
