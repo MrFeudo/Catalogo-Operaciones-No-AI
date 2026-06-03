@@ -711,65 +711,16 @@ if check_password():
                         st.session_state.lista_solicitudes.append(nueva_solicitud)
                     
                     if subida_exitosa:
-                        st.rerun()
-                        
-        # Vista del histórico (Sincronizado de la Nube)
-        try:
-            from streamlit_gsheets import GSheetsConnection
-            conn = st.connection("gsheets", type=GSheetsConnection)
-            
-            if "connections" in st.secrets and "gsheets" in st.secrets["connections"]:
-                spreadsheet_url = st.secrets["connections"]["gsheets"]["spreadsheet"]
-            elif "gsheets" in st.secrets and "spreadsheet" in st.secrets["gsheets"]:
-                spreadsheet_url = st.secrets["gsheets"]["spreadsheet"]
-            else:
-                spreadsheet_url = st.secrets.get("spreadsheet", "")
-
-            df_mostrar = conn.read(spreadsheet=spreadsheet_url)
-            origen_datos = "Google Sheets (Tiempo Real)"
-            
-            if df_mostrar.empty or len(df_mostrar.columns) < 2:
-                raise ValueError()
-            df_mostrar = df_mostrar.dropna(how='all').loc[:, ~df_mostrar.columns.str.contains('^Unnamed')]
-        except Exception:
-            if st.session_state.lista_solicitudes:
-                columnas_orden = [
-                    "SN", "Submitted on", "Respondents", "Fecha del día", 
-                    "Marca del vehículo", "INTRODUCIR MODELO", "INTRODUCIR VIN", 
-                    "Mercado", "CÓDIGO DE PRODUCTO", "REFERENCIA DE PIEZA", 
-                    "OPERACIÓN QUE SE SOLICITA AÑADIR", "DEALER"
-                ]
-                df_mostrar = pd.DataFrame(st.session_state.lista_solicitudes)[columnas_orden]
-                origen_datos = "Caché Local de la Aplicación"
-            else:
-                df_mostrar = pd.DataFrame()
-
-        if not df_mostrar.empty:
-            st.markdown("---")
-            st.markdown(f"### 📋 Histórico Base de Datos ({len(df_mostrar)} filas) — *Fuente: {origen_datos}*")
-            
-            st.dataframe(df_mostrar, use_container_width=True, hide_index=True)
-            
-            output = io.BytesIO()
-            with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-                df_mostrar.to_excel(writer, index=False, sheet_name='Solicitud')
-            
-            fecha_archivo = datetime.datetime.now().strftime('%Y%m%d')
-            
-            col_descarga, col_resetear = st.columns([3, 1])
-            with col_descarga:
-                st.download_button(
-                    label=f"📥 Descargar Reporte Completo ({len(df_mostrar)} registros)",
-                    data=output.getvalue(),
-                    file_name=f"Reporte_Solicitudes_HQ_{fecha_archivo}.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    use_container_width=True
-                )
-            with col_resetear:
-                if st.button("🗑️ Limpiar Histórico Local", use_container_width=True):
-                    st.session_state.lista_solicitudes = []
+                    # 🟢 DISCLAMER EN VERDE PERMANENTE ANTES DE REFRESCAR
+                    st.success("✅ **Operación registrada con éxito.** La solicitud ha sido transmitida al departamento de Garantías de Central para su validación.")
+                    
+                    # Esperamos segundo y medio para que al mecánico le dé tiempo a leerlo con calma
+                    import time
+                    time.sleep(1.5)
+                    
+                    # Ahora sí, refrescamos y limpiamos el formulario por completo
                     st.rerun()
-
+                        
 # =========================================================================
     # PANTALLA 4: CONSULTORIO IA DE GARANTÍAS (VERSION DEFINITIVA)
     # =========================================================================
