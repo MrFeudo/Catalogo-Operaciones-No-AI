@@ -246,7 +246,7 @@ def buscador_inteligente_excel(consulta_usuario, df_contexto):
         )
 
         response = client.models.generate_content(
-            model='gemini-3.5-flash',
+            model='gemini-3.1-flash-lite',
             contents=[f"Consulta del usuario: '{consulta_usuario}'"],
             config=types.GenerateContentConfig(
                 system_instruction=prompt_sistema,
@@ -339,7 +339,7 @@ def consultar_ia_garantias(descripcion_averia, archivo_imagen=None):
 
         # Ejecución con temperatura baja (0.3) para garantizar precisión y evitar divagaciones
         response = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-3.1-flash-lite',
             contents=contenidos,
             config=types.GenerateContentConfig(
                 system_instruction=prompt_sistema,
