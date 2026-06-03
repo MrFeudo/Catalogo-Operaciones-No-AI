@@ -448,7 +448,7 @@ if check_password():
             # =================================================================
             # 🤖 SECCIÓN A: ASISTENTE IA DE BÚSQUEDA BILINGÜE
             # =================================================================
-            st.subheader("🤖 Asistente Virtual del Catálogo")
+            st.subheader("🤖 Buscar operación")
             st.write("Escribe tu consulta en español. La IA traducirá los términos mecánicos y buscará en las columnas en inglés.")
             
             consulta_rapida = st.text_input(
