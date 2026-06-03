@@ -221,13 +221,17 @@ def buscador_inteligente_excel(consulta_usuario, df_contexto):
             
         client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
-        # 🔍 FILTRO SEGURO Y LIJERO CON PYTHON ANTES DE IR A LA IA
+        # 🔍 FILTRO PREVIO CON PYTHON
         try:
-            # Limpiamos las palabras de la búsqueda para hacer un filtro por aproximación
             palabras = [p.lower() for p in consulta_usuario.split() if len(p) > 2]
             
-            if palabras:
-                # Buscamos de forma segura si alguna de las palabras clave coincide con el Modelo, Pieza u Operación
+            # REGLA DE ORO INTERNA: Si piden tiempo manual o adicional, forzamos que entre el "Universal Work Item" al corte
+            terminos_manuales = ["manual", "adicional", "extra", "tiempo mas", "añadir horas", "universal", "work item"]
+            if any(tm in consulta_usuario.lower() for tm in terminos_manuales):
+                condicion = df_contexto['Operación Técnica'].astype(str).str.lower().str.contains("universal", na=False) | \
+                            df_contexto['Nombre de la Pieza'].astype(str).str.lower().str.contains("universal", na=False)
+                df_recortado = df_contexto[condicion].head(20)
+            elif palabras:
                 condicion = (
                     df_contexto['Modelo'].astype(str).str.lower().str.contains('|'.join(palabras), na=False) |
                     df_contexto['Nombre de la Pieza'].astype(str).str.lower().str.contains('|'.join(palabras), na=False) |
@@ -237,21 +241,27 @@ def buscador_inteligente_excel(consulta_usuario, df_contexto):
             else:
                 df_recortado = df_contexto.head(50)
                 
-            # Convertimos el extracto recortado a un texto limpio para el prompt
             resumen_excel = df_recortado[['Modelo', 'Nombre de la Pieza', 'Código de Referencia', 'Operación Técnica']].to_string(index=False)
         except Exception as e:
             return f"❌ Error interno al filtrar el catálogo: {str(e)}"
 
-        # 🧠 PROMPT DE NAVEGACIÓN BILINGÜE OPTIMIZADO
+        # 🧠 PROMPT DE SISTEMA ACTUALIZADO CON LA REGLA DEL UNIVERSAL WORK ITEM
         prompt_sistema = (
             "Eres el Asistente de Búsqueda del catálogo de operaciones de OMODA & JAECOO España.\n\n"
-            "El usuario te va a preguntar en ESPAÑOL, pero el catálogo de operaciones adjunto abajo está en INGLÉS. "
-            "Traduce mentalmente los términos técnicos (ej. 'pastillas' -> 'brake pads', 'paragolpes' -> 'bumper', 'pulir' -> 'polish/paint') y busca su correspondencia exacta.\n\n"
-            "REGLAS INEXCUSABLES:\n"
-            "1. Si encuentras operaciones en el listado adjunto que encajen con lo que pide el usuario, muéstraselas en una lista clara indicando el Modelo, la Operación y el Código de Referencia.\n"
-            "2. Si la operación concreta NO EXISTE de forma explícita en el listado adjunto abajo para ese modelo, responde EXACTAMENTE este mensaje:\n"
+            "CONTEXTO DE IDIOMA: El usuario pregunta en ESPAÑOL, pero el catálogo adjunto abajo está en INGLÉS. "
+            "Traduce mentalmente (ej. 'pastillas' -> 'brake pads', 'paragolpes' -> 'bumper').\n\n"
+            "⚠️ REGLA CRÍTICA ESPECIAL (TIEMPOS ADICIONALES / MANUALES):\n"
+            "Si el usuario solicita añadir tiempo manualmente, meter mano de obra adicional, horas extra o reporta que la operación "
+            "no viene tabulada de forma estándar, debes ofrecerle e identificar DIRECTAMENTE la operación denominada 'Universal Work Item'.\n"
+            "Al mostrarle esta operación, indícale explícitamente al taller este mensaje literal:\n"
+            "『ℹ️ **Nota de Central:** La operación **Universal Work Item** es el ÚNICO ítem de todo el catálogo que tiene autorización "
+            "para saltarse el filtro por defecto de \"Spain OJ\". Puede utilizar este código para el reporte de tiempos adicionales, "
+            "siendo obligatorio adjuntar los fichajes del operario y la debida justificación técnica en la reclamación.』\n\n"
+            "REGLAS GENERALES:\n"
+            "1. Si encuentras la operación o el Universal Work Item en el listado de abajo, muéstralo en una lista con su Código de Referencia.\n"
+            "2. Si la operación no es de tiempo adicional y NO EXISTE de ninguna forma en el listado adjunto para ese modelo, responde exactamente:\n"
             "   '❌ No se ha encontrado esta operación en el catálogo oficial de la marca. Por favor, dirígete a la pestaña **📝 Solicitar Operación** en el menú lateral izquierdo para rellenar el formulario de solicitud y que Central pueda darla de alta.'\n"
-            "3. No inventes códigos ni nombres que no estén en el bloque de texto inferior.\n\n"
+            "3. No inventes códigos ni nombres bajo ningún concepto.\n\n"
             f"--- EXTRACTO DEL CATÁLOGO DE OPERACIONES --- \n{resumen_excel}"
         )
 
@@ -264,7 +274,7 @@ def buscador_inteligente_excel(consulta_usuario, df_contexto):
             )
         )
         
-        # Sincronización del chivato de tokens de tu barra lateral
+        # Sincronización del chivato del sidebar
         if "tokens_totales_input" not in st.session_state:
             st.session_state.tokens_totales_input = 0
             st.session_state.tokens_totales_output = 0
