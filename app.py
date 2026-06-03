@@ -221,40 +221,87 @@ def buscador_inteligente_excel(consulta_usuario, df_contexto):
             
         client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
-        # 📊 CONVERSIÓN TOTAL SIN FILTROS PREVIOS
-        try:
-            # Pasamos las columnas clave de TODO el Excel. Gemini se encargará de filtrar y buscar de forma semántica.
-            resumen_excel = df_contexto[['Modelo', 'Nombre de la Pieza', 'Código de Referencia', 'Operación Técnica']].to_string(index=False)
-        except Exception as e:
-            return f"❌ Error al procesar el catálogo: {str(e)}"
+        # 🎯 1. DICCIONARIO DE TRADUCCIÓN MECÁNICA (Para saltarnos la barrera del idioma)
+        sinonimos_posventa = {
+            "pulir": "polishing",
+            "pulido": "polishing",
+            "pintar": "paint",
+            "pintura": "paint",
+            "paragolpes": "bumper",
+            "defensa": "bumper",
+            "freno": "brake",
+            "pastillas": "pads",
+            "faro": "headlamp",
+            "piloto": "lamp",
+            "hibrido": "hev",
+            "mantenimiento": "maintenance",
+            "revision": "maintenance",
+            "aceite": "oil",
+            "filtro": "filter",
+            "embrague": "clutch",
+            "caja": "gearbox",
+            "ruido": "noise"
+        }
 
-        # 🧠 PROMPT CON SEMÁNTICA COMPLETA
+        # Limpiamos y preparamos la consulta
+        consulta_limpia = consulta_usuario.lower().replace("í", "i").replace("ó", "o")
+        palabras_usuario = consulta_limpia.split()
+        
+        # Traducimos las palabras clave al inglés usando el diccionario
+        palabras_busqueda = []
+        for p in palabras_usuario:
+            palabras_busqueda.append(p)  # Mantenemos la original (por si pone OMODA o JAECOO)
+            if p in sinonimos_posventa:
+                palabras_busqueda.append(sinonimos_posventa[p])
+
+        # 🔍 2. FILTRO ESTRICTO EN PYTHON (Ahorro total de tokens)
+        try:
+            # Buscamos filas donde coincida cualquiera de las palabras (tanto en español como traducidas)
+            palabras_claves_finales = [p for p in palabras_busqueda if len(p) > 2]
+            
+            if palabras_claves_finales:
+                # Expresión regular para buscar coincidencias parciales
+                regex_busqueda = '|'.join(palabras_claves_finales)
+                
+                condicion = (
+                    df_contexto['Modelo'].astype(str).str.lower().str.contains(regex_busqueda, na=False) |
+                    df_contexto['Nombre de la Pieza'].astype(str).str.lower().str.contains(regex_busqueda, na=False) |
+                    df_contexto['Operación Técnica'].astype(str).str.lower().str.contains(regex_busqueda, na=False)
+                )
+                # Nos quedamos con un máximo de 40 filas. Esto consume MENOS DE 5.000 TOKENS (una miseria)
+                df_recortado = df_contexto[condicion].head(40)
+            else:
+                df_recortado = df_contexto.head(20)
+                
+            resumen_excel = df_recortado[['Modelo', 'Nombre de la Pieza', 'Código de Referencia', 'Operación Técnica']].to_string(index=False)
+        except Exception as e:
+            return f"❌ Error interno al filtrar el catálogo: {str(e)}"
+
+        # Si el filtro previo de Python se queda completamente vacío tras la traducción
+        if df_recortado.empty:
+            return "❌ No se ha encontrado esta operación en el catálogo oficial de la marca. Por favor, dirígete a la pestaña **📝 Solicitar Operación** en el menú lateral izquierdo para rellenar el formulario de solicitud y que Central pueda darla de alta."
+
+        # 🧠 3. PROMPT COMPACTO PARA GEMINI
         prompt_sistema = (
             "Eres el Asistente de Búsqueda del catálogo de operaciones de OMODA & JAECOO España.\n\n"
-            "CONTEXTO DE IDIOMA Y MODELOS:\n"
-            "- El usuario te preguntará en ESPAÑOL y usará sinónimos coloquiales o técnicos (ej. 'pulir', 'pulido', 'brillo' -> 'polishing').\n"
-            "- El usuario puede escribir variaciones del modelo (ej. 'omoda 5 hibrido', 'omoda 5 hev', 'omoda c5'). Debes asociarlo inteligentemente con el modelo correcto del Excel (ej. 'OMODA 5 HEV').\n\n"
-            "⚠️ REGLA CRÍTICA ESPECIAL (TIEMPOS ADICIONALES):\n"
-            "Si solicitan añadir tiempo manualmente o una operación no tabulada, muéstrales la operación 'Universal Work Item' "
-            "e indícales la nota de Central sobre la excepción del filtro 'Spain OJ'.\n\n"
-            "REGLAS GENERALES:\n"
-            "1. Busca en todo el catálogo adjunto abajo. Si encuentras la operación que encaje, lístala en Markdown con su Modelo, Nombre de la Pieza, Operación y su 'Código de Referencia' exacto.\n"
-            "2. Si tras buscar detalladamente la operación NO EXISTE en el catálogo para ese modelo, responde exactamente:\n"
-            "   '❌ No se ha encontrado esta operación en el catálogo oficial de la marca. Por favor, dirígete a la pestaña **📝 Solicitar Operación** en el menú lateral izquierdo para rellenar el formulario de solicitud y que Central pueda darla de alta.'\n"
-            "3. No inventes códigos ni nombres bajo ningún concepto.\n\n"
-            f"--- CATÁLOGO COMPLETO DE OPERACIONES --- \n{resumen_excel}"
+            "Analiza el extracto recortado del catálogo que tienes abajo y compáralo con la petición del usuario.\n\n"
+            "REGLAS:\n"
+            "1. Si encuentras la operación o piezas que encajen con lo que pide el usuario, lístalas de forma clara con su Modelo, Nombre de la Pieza, Operación Técnica y su 'Código de Referencia' exacto.\n"
+            "2. Si la operación específica NO ESTÁ en el bloque inferior, responde exactamente con el mensaje de derivación al formulario de solicitud.\n"
+            "3. Prohibido inventar códigos.\n\n"
+            f"--- EXTRACTO OPTIMIZADO DEL CATÁLOGO --- \n{resumen_excel}"
         )
 
         response = client.models.generate_content(
-            model='gemini-3.1-flash-lite',
-            contents=[f"Consulta del usuario: '{consulta_usuario}'"],
+            model='gemini-2.5-flash',
+            contents=[f"Consulta original del usuario: '{consulta_usuario}'"],
             config=types.GenerateContentConfig(
                 system_instruction=prompt_sistema,
-                temperature=0.1  # Mantenemos temperatura baja para evitar que alucine códigos
+                temperature=0.1
             )
         )
         
-        # Sincronización de métricas en la barra lateral
+        # Sincronización del chivato del sidebar
         if "tokens_totales_input" not in st.session_state:
             st.session_state.tokens_totales_input = 0
             st.session_state.tokens_totales_output = 0
@@ -271,7 +318,7 @@ def buscador_inteligente_excel(consulta_usuario, df_contexto):
             st.session_state.dinero_total_gastado += coste
             st.session_state.ultima_consulta_info = f"Última: In: {t_input} | Out: {t_output} (+{coste:.5f}$)"
             
-        return response.text if response.text else "❌ La IA no devolvió ningún resultado."
+        return response.text if response.text else "❌ No se encontraron coincidencias."
     except Exception as e:
         return f"❌ Error en el motor de la IA de Gemini: {str(e)}"
         
