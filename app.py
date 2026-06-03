@@ -221,45 +221,48 @@ def buscador_inteligente_excel(consulta_usuario, df_contexto):
             
         client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
-        # 🔍 FILTRO PREVIO CON PYTHON
+        # 🔍 FILTRO INTELIGENTE: Clasificamos por modelo antes de llamar a la IA
         try:
-            palabras = [p.lower() for p in consulta_usuario.split() if len(p) > 2]
+            consulta_limpia = consulta_usuario.lower()
+            df_recortado = pd.DataFrame()
             
-            # REGLA DE ORO INTERNA: Si piden tiempo manual o adicional, forzamos que entre el "Universal Work Item" al corte
-            terminos_manuales = ["manual", "adicional", "extra", "tiempo mas", "añadir horas", "universal", "work item"]
-            if any(tm in consulta_usuario.lower() for tm in terminos_manuales):
-                condicion = df_contexto['Operación Técnica'].astype(str).str.lower().str.contains("universal", na=False) | \
-                            df_contexto['Nombre de la Pieza'].astype(str).str.lower().str.contains("universal", na=False)
-                df_recortado = df_contexto[condicion].head(20)
-            elif palabras:
-                condicion = (
-                    df_contexto['Modelo'].astype(str).str.lower().str.contains('|'.join(palabras), na=False) |
-                    df_contexto['Nombre de la Pieza'].astype(str).str.lower().str.contains('|'.join(palabras), na=False) |
-                    df_contexto['Operación Técnica'].astype(str).str.lower().str.contains('|'.join(palabras), na=False)
-                )
-                df_recortado = df_contexto[condicion].head(80)
+            # Detectamos si el usuario menciona algún modelo clave de tu catálogo
+            if "omoda 5" in consulta_limpia or "omoda5" in consulta_limpia:
+                df_recortado = df_contexto[df_contexto['Modelo'].astype(str).str.lower().str.contains("omoda 5|omoda5", na=False)]
+            elif "jaecoo 7" in consulta_limpia or "jaecoo7" in consulta_limpia:
+                df_recortado = df_contexto[df_contexto['Modelo'].astype(str).str.lower().str.contains("jaecoo 7|jaecoo7", na=False)]
+            elif "jaecoo 8" in consulta_limpia or "jaecoo8" in consulta_limpia:
+                df_recortado = df_contexto[df_contexto['Modelo'].astype(str).str.lower().str.contains("jaecoo 8|jaecoo8", na=False)]
+            
+            # Si no detecta un modelo concreto o el filtro es vacío, buscamos por aproximación de componentes
+            if df_recortado.empty:
+                palabras = [p for p in consulta_limpia.split() if len(p) > 2 and p not in ["para", "con", "del", "que", "quiero"]]
+                if palabras:
+                    # Filtramos por aproximación flexible de texto
+                    condicion = df_contexto['Modelo'].astype(str).str.lower().str.contains('|'.join(palabras), na=False) | \
+                                df_contexto['Nombre de la Pieza'].astype(str).str.lower().str.contains('|'.join(palabras), na=False)
+                    df_recortado = df_contexto[condicion].head(100)
+                else:
+                    df_recortado = df_contexto.head(60)
             else:
-                df_recortado = df_contexto.head(50)
+                # Si hemos cazado el modelo, limitamos a las primeras 150 filas de ese coche para no saturar
+                df_recortado = df_recortado.head(150)
                 
             resumen_excel = df_recortado[['Modelo', 'Nombre de la Pieza', 'Código de Referencia', 'Operación Técnica']].to_string(index=False)
         except Exception as e:
-            return f"❌ Error interno al filtrar el catálogo: {str(e)}"
+            return f"❌ Error interno al procesar el filtro del catálogo: {str(e)}"
 
-        # 🧠 PROMPT DE SISTEMA ACTUALIZADO CON LA REGLA DEL UNIVERSAL WORK ITEM
+        # 🧠 PROMPT DE SISTEMA: Traducción total garantizada
         prompt_sistema = (
             "Eres el Asistente de Búsqueda del catálogo de operaciones de OMODA & JAECOO España.\n\n"
-            "CONTEXTO DE IDIOMA: El usuario pregunta en ESPAÑOL, pero el catálogo adjunto abajo está en INGLÉS. "
-            "Traduce mentalmente (ej. 'pastillas' -> 'brake pads', 'paragolpes' -> 'bumper').\n\n"
+            "CONTEXTO DE IDIOMA: El usuario te preguntará en ESPAÑOL (ej. 'pulido', 'pintura', 'freno'), pero tu catálogo de "
+            "operaciones de abajo está en INGLÉS. Tu trabajo es emparejar los conceptos por significado (ej. 'pulido' o 'pulir' -> 'polishing').\n\n"
             "⚠️ REGLA CRÍTICA ESPECIAL (TIEMPOS ADICIONALES / MANUALES):\n"
-            "Si el usuario solicita añadir tiempo manualmente, meter mano de obra adicional, horas extra o reporta que la operación "
-            "no viene tabulada de forma estándar, debes ofrecerle e identificar DIRECTAMENTE la operación denominada 'Universal Work Item'.\n"
-            "Al mostrarle esta operación, indícale explícitamente al taller este mensaje literal:\n"
-            "『ℹ️ **Nota de Central:** La operación **Universal Work Item** es el ÚNICO ítem de todo el catálogo que tiene autorización "
-            "para saltarse el filtro por defecto de \"Spain OJ\". Puede utilizar este código para el reporte de tiempos adicionales, "
-            "siendo obligatorio adjuntar los fichajes del operario y la debida justificación técnica en la reclamación.』\n\n"
+            "Si el usuario solicita añadir tiempo manualmente o una operación que no viene tabulada, ofrécele la operación 'Universal Work Item' "
+            "e indícales la nota de Central sobre la excepción del filtro 'Spain OJ'.\n\n"
             "REGLAS GENERALES:\n"
-            "1. Si encuentras la operación o el Universal Work Item en el listado de abajo, muéstralo en una lista con su Código de Referencia.\n"
-            "2. Si la operación no es de tiempo adicional y NO EXISTE de ninguna forma en el listado adjunto para ese modelo, responde exactamente:\n"
+            "1. Si encuentras operaciones que encajen conceptualmente con la traducción del usuario, muéstraselas en una lista con su Código de Referencia.\n"
+            "2. Si la operación solicitada NO EXISTE de ninguna forma en el catálogo para ese modelo, responde exactamente:\n"
             "   '❌ No se ha encontrado esta operación en el catálogo oficial de la marca. Por favor, dirígete a la pestaña **📝 Solicitar Operación** en el menú lateral izquierdo para rellenar el formulario de solicitud y que Central pueda darla de alta.'\n"
             "3. No inventes códigos ni nombres bajo ningún concepto.\n\n"
             f"--- EXTRACTO DEL CATÁLOGO DE OPERACIONES --- \n{resumen_excel}"
@@ -267,14 +270,14 @@ def buscador_inteligente_excel(consulta_usuario, df_contexto):
 
         response = client.models.generate_content(
             model='gemini-2.5-flash',
-            contents=[f"Consulta en español del usuario: '{consulta_usuario}'"],
+            contents=[f"Consulta del taller: '{consulta_usuario}'"],
             config=types.GenerateContentConfig(
                 system_instruction=prompt_sistema,
                 temperature=0.1
             )
         )
         
-        # Sincronización del chivato del sidebar
+        # Sincronización del estado de consumo
         if "tokens_totales_input" not in st.session_state:
             st.session_state.tokens_totales_input = 0
             st.session_state.tokens_totales_output = 0
