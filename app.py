@@ -221,65 +221,80 @@ def buscador_inteligente_excel(consulta_usuario, df_contexto):
             
         client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
-        # 🎯 1. DICCIONARIO AVANZADO DE COMPONENTES Y ACCIONES CRÍTICAS
-        sinonimos_posventa = {
-            # Techo Solar y Mecanismos
-            "techo": "sunroof", "solar": "sunroof", "sunroof": "sunroof",
-            "engrasar": "lubrication", "engrase": "lubrication", "lubricar": "lubrication", "lubricacion": "lubrication",
+        # 🎯 1. DICCIONARIO CLASIFICADO
+        acciones_tecnicas = {
+            "pulir": "polishing", "pulido": "polishing", "abrillantar": "polishing",
+            "pintar": "paint", "pintura": "paint", "barniz": "paint",
+            "engrasar": "lubrication", "engrase": "lubrication", "lubricar": "lubrication",
             "limpiar": "cleaning", "limpieza": "cleaning",
-            # Motorizaciones y Alta Tensión
-            "hibrido": "hev", "enchufable": "phev", "electrico": "bev", "ev": "bev",
+            "cambiar": "replace", "sustituir": "replace", "cambio": "replace", "sustitucion": "replace",
+            "desmontar": "remove", "montar": "reinstall"
+        }
+
+        componentes_piezas = {
+            "capo": "hood", "techo": "sunroof", "solar": "sunroof",
             "traccion": "traction", "alta tension": "high voltage", "bateria": "battery",
-            # Operaciones Base
-            "cambiar": "replace", "cambio": "replace", "sustituir": "replace", "sustitucion": "replace",
-            "quitar": "remove", "poner": "reinstall", "desmontar": "remove", "montar": "reinstall",
-            # Carrocería e Iluminación
-            "pulir": "polishing", "pulido": "polishing", "pintar": "paint", "pintura": "paint", 
-            "paragolpes": "bumper", "defensa": "bumper", "parachoques": "bumper", 
+            "paragolpes": "bumper", "defensa": "bumper", "parachoques": "bumper",
             "freno": "brake", "pastillas": "pads", "faro": "headlamp", "piloto": "lamp"
         }
 
-        # Limpieza absoluta de la cadena del usuario
         consulta_limpia = consulta_usuario.lower().replace("í", "i").replace("ó", "o").replace("á", "a").strip()
-        palabras_usuario = [p for p in consulta_limpia.split() if len(p) > 2 and p not in ["quiero", "para", "con", "del", "una", "uno"]]
-        palabras_usuario = [p for p in palabras_usuario if not (p.isdigit() and len(p) == 1)]
 
-        # Añadimos equivalencias en inglés al saco de búsqueda
-        palabras_busqueda = list(palabras_usuario)
-        for p in palabras_usuario:
-            if p in sinonimos_posventa:
-                palabras_busqueda.append(sinonimos_posventa[p])
+        # Detección de conceptos clave
+        acciones_detectadas = [eng for esp, eng in acciones_tecnicas.items() if esp in consulta_limpia]
+        componentes_detectados = [eng for esp, eng in componentes_piezas.items() if esp in consulta_limpia]
         
-        # Eliminamos duplicados en la lista de palabras clave
-        palabras_busqueda = list(set(palabras_busqueda))
+        palabras_texto = [p for p in consulta_limpia.split() if len(p) > 2 and p not in ["quiero", "para", "con", "del", "una", "uno"]]
+        palabras_texto = [p for p in palabras_texto if not (p.isdigit() and len(p) == 1)]
 
-        # 🔍 2. NUEVO MOTOR DE SCORE POR INTERSECCIÓN REALTIVA
+        # 🔍 2. MOTOR DE SCORE REVISADO CON BONUS DE INTERSECCIÓN
         try:
             if any(tm in consulta_limpia for tm in ["manual", "adicional", "extra", "tiempo mas", "universal"]):
                 df_recortado = df_contexto[df_contexto['Operación Técnica'].astype(str).str.lower().str.contains("universal", na=False)].head(20)
             else:
-                # Filtrado inicial opcional por marca para aligerar la memoria de Streamlit
                 df_base = df_contexto.copy()
+                
+                # Criba por marca
                 if "omoda" in consulta_limpia:
                     df_base = df_base[df_base['Modelo'].astype(str).str.lower().str.contains("omoda", na=False)]
                 elif "jaecoo" in consulta_limpia:
                     df_base = df_base[df_base['Modelo'].astype(str).str.lower().str.contains("jaecoo", na=False)]
 
-                # Creamos una columna de puntuación a cero
                 df_base['score'] = 0
 
-                # 🔴 REGLA DE ORO: Cada palabra técnica clave que aparezca suma de forma independiente
-                for palabra in palabras_busqueda:
-                    # Buscamos la palabra en el modelo, pieza u operación técnica
-                    match_modelo = df_base['Modelo'].astype(str).str.lower().str.contains(palabra, na=False).astype(int)
-                    match_pieza = df_base['Nombre de la Pieza'].astype(str).str.lower().str.contains(palabra, na=False).astype(int)
-                    match_operacion = df_base['Operación Técnica'].astype(str).str.lower().str.contains(palabra, na=False).astype(int)
-                    
-                    # Sumamos la coincidencia (multiplicamos por 2 si coincide en la operación para darle prioridad)
-                    df_base['score'] += match_modelo + match_pieza + (match_operacion * 2)
+                # 1. Puntuación por texto base
+                for palabra in palabras_texto:
+                    df_base['score'] += df_base['Modelo'].astype(str).str.lower().str.contains(palabra, na=False).astype(int)
+                    df_base['score'] += df_base['Nombre de la Pieza'].astype(str).str.lower().str.contains(palabra, na=False).astype(int)
+                    df_base['score'] += df_base['Operación Técnica'].astype(str).str.lower().str.contains(palabra, na=False).astype(int)
 
-                # Nos quedamos con las 60 filas que tengan más puntuación real acumulada
-                df_recortado = df_base[df_base['score'] > 0].sort_values(by='score', ascending=False).head(60)
+                # 2. Puntuación por acción detectada
+                if acciones_detectadas:
+                    regex_accion = '|'.join(acciones_detectadas)
+                    match_accion = df_base['Operación Técnica'].astype(str).str.lower().str.contains(regex_accion, na=False)
+                    df_base.loc[match_accion, 'score'] += 15
+
+                # 3. Puntuación por componente detectado
+                if componentes_detectados:
+                    regex_componente = '|'.join(componentes_detectados)
+                    match_componente = df_base['Nombre de la Pieza'].astype(str).str.lower().str.contains(regex_componente, na=False) | \
+                                       df_base['Operación Técnica'].astype(str).str.lower().str.contains(regex_componente, na=False)
+                    df_base.loc[match_componente, 'score'] += 8
+
+                # 🔴 4. REGLA MAESTRA (EL SÚPER BONUS DE INTERSECCIÓN):
+                # Si una fila tiene la ACCIÓN Y EL COMPONENTE a la vez, se dispara arriba del todo obligatoriamente
+                if acciones_detectadas and componentes_detectados:
+                    regex_acc = '|'.join(acciones_detectadas)
+                    regex_comp = '|'.join(componentes_detectados)
+                    
+                    match_perfecto = (df_base['Operación Técnica'].astype(str).str.lower().str.contains(regex_acc, na=False)) & \
+                                     (df_base['Nombre de la Pieza'].astype(str).str.lower().str.contains(regex_comp, na=False) | 
+                                      df_base['Operación Técnica'].astype(str).str.lower().str.contains(regex_comp, na=False))
+                    
+                    df_base.loc[match_perfecto, 'score'] += 50
+
+                # Ordenamos y extraemos las mejores 50
+                df_recortado = df_base[df_base['score'] > 0].sort_values(by='score', ascending=False).head(50)
                 df_base.drop(columns=['score'], errors='ignore')
 
             resumen_excel = df_recortado[['Modelo', 'Nombre de la Pieza', 'Código de Referencia', 'Operación Técnica']].to_string(index=False)
@@ -289,17 +304,16 @@ def buscador_inteligente_excel(consulta_usuario, df_contexto):
         if df_recortado.empty:
             return "❌ No se ha encontrado esta operación en el catálogo oficial de la marca. Por favor, dirígete a la pestaña **📝 Solicitar Operación** en el menú lateral izquierdo para rellenar el formulario de solicitud y que Central pueda darla de alta."
 
-        # 🧠 3. PROMPT DE TRADUCCIÓN SEMÁNTICA PARA GEMINI
+        # 🧠 3. PROMPT PARA GEMINI
         prompt_sistema = (
             "Eres el Asistente de Búsqueda del catálogo de operaciones de OMODA & JAECOO España.\n\n"
-            "Analiza el extracto del catálogo de abajo (que viene ordenado de mayor a menor relevancia por Python) "
-            "y extrae de forma limpia todas las operaciones que coincidan con lo que pide el usuario.\n"
-            "Presta especial atención a operaciones de mantenimiento, engrase o sustitución (ej: 'sunroof lubrication', 'sunroof replace').\n\n"
+            "Analiza el extracto optimizado del catálogo que tienes abajo (ordenado por relevancia estricta en Python).\n"
+            "Muestra los resultados que respondan a la intención de la consulta del taller.\n\n"
             "REGLAS:\n"
             "1. Muestra en una lista limpia en Markdown los resultados válidos indicando el Modelo, la Operación Técnica y su 'Código de Referencia' exacto.\n"
-            "2. Si el concepto exacto solicitado no se encuentra dentro del bloque inferior, responde con el mensaje estricto de derivación al formulario.\n"
+            "2. Si la operación específica solicitada no se encuentra dentro del bloque inferior, responde con el mensaje estricto de derivación al formulario.\n"
             "3. Prohibido inventar códigos.\n\n"
-            f"--- EXTRACTO DE ALTA RELEVANCIA --- \n{resumen_excel}"
+            f"--- EXTRACTO OPTIMIZADO DEL CATÁLOGO --- \n{resumen_excel}"
         )
 
         response = client.models.generate_content(
@@ -319,7 +333,7 @@ def buscador_inteligente_excel(consulta_usuario, df_contexto):
 
         if response.text and response.usage_metadata:
             t_input = response.usage_metadata.prompt_token_count
-            t_output = response.usage_metadata.candidates_count if hasattr(response.usage_metadata, 'candidates_count') else response.usage_metadata.candidates_token_count
+            t_output = response.usage_metadata.candidates_token_count
             coste = ((t_input * 0.075) / 1_000_000) + ((t_output * 0.30) / 1_000_000)
             
             st.session_state.tokens_totales_input += t_input
