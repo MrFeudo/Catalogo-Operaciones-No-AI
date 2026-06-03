@@ -221,72 +221,119 @@ def buscador_inteligente_excel(consulta_usuario, df_contexto):
             
         client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
-        # Mapeo universal de palabras clave core (Raíces puras de componentes)
+        # 🎯 1. MAESTRÍA DE RAÍCES: El diccionario definitivo de "Modo Taller" (Jerga, errores y abreviaturas)
         mapa_raices = {
-            "cinturon": "seatbelt|seat belt|belt",
-            "pulir": "polishing|polish", "pulido": "polishing|polish",
-            "capo": "hood",
-            "techo": "sunroof", "solar": "sunroof",
-            "traccion": "traction", "alta tension": "high voltage", "bateria": "battery",
-            "vapores": "canister|evap|solenoid", "canister": "canister",
-            "paragolpes": "bumper", "defensa": "bumper", "parachoques": "bumper",
-            "freno": "brake", "pastillas": "pads", "faro": "headlamp", "piloto": "lamp",
-            "sustituir": "replace|remove", "cambiar": "replace|remove", "cambio": "replace|remove"
+            # --- 🛠️ ACCIONES / OPERACIONES (Mapeadas a 'Remove and Reinstall' o 'Replace') ---
+            "sustituir": "remove and reinstall|replace|remove|reinstall",
+            "sustitucion": "remove and reinstall|replace|remove|reinstall",
+            "cambiar": "remove and reinstall|replace|remove|reinstall",
+            "cambio": "remove and reinstall|replace|remove|reinstall",
+            "reemplazar": "remove and reinstall|replace|remove|reinstall",
+            "reemplazo": "remove and reinstall|replace|remove|reinstall",
+            "reinstalar": "remove and reinstall|reinstall",
+            "quitar": "remove", "desmontar": "remove", "desmontaje": "remove",
+            "poner": "reinstall|reinstall", "montar": "reinstall", "montaje": "reinstall",
+            "engrasar": "lubrication|polish", "engrase": "lubrication", "lubricar": "lubrication", "lubricacion": "lubrication",
+            "limpiar": "cleaning", "limpieza": "cleaning",
+            "pulir": "polishing|polish", "pulido": "polishing|polish", "abrillantar": "polishing",
+            "pintar": "paint", "pintura": "paint", "barniz": "paint", "repintar": "paint",
+            "comprobar": "check|inspection", "comprobacion": "check|inspection", "verificar": "check|inspection", "mirar": "check",
+            
+            # --- 📍 POSICIONES Y LADOS (Mapeo directo a siglas del Excel) ---
+            "delantero": "fr", "delantera": "fr", "fr": "fr", "frontal": "fr", "alante": "fr",
+            "trasero": "rr", "trasera": "rr", "rr": "rr", "posterior": "rr", "atras": "rr",
+            "izquierdo": "lh", "izquierda": "lh", "lh": "lh", "izq": "lh", "izda": "lh",
+            "derecho": "rh", "derecha": "rh", "rh": "rh", "der": "rh", "drcha": "rh",
+            
+            # --- 🚗 COMPONENTES DE CARROCERÍA Y EXTERIOR ---
+            "capo": "hood", "coche": "vehicle", "vehiculo": "vehicle",
+            "techo": "sunroof|roof", "solar": "sunroof", "panoramico": "sunroof",
+            "paragolpes": "bumper", "defensa": "bumper", "parachoques": "bumper", "paragolpe": "bumper",
+            "faro": "headlamp|lamp", "piloto": "lamp", "optica": "headlamp", "foco": "headlamp", "led": "led",
+            "retrovisor": "mirror", "espejo": "mirror", "cristal": "glass", "luna": "glass", "parabrisas": "windshield",
+            "puerta": "door", "aleta": "fender", "porton": "tailgate|trunk", "maletero": "trunk",
+            "moldura": "protector|trim", "embellecedor": "trim", "rejilla": "grille", "calandra": "grille",
+            "maneta": "handle", "tirador": "handle", "cerradura": "lock",
+            
+            # --- ⚙️ MECÁNICA, MOTOR Y GASES ---
+            "cinturon": "seatbelt|seat belt|belt", "cinturones": "seatbelt|seat belt",
+            "vapores": "canister|evap|solenoid|pipe", "canister": "canister", "solenoide": "solenoid", "valvula": "solenoid",
+            "tubo": "pipe|hose", "manguito": "hose", "conducto": "pipe", "tubería": "pipe",
+            "bateria": "battery", "traccion": "traction", "alta tension": "high voltage", "voltaje": "high voltage",
+            "freno": "brake", "pastillas": "pads", "pastilla": "pads", "disco": "disc", "pinza": "caliper",
+            "radiador": "radiator", "ventilador": "fan", "bomba": "pump", "alternador": "alternator",
+            "embrague": "clutch", "caja": "transmission|gearbox", "cambios": "transmission", "direccion": "steering",
+            "amortiguador": "absorber", "suspension": "suspension", "rueda": "wheel|tyre", "llanta": "wheel"
         }
 
-        # Equivalencias de modelos de taller
+        # Equivalencias elásticas de modelos y motorizaciones habituales
         abreviaturas_modelos = {
-            "j5": "jaecoo 5", "jaecoo5": "jaecoo 5",
-            "j7": "jaecoo 7", "jaecoo7": "jaecoo 7",
-            "j8": "jaecoo 8", "jaecoo8": "jaecoo 8",
-            "o5": "omoda 5", "omoda5": "omoda 5", "o7": "omoda 7"
+            "j5": "jaecoo 5", "jaecoo5": "jaecoo 5", "j-5": "jaecoo 5",
+            "j7": "jaecoo 7", "jaecoo7": "jaecoo 7", "j-7": "jaecoo 7",
+            "j8": "jaecoo 8", "jaecoo8": "jaecoo 8", "j-8": "jaecoo 8",
+            "o5": "omoda 5", "omoda5": "omoda 5", "o-5": "omoda 5", "omoda 5": "omoda 5",
+            "hibrido": "hev", "hev": "hev", "hybrid": "hev",
+            "electrico": "bev", "bev": "bev", "ev": "bev", "electric": "bev",
+            "gasolina": "ice", "t": "230t", "turbo": "230t"
         }
 
-        # Limpieza inicial de la consulta
-        consulta_limpia = consulta_usuario.lower().replace("í", "i").replace("ó", "o").replace("á", "a").strip()
+        # Limpieza radical del texto del usuario (quitamos acentos y caracteres raros)
+        consulta_limpia = consulta_usuario.lower().strip()
+        for orig, dest in [("í", "i"), ("ó", "o"), ("á", "a"), ("é", "e"), ("ú", "u"), ("ñ", "n")]:
+            consulta_limpia = consulta_limpia.replace(orig, dest)
 
-        # Expandimos abreviaturas de modelos (j5 -> jaecoo 5)
+        # Reemplazamos las abreviaturas de modelos dentro de la cadena entera
         for abrev, mod_real in abreviaturas_modelos.items():
+            # Evitamos falsos positivos separando por espacios o aislando el término
             if abrev in consulta_limpia.split() or abrev in consulta_limpia:
                 consulta_limpia = consulta_limpia.replace(abrev, mod_real)
 
-        # Creamos el saco de palabras clave traduciendo las raíces encontradas
+        # Construimos el saco de expresiones regulares traduciendo al inglés técnico
         palabras_regex = []
         for esp, eng in mapa_raices.items():
             if esp in consulta_limpia:
-                palabras_regex.append(eng)
+                palabras_regex.extend(eng.split('|'))
 
-        # Añadimos también las palabras sueltas del usuario que tengan valor técnico
+        # Añadimos palabras sueltas que ponga el mecánico por si escribe el nombre de una pieza rara en inglés o español
+        palabras_ignorar = ["quiero", "para", "con", "del", "una", "uno", "el", "la", "los", "las", "este", "un", "de", "que"]
         for p in consulta_limpia.split():
-            if len(p) > 2 and p not in ["quiero", "para", "con", "del", "una", "uno", "sustituir", "cambiar", "el", "la", "los"]:
-                if not (p.isdigit() and len(p) == 1): # Evitamos números sueltos como 5 o 7
+            if len(p) > 2 and p not in palabras_ignorar and p not in mapa_raices.keys() and p not in abreviaturas_modelos.keys():
+                if not (p.isdigit() and len(p) == 1):  # Volamos números sueltos tramposos (como el '5' o '7')
                     palabras_regex.append(p)
 
-        # 🔍 MOTOR DE BÚSQUEDA ELÁSTICO
+        palabras_regex = list(set(palabras_regex)) # Eliminamos duplicados
+
+        # 🔍 2. NUEVO MOTOR DE RELEVANCIA MULTI-CAPA (Puntuación Inteligente)
         try:
-            if any(tm in consulta_limpia for tm in ["manual", "adicional", "extra", "tiempo mas", "universal"]):
+            # Control inmediato de la regla maestra de tiempos manuales adicionales
+            terminos_manuales = ["manual", "adicional", "extra", "tiempo mas", "añadir horas", "universal", "marron", "baremo no"]
+            if any(tm in consulta_limpia for tm in terminos_manuales):
                 df_recortado = df_contexto[df_contexto['Operación Técnica'].astype(str).str.lower().str.contains("universal", na=False)].head(20)
             else:
                 df_base = df_contexto.copy()
                 df_base['score'] = 0
 
-                # Aplicamos la puntuación por cada término del saco de expresiones regulares
                 if palabras_regex:
-                    regex_final = '|'.join(set(palabras_regex))
+                    regex_final = '|'.join(palabras_regex)
                     
-                    # Sumamos puntos si aparece en las columnas clave
-                    df_base['score'] += df_base['Modelo'].astype(str).str.lower().str.contains(regex_final, na=False).astype(int) * 2
-                    df_base['score'] += df_base['Nombre de la Pieza'].astype(str).str.lower().str.contains(regex_final, na=False).astype(int) * 3
-                    df_base['score'] += df_base['Operación Técnica'].astype(str).str.lower().str.contains(regex_final, na=False).astype(int) * 5
+                    # Buscamos de forma masiva en las tres columnas clave del catálogo
+                    match_mod = df_base['Modelo'].astype(str).str.lower().str.contains(regex_final, na=False).astype(int)
+                    match_pie = df_base['Nombre de la Pieza'].astype(str).str.lower().str.contains(regex_final, na=False).astype(int)
+                    match_ope = df_base['Operación Técnica'].astype(str).str.lower().str.contains(regex_final, na=False).astype(int)
+                    
+                    # Ponderamos los puntos: Que coincida la operación o pieza vale muchísimo más
+                    df_base['score'] += match_mod * 2
+                    df_base['score'] += match_pie * 5
+                    df_base['score'] += match_ope * 8
 
-                    # Nos quedamos con el top de filas con puntuación
-                    df_recortado = df_base[df_base['score'] > 0].sort_values(by='score', ascending=False).head(60)
+                    # 🔴 REGLA ANTIBLOQUEO DE MOTORIZACIONES:
+                    # Si el usuario metió "electrico" o "bev" pero busca una pieza que da 0 filas en ese motor,
+                    # guardamos las filas que sí coincidan por componente (aunque sean del térmico o híbrido)
+                    df_recortado = df_base[df_base['score'] > 0].sort_values(by='score', ascending=False).head(50)
                 else:
                     df_recortado = df_base.head(20)
 
-                # 🔴 RED DE SEGURIDAD ABSOLUTA: Si el extracto se queda vacío (0 filas),
-                # forzamos a Python a volcar las primeras 80 filas que contengan la marca básica (Omoda o Jaecoo)
-                # para que Gemini tenga material de sobra que procesar y no se quede ciego con 194 tokens.
+                # 🔴 RED DE SEGURIDAD ABSOLUTA (Si el filtro da cero, forzamos volcado por marca para que la IA decida)
                 if df_recortado.empty:
                     if "omoda" in consulta_limpia:
                         df_recortado = df_contexto[df_contexto['Modelo'].astype(str).str.lower().str.contains("omoda", na=False)].head(80)
@@ -299,33 +346,53 @@ def buscador_inteligente_excel(consulta_usuario, df_contexto):
 
             resumen_excel = df_recortado[['Modelo', 'Nombre de la Pieza', 'Código de Referencia', 'Operación Técnica']].to_string(index=False)
         except Exception as e:
-            return f"❌ Error interno al filtrar el catálogo: {str(e)}"
+            return f"❌ Error interno al procesar el filtro de relevancia: {str(e)}"
 
-        if df_recortado.empty:
-            return "❌ No se ha encontrado esta operación en el catálogo oficial de la marca. Por favor, dirígete a la pestaña **📝 Solicitar Operación** en el menú lateral izquierdo para rellenar el formulario de solicitud y que Central pueda darla de alta."
-
-        # 🧠 PROMPT FLEXIBLE PARA GEMINI
+        # 🧠 3. EL PROMPT MAESTRO (Instrucciones ultra-flexibles y resolución semántica para Gemini)
         prompt_sistema = (
-            "Eres el Asistente de Búsqueda del catálogo de operaciones de OMODA & JAECOO España.\n\n"
-            "Analiza el listado del catálogo inferior y busca de forma semántica lo que pide el usuario.\n"
-            "Ten en cuenta sinónimos técnicos (ej: 'sustituir cinturón' equivale a operaciones de 'Remove and reinstall seatbelt' o 'seat belt').\n\n"
-            "REGLAS:\n"
-            "1. Muestra en una lista limpia en Markdown los resultados válidos indicando el Modelo, la Operación Técnica y su 'Código de Referencia' exacto.\n"
-            "2. Si la operación específica no aparece bajo ningún concepto en el extracto inferior, responde con el mensaje estricto de derivación al formulario.\n"
-            "3. Prohibido inventar códigos.\n\n"
-            f"--- EXTRACTO DEL CATÁLOGO --- \n{resumen_excel}"
+            "Eres el Buscador Inteligente Avanzado del catálogo oficial de OMODA & JAECOO España.\n\n"
+            "COMPORTAMIENTO ANTE CONSULTAS DE TALLER:\n"
+            "- Ten en cuenta que los usuarios son mecánicos, asesores o jefes de taller que escriben rápido. "
+            "Pueden cometer errores, omitir palabras o usar términos en español ('cinturón delantero derecho') "
+            "mientras que el catálogo de operaciones inferior está redactado en inglés.\n\n"
+            "DICCIONARIO DE TRADUCCIÓN Y MAPEO DE CAMPOS (TRADUCE MENTALMENTE):\n"
+            "1. POSICIONES DE PIEZAS:\n"
+            "   - 'FR' = Front = Delantero / Delantera / Frontal\n"
+            "   - 'RR' = Rear = Trasero / Trasera / Posterior\n"
+            "   - 'LH' = Left Hand = Izquierdo / Izquierda / Lado Conductor (en España)\n"
+            "   - 'RH' = Right Hand = Derecho / Derecha / Lado Acompañante\n"
+            "2. ACCIONES RECURRENTES:\n"
+            "   - 'Remove and reinstall' = Desmontar y montar, sustituir, cambiar, reemplazo, reinstalar, sustitución.\n"
+            "   - 'Replace' = Cambiar, sustituir, reemplazar de forma directa.\n"
+            "   - 'Polishing' / 'Polish' = Pulir, pulido, abrillantar, quitar arañazo superficial.\n"
+            "   - 'Lubrication' = Engrasar, lubricar, limpieza y engrase, mantenimiento preventivo.\n"
+            "3. COMPATIBILIDAD ENTRE MOTORIZACIONES:\n"
+            "   - Si el usuario busca una operación para un modelo eléctrico (BEV) o híbrido (HEV) pero la fila exacta de ese modelo "
+            "     tiene el código en blanco o no aparece, busca en el listado la misma operación en el modelo base térmico o gasolina. "
+            "     Si la chapa o el componente es idéntico, muéstrale ese código e infórmale de que es una operación compartida.\n"
+            "   - Si pide una pieza imposible para ese motor (ej: tubo de vapores/cánister en un eléctrico), facilítale el código de la versión híbrida o gasolina "
+            "     y acláraselo de forma muy directa y breve.\n\n"
+            "⚠️ REGLA CRÍTICA ESPECIAL (TIEMPOS ADICIONALES):\n"
+            "Si detectas que piden meter horas a mano, tiempos adicionales o manuales, muéstrales la operación 'Universal Work Item' "
+            "e indícales la nota literal de Central sobre la excepción del filtro 'Spain OJ'.\n\n"
+            "REGLAS DE SALIDA:\n"
+            "1. Devuelve los resultados válidos en una lista Markdown limpia y estructurada.\n"
+            "2. Si la operación solicitada no guarda ninguna relación semántica con lo que hay en el extracto inferior, responde textualmente:\n"
+            "   '❌ No se ha encontrado esta operación en el catálogo oficial de la marca. Por favor, dirígete a la pestaña **📝 Solicitar Operación** en el menú lateral izquierdo para rellenar el formulario de solicitud y que Central pueda darla de alta.'\n"
+            "3. Prohibido inventarse códigos o nombres bajo ningún concepto.\n\n"
+            f"--- EXTRACTO RELEVANTE DEL CATÁLOGO --- \n{resumen_excel}"
         )
 
         response = client.models.generate_content(
             model='gemini-2.5-flash',
-            contents=[f"Consulta original del usuario: '{consulta_usuario}'"],
+            contents=[f"Consulta del operario de taller: '{consulta_usuario}'"],
             config=types.GenerateContentConfig(
                 system_instruction=prompt_sistema,
                 temperature=0.1
             )
         )
         
-        # Sincronización de estadísticas en el sidebar
+        # Métricas de consumo del sidebar
         if "tokens_totales_input" not in st.session_state:
             st.session_state.tokens_totales_input = 0
             st.session_state.tokens_totales_output = 0
