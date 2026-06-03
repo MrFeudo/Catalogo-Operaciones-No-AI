@@ -256,7 +256,7 @@ def consultar_ia_garantias(descripcion_averia, archivo_imagen=None):
                 imagen_pil.thumbnail((1024, 1024))
                 contenidos.append(imagen_pil)
             
-        # PROMPT DE USUARIO: Estructura exacta solicitada con el cambio de orden prioritario
+       # PROMPT DE USUARIO: Criterio laxo para actualizaciones de software integrado
         prompt_usuario = (
             f"Caso reportado por el taller:\n'{descripcion_averia}'\n\n"
             "Genera el dictamen técnico estructurado. No incluyas introducciones. "
@@ -267,10 +267,11 @@ def consultar_ia_garantias(descripcion_averia, archivo_imagen=None):
             "**1. EVALUACIÓN Y CATEGORÍA TÉCNICA**\n"
             "- **Componente afectado**: Identifícalo en negrita.\n"
             "- **Criticidad**: Evalúala (🔴 Crítico / 🟡 Medio / 🟢 Bajo).\n"
-            "- **Naturaleza**: Tipifica el fallo (mecánico, eléctrico, estético) con frases de una sola línea.\n\n"
+            "- **Naturaleza**: Tipifica el fallo (mecánico, eléctrico, estético, software) con frases de una sola línea.\n\n"
             "**2. ANÁLISIS DE LA EVIDENCIA VISUAL (FOTOS)**\n"
-            "- Si NO hay imágenes: Muestra una tabla Markdown detallando las fotos o capturas de diagnosis exactas que debe subir el taller de forma obligatoria para validar el caso.\n"
-            "- Si SÍ hay imágenes: Describe en puntos breves los hallazgos técnicos (marcas, roturas, etc.).\n\n"
+            "- Si NO hay imágenes: Muestra una tabla Markdown detallando las fotos o capturas exactas que debe subir el taller. "
+            "⚠️ REGLA DE LAXITUD PARA SOFTWARE: Si el caso es una actualización de software, NO exijas vídeo. Especifica en la tabla que es suficiente con aportar dos fotos: una de la versión de software anterior y otra de la nueva versión ya instalada en el vehículo.\n"
+            "- Si SÍ hay imágenes: Describe en puntos breves los hallazgos técnicos (marcas, versiones de pantalla, etc.).\n\n"
             "**3. ACCIÓN REQUERIDA Y PROTOCOLO DE TRABAJO**\n"
             "- Lista numerada (1, 2, 3...) muy escueta con las instrucciones técnicas exactas que debe ejecutar el operario para resolver o certificar la incidencia."
         )
