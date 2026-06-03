@@ -225,8 +225,21 @@ def buscador_inteligente_excel(consulta_usuario, df_contexto):
         sinonimos_posventa = {
             # Tecnologías de propulsión
             "hibrido": "hev", "enchufable": "phev", "electrico": "bev", "ev": "bev",
-            # Baterías y Alta Tensión
-            "traccion": "traction", "alta tension": "high voltage", "bateria": "battery",
+            
+            # 🔴 Batería de Alta Tensión / Tracción (EV/HEV)
+            "traccion": "traction battery", 
+            "alta tension": "high voltage battery",
+            "bateria de traccion": "traction battery",
+            "bateria de alta tension": "high voltage battery",
+            
+            # Batería auxiliar común (12V)
+            "bateria de 12v": "storage battery",
+            "bateria auxiliar": "storage battery",
+            "bateria 12v": "storage battery",
+            
+            # Si ponen "bateria" a secas, metemos ambas raíces para que el score suba con las dos y decida la IA
+            "bateria": "battery", 
+            
             # Mecánica y Estética común
             "pulir": "polishing", "pulido": "polishing", "abrillantar": "polishing",
             "pintar": "paint", "pintura": "paint", "paragolpes": "bumper",
