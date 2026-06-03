@@ -221,28 +221,20 @@ def buscador_inteligente_excel(consulta_usuario, df_contexto):
             
         client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
-        # 🎯 1. DICCIONARIO CLASIFICADO
-        acciones_tecnicas = {
-            "pulir": "polishing", "pulido": "polishing", "abrillantar": "polishing",
-            "pintar": "paint", "pintura": "paint", "barniz": "paint",
-            "engrasar": "lubrication", "engrase": "lubrication", "lubricar": "lubrication",
-            "limpiar": "cleaning", "limpieza": "cleaning",
-            "cambiar": "replace", "sustituir": "replace", "cambio": "replace", "sustitucion": "replace",
-            "desmontar": "remove", "montar": "reinstall"
-        }
-
-        componentes_piezas = {
-            # Sistema de Vapores / Cánister (EVAP)
-            "vapores": "canister", "canister": "canister", "solenoide": "solenoid", "valvula": "solenoid",
-            "tubo": "pipe", "manguito": "hose", "conducto": "pipe",
-            # Chasis, Carrocería y Electricidad
-            "capo": "hood", "techo": "sunroof", "solar": "sunroof",
+        # Mapeo universal de palabras clave core (Raíces puras de componentes)
+        mapa_raices = {
+            "cinturon": "seatbelt|seat belt|belt",
+            "pulir": "polishing|polish", "pulido": "polishing|polish",
+            "capo": "hood",
+            "techo": "sunroof", "solar": "sunroof",
             "traccion": "traction", "alta tension": "high voltage", "bateria": "battery",
+            "vapores": "canister|evap|solenoid", "canister": "canister",
             "paragolpes": "bumper", "defensa": "bumper", "parachoques": "bumper",
-            "freno": "brake", "pastillas": "pads", "faro": "headlamp", "piloto": "lamp"
+            "freno": "brake", "pastillas": "pads", "faro": "headlamp", "piloto": "lamp",
+            "sustituir": "replace|remove", "cambiar": "replace|remove", "cambio": "replace|remove"
         }
 
-        # Mapeo de abreviaturas coloquiales de modelos
+        # Equivalencias de modelos de taller
         abreviaturas_modelos = {
             "j5": "jaecoo 5", "jaecoo5": "jaecoo 5",
             "j7": "jaecoo 7", "jaecoo7": "jaecoo 7",
@@ -250,72 +242,58 @@ def buscador_inteligente_excel(consulta_usuario, df_contexto):
             "o5": "omoda 5", "omoda5": "omoda 5", "o7": "omoda 7"
         }
 
+        # Limpieza inicial de la consulta
         consulta_limpia = consulta_usuario.lower().replace("í", "i").replace("ó", "o").replace("á", "a").strip()
 
-        # Detección de conceptos clave
-        acciones_detectadas = [eng for esp, eng in acciones_tecnicas.items() if esp in consulta_limpia]
-        componentes_detectados = [eng for esp, eng in componentes_piezas.items() if esp in consulta_limpia]
-        
-        palabras_texto = [p for p in consulta_limpia.split() if len(p) > 2 and p not in ["quiero", "para", "con", "del", "una", "uno"]]
-        palabras_texto = [p for p in palabras_texto if not (p.isdigit() and len(p) == 1)]
+        # Expandimos abreviaturas de modelos (j5 -> jaecoo 5)
+        for abrev, mod_real in abreviaturas_modelos.items():
+            if abrev in consulta_limpia.split() or abrev in consulta_limpia:
+                consulta_limpia = consulta_limpia.replace(abrev, mod_real)
 
-        # 🔍 2. MOTOR DE SCORE COMPROBADO Y PROTEGIDO
+        # Creamos el saco de palabras clave traduciendo las raíces encontradas
+        palabras_regex = []
+        for esp, eng in mapa_raices.items():
+            if esp in consulta_limpia:
+                palabras_regex.append(eng)
+
+        # Añadimos también las palabras sueltas del usuario que tengan valor técnico
+        for p in consulta_limpia.split():
+            if len(p) > 2 and p not in ["quiero", "para", "con", "del", "una", "uno", "sustituir", "cambiar", "el", "la", "los"]:
+                if not (p.isdigit() and len(p) == 1): # Evitamos números sueltos como 5 o 7
+                    palabras_regex.append(p)
+
+        # 🔍 MOTOR DE BÚSQUEDA ELÁSTICO
         try:
             if any(tm in consulta_limpia for tm in ["manual", "adicional", "extra", "tiempo mas", "universal"]):
                 df_recortado = df_contexto[df_contexto['Operación Técnica'].astype(str).str.lower().str.contains("universal", na=False)].head(20)
             else:
                 df_base = df_contexto.copy()
-                
-                # Criba flexible por marca
-                if "omoda" in consulta_limpia:
-                    df_base = df_base[df_base['Modelo'].astype(str).str.lower().str.contains("omoda", na=False)]
-                elif "jaecoo" in consulta_limpia:
-                    df_base = df_base[df_base['Modelo'].astype(str).str.lower().str.contains("jaecoo", na=False)]
-
                 df_base['score'] = 0
 
-                # 1. Puntuación de texto base
-                for palabra in palabras_texto:
-                    df_base['score'] += df_base['Modelo'].astype(str).str.lower().str.contains(palabra, na=False).astype(int)
-                    df_base['score'] += df_base['Nombre de la Pieza'].astype(str).str.lower().str.contains(palabra, na=False).astype(int)
-                    df_base['score'] += df_base['Operación Técnica'].astype(str).str.lower().str.contains(palabra, na=False).astype(int)
-
-                # 2. Puntuación por acción
-                if acciones_detectadas:
-                    regex_accion = '|'.join(acciones_detectadas)
-                    match_accion = df_base['Operación Técnica'].astype(str).str.lower().str.contains(regex_accion, na=False)
-                    df_base.loc[match_accion, 'score'] += 15
-
-                # 3. Puntuación por componente
-                if componentes_detectados:
-                    regex_componente = '|'.join(componentes_detectados)
-                    match_componente = df_base['Nombre de la Pieza'].astype(str).str.lower().str.contains(regex_componente, na=False) | \
-                                       df_base['Operación Técnica'].astype(str).str.lower().str.contains(regex_componente, na=False)
-                    df_base.loc[match_componente, 'score'] += 8
-
-                # 4. Súper Bonus de Intersección (Acción + Componente juntos)
-                if acciones_detectadas and componentes_detectados:
-                    regex_acc = '|'.join(acciones_detectadas)
-                    regex_comp = '|'.join(componentes_detectados)
+                # Aplicamos la puntuación por cada término del saco de expresiones regulares
+                if palabras_regex:
+                    regex_final = '|'.join(set(palabras_regex))
                     
-                    match_perfecto = (df_base['Operación Técnica'].astype(str).str.lower().str.contains(regex_acc, na=False)) & \
-                                     (df_base['Nombre de la Pieza'].astype(str).str.lower().str.contains(regex_comp, na=False) | 
-                                      df_base['Operación Técnica'].astype(str).str.lower().str.contains(regex_comp, na=False))
-                    
-                    df_base.loc[match_perfecto, 'score'] += 50
+                    # Sumamos puntos si aparece en las columnas clave
+                    df_base['score'] += df_base['Modelo'].astype(str).str.lower().str.contains(regex_final, na=False).astype(int) * 2
+                    df_base['score'] += df_base['Nombre de la Pieza'].astype(str).str.lower().str.contains(regex_final, na=False).astype(int) * 3
+                    df_base['score'] += df_base['Operación Técnica'].astype(str).str.lower().str.contains(regex_final, na=False).astype(int) * 5
 
-                # Extraemos las filas con puntuación
-                df_recortado = df_base[df_base['score'] > 0].sort_values(by='score', ascending=False).head(50)
-                
-                # 🔴 RED DE SEGURIDAD ANTIBLOQUEO: Si por culpa de los filtros duros el extracto se queda vacío,
-                # abrimos el colador por completo a todo el Excel para que Gemini tenga datos que leer obligatoriamente.
+                    # Nos quedamos con el top de filas con puntuación
+                    df_recortado = df_base[df_base['score'] > 0].sort_values(by='score', ascending=False).head(60)
+                else:
+                    df_recortado = df_base.head(20)
+
+                # 🔴 RED DE SEGURIDAD ABSOLUTA: Si el extracto se queda vacío (0 filas),
+                # forzamos a Python a volcar las primeras 80 filas que contengan la marca básica (Omoda o Jaecoo)
+                # para que Gemini tenga material de sobra que procesar y no se quede ciego con 194 tokens.
                 if df_recortado.empty:
-                    df_contexto['score_emergencia'] = 0
-                    for comp in (componentes_detectados if componentes_detectados else palabras_texto):
-                        df_contexto['score_emergencia'] += df_contexto['Nombre de la Pieza'].astype(str).str.lower().str.contains(comp, na=False).astype(int)
-                        df_contexto['score_emergencia'] += df_contexto['Operación Técnica'].astype(str).str.lower().str.contains(comp, na=False).astype(int)
-                    df_recortado = df_contexto[df_contexto['score_emergencia'] > 0].sort_values(by='score_emergencia', ascending=False).head(50)
-                    df_contexto.drop(columns=['score_emergencia'], errors='ignore')
+                    if "omoda" in consulta_limpia:
+                        df_recortado = df_contexto[df_contexto['Modelo'].astype(str).str.lower().str.contains("omoda", na=False)].head(80)
+                    elif "jaecoo" in consulta_limpia:
+                        df_recortado = df_contexto[df_contexto['Modelo'].astype(str).str.lower().str.contains("jaecoo", na=False)].head(80)
+                    else:
+                        df_recortado = df_contexto.head(40)
 
                 df_base.drop(columns=['score'], errors='ignore')
 
@@ -323,16 +301,19 @@ def buscador_inteligente_excel(consulta_usuario, df_contexto):
         except Exception as e:
             return f"❌ Error interno al filtrar el catálogo: {str(e)}"
 
-        # 🧠 3. PROMPT PARA GEMINI
+        if df_recortado.empty:
+            return "❌ No se ha encontrado esta operación en el catálogo oficial de la marca. Por favor, dirígete a la pestaña **📝 Solicitar Operación** en el menú lateral izquierdo para rellenar el formulario de solicitud y que Central pueda darla de alta."
+
+        # 🧠 PROMPT FLEXIBLE PARA GEMINI
         prompt_sistema = (
             "Eres el Asistente de Búsqueda del catálogo de operaciones de OMODA & JAECOO España.\n\n"
-            "Analiza el extracto optimizado del catálogo que tienes abajo (ordenado por relevancia estricta en Python).\n"
-            "Muestra los resultados que respondan a la intención de la consulta del taller.\n\n"
+            "Analiza el listado del catálogo inferior y busca de forma semántica lo que pide el usuario.\n"
+            "Ten en cuenta sinónimos técnicos (ej: 'sustituir cinturón' equivale a operaciones de 'Remove and reinstall seatbelt' o 'seat belt').\n\n"
             "REGLAS:\n"
             "1. Muestra en una lista limpia en Markdown los resultados válidos indicando el Modelo, la Operación Técnica y su 'Código de Referencia' exacto.\n"
-            "2. Si la operación específica solicitada no se encuentra dentro del bloque inferior, responde con el mensaje estricto de derivación al formulario.\n"
+            "2. Si la operación específica no aparece bajo ningún concepto en el extracto inferior, responde con el mensaje estricto de derivación al formulario.\n"
             "3. Prohibido inventar códigos.\n\n"
-            f"--- EXTRACTO OPTIMIZADO DEL CATÁLOGO --- \n{resumen_excel}"
+            f"--- EXTRACTO DEL CATÁLOGO --- \n{resumen_excel}"
         )
 
         response = client.models.generate_content(
@@ -344,6 +325,7 @@ def buscador_inteligente_excel(consulta_usuario, df_contexto):
             )
         )
         
+        # Sincronización de estadísticas en el sidebar
         if "tokens_totales_input" not in st.session_state:
             st.session_state.tokens_totales_input = 0
             st.session_state.tokens_totales_output = 0
