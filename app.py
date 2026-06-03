@@ -457,6 +457,11 @@ if check_password():
                 key="campo_consulta_ia_excel"
             )
 
+            st.warning("""
+            ⚠️ **RECORDATORIO CRÍTICO DE CENTRAL (CONCORDANCIA DE RECAMBIOS)** Antes de tramitar cualquier reclamación, verifique obligatoriamente que **la pieza a reclamar coincide con el pedido exacto realizado a Recambios** para esta reparación.  
+            *Cualquier discrepancia entre el código de la operación técnica autorizada y la referencia del recambio original suministrado será motivo de rechazo automático del abono.*
+            """)
+
             if st.button("Buscar con IA", type="secondary", width='stretch'):
                 if not consulta_rapida.strip():
                     st.warning("⚠️ Introduce una descripción o término para realizar la búsqueda.")
