@@ -215,20 +215,18 @@ opcion_menu = st.sidebar.radio(
 )
 
 
-# ==========================================
-# FUNCIÓN DEL CONSULTORIO DE IA (MULTIMEDIA OPTIMIZADA)
-# ==========================================
+# =========================================================================
+# FUNCIÓN DEL CONSULTORIO DE IA (ESTRICTA, RESPALDADA Y DIRECTA AL GRANO)
+# =========================================================================
 def consultar_ia_garantias(descripcion_averia, archivo_imagen=None):
     """
-    Procesa la consulta técnica de forma efímera utilizando el nuevo SDK oficial 
-    google-genai y el modelo gemini-2.5-flash.
-    
-    Elimina introducciones innecesarias para maximizar el ahorro de tokens y
-    se centra exclusivamente en la estructura limpia de los 4 puntos técnicos.
+    Procesa la consulta técnica aplicando un criterio estricto de Central.
+    Fuerza respuestas ultra-estructuradas, con frases cortas, veredictos
+    inmediatos y respaldo explícito en los artículos de la política.
     """
     try:
         if "GEMINI_API_KEY" not in st.secrets:
-            return "⚠️ **Error de Configuración**: No se ha encontrado la clave 'GEMINI_API_KEY' en los secretos de Streamlit (st.secrets)."
+            return "⚠️ **Error de Configuración**: No se ha encontrado la clave 'GEMINI_API_KEY' en st.secrets."
             
         client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
@@ -236,28 +234,21 @@ def consultar_ia_garantias(descripcion_averia, archivo_imagen=None):
             with open("Politica_conocimiento.txt", "r", encoding="utf-8") as f:
                 politica_texto = f.read()
         except FileNotFoundError:
-            politica_texto = "Política oficial no disponible de forma local. Siga los estándares generales de garantía de OMODA & JAECOO."
+            politica_texto = "Política oficial no disponible localmente. Exigir cumplimiento normativo general."
 
+        # PROMPT DE SISTEMA: Establece el tono imperativo, directo y la obligación de citar la política
         prompt_sistema = (
-            "Eres un Ingeniero de Garantías Senior para OMODA & JAECOO España, experto en análisis técnico de "
-            "automoción y valoración de siniestros/averías en preentrega y posventa.\n\n"
-            
-            "REGLA CRÍTICA DE EMISIÓN DE TOKENS: Sé extremadamente directo. Prohibido incluir saludos como 'Estimado taller', "
-            "prohibido incluir introducciones corteses o frases de transición. Empieza tu respuesta DIRECTAMENTE con el "
-            "punto '1. EVALUACIÓN Y CATEGORÍA TÉCNICA', sin añadir ni una sola palabra antes.\n\n"
-            
-            "Tus directrices principales son:\n"
-            f"1. **Conocimiento Oficial**: Usa estrictamente esta política de conocimiento adjunta:\n{politica_texto}\n"
-            "2. **Análisis Multimodal Crítico**: Analiza con total minuciosidad cualquier imagen adjunta. Busca "
-            "indicios visuales clave como marcas de herramientas, signos de manipulación previa, deformaciones por impacto, "
-            "fugas de fluidos, o defectos de ensamblaje en fábrica (como conectores mal encajados o pinzados de origen).\n"
-            "3. **Criterio de Preentrega**: Si el caso menciona que es un vehículo nuevo en fase de preentrega, "
-            "sé especialmente estricto evaluando si el daño pudo ser causado por el transporte o si es un defecto de origen oculto "
-            "debajo de guarnecidos/consolas."
+            "Eres un Ingeniero de Garantías Senior para OMODA & JAECOO España. Tu tarea es emitir dictámenes definitivos.\n\n"
+            "REGLAS CRÍTICAS DE ESTILO Y FORMATO:\n"
+            "1. Frases cortas, cortantes y directas. Evita la paja y los párrafos densos. Usa Markdown exhaustivo (negritas y listas).\n"
+            "2. Prohibido incluir cualquier tipo de saludo, introducción o transición. Empieza DIRECTAMENTE con el bloque del Dictamen Preliminar.\n"
+            "3. Cada argumento técnico o decisión técnica DEBE citar obligatoriamente la Sección, Artículo o Punto exacto de la política adjunta.\n\n"
+            f"--- POLÍTICA DE CONOCIMIENTO OFICIAL ---\n{politica_texto}"
         )
 
         contenidos = []
         
+        # Procesamiento y compresión efímera de imágenes (máximo 2)
         if archivo_imagen is not None:
             lista_archivos = archivo_imagen if isinstance(archivo_imagen, list) else [archivo_imagen]
             for archivo in lista_archivos[:2]:
@@ -265,42 +256,51 @@ def consultar_ia_garantias(descripcion_averia, archivo_imagen=None):
                 imagen_pil.thumbnail((1024, 1024))
                 contenidos.append(imagen_pil)
             
-         prompt_usuario = (
+        # PROMPT DE USUARIO: Estructura exacta solicitada con el cambio de orden prioritario
+        prompt_usuario = (
             f"Caso reportado por el taller:\n'{descripcion_averia}'\n\n"
-            "Genera el informe técnico estructurado omitiendo cualquier saludo o introducción. "
-            "EsCRÍTICO que la respuesta NO sea un texto denso o en bloque. Usa Markdown de forma exhaustiva: "
-            "organiza la información con viñetas claras, negritas en los datos clave y tablas visuales para las evidencias.\n\n"
-            "Desarrolla en profundidad los siguientes apartados exactamente en este orden y con esta estructura:\n\n"
+            "Genera el dictamen técnico estructurado. No incluyas introducciones. "
+            "Usa frases muy cortas. Sigue estrictamente este orden y pautas:\n\n"
+            "**📢 VEREDICTO INMEDIATO Y DICTAMEN DE COBERTURA**\n"
+            "- Indica en la primera línea si el caso se **ACEPTA**, se **RECHAZA** o si requiere **PRE-AUTORIZACIÓN** (Cita Sección y Artículo).\n"
+            "- Argumenta la decisión basándote en la política (aplica la regla de que daños ocultos bajo guarnecidos/consolas en transporte o que lleguen así a puerto SÍ se cubren).\n\n"
             "**1. EVALUACIÓN Y CATEGORÍA TÉCNICA**\n"
-            "- Identifica detalladamente el componente afectado utilizando negritas.\n"
-            "- Evalúa de forma separada su nivel de criticidad (Bajo/Medio/Alto/Crítico) usando emoticonos (ej. 🔴, 🟡).\n"
-            "- Tipifica de forma razonada la naturaleza del fallo (eléctrico, mecánico o estético) y el porqué.\n\n"
-            "**2. ANÁLISIS EXHAUSTIVO DE LA EVIDENCIA VISUAL (FOTOS)**\n"
-            "- REGLA CRÍTICA: Si el taller NO ha adjuntado imágenes en la consulta, NO menciones que se han analizado fotos ni inventes descripciones. En su lugar, muestra DIRECTAMENTE una tabla en Markdown que detalle qué comprobaciones visuales específicas, fotos macro o capturas de pantallas de diagnosis debe aportar el mecánico obligatoriamente para esclarecer el origen y validar la reclamación.\n"
-            "- Si SÍ hay imágenes adjuntas, describe minuciosamente lo que se aprecia en ellas (marcas de desmontaje forzado, rotura limpia, defecto de fabricación, etc.).\n\n"
-            "**3. DICTAMEN PRELIMINAR DE COBERTURA DE GARANTÍA**\n"
-            "- Evalúa de forma argumentada si la avería es susceptible de cobertura basándote explícitamente en la política oficial adjunta.\n"
-            "- Aplica la regla especial: los daños de transporte que lleguen así a puerto o que estuvieran ocultos bajo guarnecidos/consolas y no pudieron detectarse en la recepción inicial, SÍ se cubren en garantía.\n"
-            "- Especifica si el caso requiere pre-autorización por superar los límites de coste económicos estándar.\n\n"
-            "**4. ACCIÓN REQUERIDA Y PROTOCOLO DE TRABAJO**\n"
-            "- Detalla cronológicamente (usando una lista numerada: 1., 2., 3...) el protocolo de pasos técnicos detallados que debe seguir el operario en el taller para verificar, diagnosticar o solucionar la avería de forma profesional."
+            "- **Componente afectado**: Identifícalo en negrita.\n"
+            "- **Criticidad**: Evalúala (🔴 Crítico / 🟡 Medio / 🟢 Bajo).\n"
+            "- **Naturaleza**: Tipifica el fallo (mecánico, eléctrico, estético) con frases de una sola línea.\n\n"
+            "**2. ANÁLISIS DE LA EVIDENCIA VISUAL (FOTOS)**\n"
+            "- Si NO hay imágenes: Muestra una tabla Markdown detallando las fotos o capturas de diagnosis exactas que debe subir el taller de forma obligatoria para validar el caso.\n"
+            "- Si SÍ hay imágenes: Describe en puntos breves los hallazgos técnicos (marcas, roturas, etc.).\n\n"
+            "**3. ACCIÓN REQUERIDA Y PROTOCOLO DE TRABAJO**\n"
+            "- Lista numerada (1, 2, 3...) muy escueta con las instrucciones técnicas exactas que debe ejecutar el operario para resolver o certificar la incidencia."
         )
         contenidos.append(prompt_usuario)
 
+        # Ejecución con temperatura baja (0.3) para garantizar precisión y evitar divagaciones
         response = client.models.generate_content(
             model='gemini-2.5-flash',
             contents=contenidos,
             config=types.GenerateContentConfig(
                 system_instruction=prompt_sistema,
-                temperature=0.5
+                temperature=0.3
             )
         )
         
-        return response.text if response.text else "⚠️ La IA procesó la solicitud pero no devolvió ningún texto."
+        # Inyección de métricas en la sesión global para tu barra lateral
+        if response.text and response.usage_metadata:
+            t_input = response.usage_metadata.prompt_token_count
+            t_output = response.usage_metadata.candidates_token_count
+            coste_estimado = ((t_input * 0.075) / 1_000_000) + ((t_output * 0.30) / 1_000_000)
+            
+            st.session_state.tokens_totales_input += t_input
+            st.session_state.tokens_totales_output += t_output
+            st.session_state.dinero_total_gastado += coste_estimado
+            st.session_state.ultima_consulta_info = f"Última: In: {t_input} | Out: {t_output} (+{coste_estimado:.5f}$)"
+            
+        return response.text if response.text else "⚠️ La IA procesó la solicitud pero no devolvió contenido."
 
     except Exception as e:
-        return f"❌ **Error al procesar la consulta en la API de Gemini**:\n```text\n{str(e)}\n```"
-
+        return f"❌ **Error en la API de Gemini**:\n```text\n{str(e)}\n```"
 # ==========================================
 # 4. SISTEMA DE SEGURIDAD CONTRASEÑA
 # ==========================================
