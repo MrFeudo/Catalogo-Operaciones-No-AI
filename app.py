@@ -471,7 +471,7 @@ if check_password():
             ⚠️ **RECORDATORIO** Antes de tramitar cualquier reclamación, verifique obligatoriamente que **la pieza a reclamar coincide con el pedido exacto realizado a Recambios** para esta reparación. 
             """)
 
-            if st.button("Buscar con IA", type="secondary", width='stretch'):
+            if st.button("Buscar operación", type="secondary", width='stretch'):
                 if not consulta_rapida.strip():
                     st.warning("⚠️ Introduce una descripción o término para realizar la búsqueda.")
                 else:
