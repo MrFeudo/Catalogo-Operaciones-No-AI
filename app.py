@@ -401,8 +401,8 @@ def check_password():
 
 if check_password():
     
-   # =========================================================================
-    # PANTALLA 1: TIEMPOS DE TALLER (CON ASISTENTE IA INTEGRADO)
+  # =========================================================================
+    # PANTALLA 1: TIEMPOS DE TALLER (CON ESTADO PERSISTENTE DE IA)
     # =========================================================================
     if opcion_menu == txt["menu_taller"]:
         
@@ -441,11 +441,15 @@ if check_password():
             st.write(txt["taller_sub"])
             st.markdown("---")
 
+            # 🛡️ INICIALIZADOR DEL ESTADO DE BÚSQUEDA (Evita que el resultado desaparezca)
+            if "resultado_ia_excel" not in st.session_state:
+                st.session_state.resultado_ia_excel = None
+
             # =================================================================
             # 🤖 SECCIÓN A: ASISTENTE IA DE BÚSQUEDA BILINGÜE
             # =================================================================
             st.subheader("🤖 Asistente Virtual del Catálogo")
-            st.write("Escribe tu consulta en español. La IA traducirá los términos mecánicos y buscará coincidencias en el catálogo.")
+            st.write("Escribe tu consulta en español. La IA traducirá los términos mecánicos y buscará en las columnas en inglés.")
             
             consulta_rapida = st.text_input(
                 "¿Qué operación, pieza o modelo necesitas localizar?",
@@ -453,21 +457,27 @@ if check_password():
                 key="campo_consulta_ia_excel"
             )
 
-            if st.button("Buscar con IA", type="secondary", use_container_width=True):
+            if st.button("Buscar con IA", type="secondary", width='stretch'):
                 if not consulta_rapida.strip():
                     st.warning("⚠️ Introduce una descripción o término para realizar la búsqueda.")
                 else:
                     with st.spinner("🔍 Traduciendo y escaneando el catálogo de operaciones..."):
-                        resultado_busqueda = buscador_inteligente_excel(consulta_rapida, data)
-                        
-                        st.markdown("#### ⚙️ Resultado de la Consulta:")
-                        if "❌ No se ha encontrado" in resultado_busqueda:
-                            st.error(resultado_busqueda)
-                        else:
-                            st.info(resultado_busqueda)
-                        
-                        # Forzamos refresco automático para pintar el consumo de tokens en la barra lateral
+                        # Guardamos el resultado en la sesión persistente
+                        st.session_state.resultado_ia_excel = buscador_inteligente_excel(consulta_rapida, data)
                         st.rerun()
+
+            # RENDERIZADO ESTÁTICO DEL RESULTADO: Si hay algo guardado, se pinta sí o sí
+            if st.session_state.resultado_ia_excel:
+                st.markdown("#### ⚙️ Resultado de la Consulta:")
+                if "❌ No se ha encontrado" in st.session_state.resultado_ia_excel:
+                    st.error(st.session_state.resultado_ia_excel)
+                else:
+                    st.info(st.session_state.resultado_ia_excel)
+                
+                # Botón auxiliar opcional para limpiar la pantalla de la IA
+                if st.button("🗑️ Limpiar búsqueda de la IA", key="btn_limpiar_ia"):
+                    st.session_state.resultado_ia_excel = None
+                    st.rerun()
 
             st.markdown("---")
 
@@ -532,7 +542,7 @@ if check_password():
 
             st.markdown(txt["res_taller"].format(len(df_filtrado)))
             if not df_filtrado.empty:
-                st.dataframe(df_filtrado, use_container_width=True, hide_index=True)
+                st.dataframe(df_filtrado, width='stretch', hide_index=True)
             else:
                 st.warning(txt["warn_taller"])
                 
