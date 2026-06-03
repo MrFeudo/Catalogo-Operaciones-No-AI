@@ -221,8 +221,10 @@ def buscador_inteligente_excel(consulta_usuario, df_contexto):
             
         client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
-        # 🎯 1. DICCIONARIO DE TRADUCCIÓN MECÁNICA (Para saltarnos la barrera del idioma)
-        "hibrido": "hev",
+       # 🎯 DICCIONARIO MASIVO DE SINÓNIMOS TÉCNICOS (Extraído del catálogo oficial)
+        sinonimos_posventa = {
+            # --- Modelos y Motorizaciones ---
+            "hibrido": "hev",
             "enchufable": "phev",
             "electrico": "bev",
             "gasolina": "ice",
