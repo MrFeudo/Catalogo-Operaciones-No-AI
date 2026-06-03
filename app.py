@@ -458,8 +458,7 @@ if check_password():
             )
 
             st.warning("""
-            ⚠️ **RECORDATORIO CRÍTICO DE CENTRAL (CONCORDANCIA DE RECAMBIOS)** Antes de tramitar cualquier reclamación, verifique obligatoriamente que **la pieza a reclamar coincide con el pedido exacto realizado a Recambios** para esta reparación.  
-            *Cualquier discrepancia entre el código de la operación técnica autorizada y la referencia del recambio original suministrado será motivo de rechazo automático del abono.*
+            ⚠️ **RECORDATORIO** Antes de tramitar cualquier reclamación, verifique obligatoriamente que **la pieza a reclamar coincide con el pedido exacto realizado a Recambios** para esta reparación. 
             """)
 
             if st.button("Buscar con IA", type="secondary", width='stretch'):
