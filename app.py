@@ -303,7 +303,7 @@ def buscador_inteligente_excel(consulta_usuario, df_contexto):
 
         palabras_regex = list(set(palabras_regex)) # Eliminamos duplicados
 
-       # 🔍 2. MOTOR DE BÚSQUEDA ELÁSTICO CORREGIDO
+       # 🔍 2. MOTOR DE BÚSQUEDA DE ALTA FIDELIDAD (Filtrado por Exclusión Semántica)
         try:
             terminos_manuales = ["manual", "adicional", "extra", "tiempo mas", "añadir horas", "universal", "marron", "baremo no"]
             if any(tm in consulta_limpia for tm in terminos_manuales):
@@ -311,53 +311,70 @@ def buscador_inteligente_excel(consulta_usuario, df_contexto):
             else:
                 df_base = df_contexto.copy()
                 
-                # Criba rápida por marca para aligerar datos
-                if "omoda" in consulta_limpia:
-                    df_base = df_base[df_base['Modelo'].astype(str).str.lower().str.contains("omoda", na=False)]
-                elif "jaecoo" in consulta_limpia:
-                    df_base = df_base[df_base['Modelo'].astype(str).str.lower().str.contains("jaecoo", na=False)]
+                # --- PASO A: Normalizar columnas a minúsculas para evitar saltos de caja ---
+                for col in ['Modelo', 'Nombre de la Pieza', 'Operación Técnica']:
+                    df_base[col] = df_base[col].astype(str).str.lower().str.strip()
 
-                # 🔴 PASO 1: Aislamiento estricto de la pieza técnica
-                # Buscamos qué componente del mapa_raices (bateria, cinturon, capo, techo...) está en la consulta
+                # --- PASO B: Criba Obligatoria de Marca/Modelo (AND) ---
+                if "omoda" in consulta_limpia:
+                    df_base = df_base[df_base['Modelo'].str.contains("omoda", na=False)]
+                elif "jaecoo" in consulta_limpia:
+                    df_base = df_base[df_base['Modelo'].str.contains("jaecoo", na=False)]
+
+                # --- PASO C: Intersección Obligatoria del Componente Base (AND) ---
                 componentes_encontrados = []
                 for esp, eng in mapa_raices.items():
-                    if esp in consulta_limpia and esp not in ["cambiar", "sustituir", "cambio", "sustitucion", "reemplazar", "reemplazo", "desmontar", "montar"]:
+                    if esp in consulta_limpia and esp not in ["cambiar", "sustituir", "cambio", "sustitucion", "reemplazar", "reemplazer", "desmontar", "montar"]:
                         componentes_encontrados.extend(eng.split('|'))
                 
-                # Si detectamos un componente claro (ej: battery), forzamos a que el Excel contenga esa raíz inglesa
                 if componentes_encontrados:
-                    regex_componente = '|'.join(set(componentes_encontrados))
-                    condicion_pieza = (
-                        df_base['Nombre de la Pieza'].astype(str).str.lower().str.contains(regex_componente, na=False) |
-                        df_base['Operación Técnica'].astype(str).str.lower().str.contains(regex_componente, na=False)
-                    )
-                    df_base = df_base[condicion_pieza]
+                    # Obligamos a que la fila contenga la pieza principal buscada (ej: battery, seatbelt, hood...)
+                    regex_comp = '|'.join(set(componentes_encontrados))
+                    df_base = df_base[df_base['Nombre de la Pieza'].str.contains(regex_comp, na=False) | 
+                                      df_base['Operación Técnica'].str.contains(regex_comp, na=False)]
 
-                # 🔴 PASO 2: Puntuación de coincidencia cruzada con tus 7 puntos equilibrados
+                # --- PASO D: ALGORITMO DE EXCLUSIÓN INTELIGENTE (Capa la broza secundaria) ---
+                # Definimos palabras secundarias que suelen saturar el catálogo
+                filtros_secundarios = {
+                    "wiring|harness|wire": ["cable", "cableado", "instalacion", "mazo", "manguito"],
+                    "sensor": ["sensor", "sonda", "medidor"],
+                    "bracket|salver|tray|support|pressure|rod|plate": ["soporte", "cuna", "bandeja", "tapa", "cubierta", "varilla", "placa", "protector"]
+                }
+                
+                # Si el operario NO ha mencionado estas palabras en español, las purgamos del Excel
+                for eng_purgar, esp_palabras in filtros_secundarios.items():
+                    # ¿Ha escrito el usuario alguna de estas palabras en su consulta?
+                    usuario_pide_secundario = any(w in consulta_limpia for w in esp_palabras)
+                    
+                    if not usuario_pide_secundario:
+                        # Purgamos las filas que contengan estos elementos derivados para dejar solo la pieza limpia
+                        condicion_purgar = df_base['Nombre de la Pieza'].str.contains(eng_purgar, na=False) | \
+                                           df_base['Operación Técnica'].str.contains(eng_purgar, na=False)
+                        df_base = df_base[~condicion_purgar]
+
+                # --- PASO E: Puntuación Final de las Filas Limpias ---
                 df_base['score'] = 0
                 if palabras_regex:
                     regex_puntos = '|'.join(palabras_regex)
-                    match_mod = df_base['Modelo'].astype(str).str.lower().str.contains(regex_puntos, na=False).astype(int)
-                    match_pie = df_base['Nombre de la Pieza'].astype(str).str.lower().str.contains(regex_puntos, na=False).astype(int)
-                    match_ope = df_base['Operación Técnica'].astype(str).str.lower().str.contains(regex_puntos, na=False).astype(int)
+                    df_base['score'] += df_base['Modelo'].str.contains(regex_puntos, na=False).astype(int) * 5
+                    df_base['score'] += df_base['Nombre de la Pieza'].str.contains(regex_puntos, na=False).astype(int) * 10
+                    df_base['score'] += df_base['Operación Técnica'].str.contains(regex_puntos, na=False).astype(int) * 10
                     
-                    df_base['score'] = (match_mod * 7) + (match_pie * 7) + (match_ope * 7)
-                    df_recortado = df_base.sort_values(by='score', ascending=False).head(120)
+                    # Ordenamos y dejamos un margen de 100 filas limpias para Gemini
+                    df_recortado = df_base.sort_values(by='score', ascending=False).head(100)
                 else:
                     df_recortado = df_base.head(40)
 
-                # 🔴 RED DE SEGURIDAD ABSOLUTA (Si el filtro se queda vacío por cualquier motivo, vuelca todo)
+                # Red de seguridad si el filtro es súper agresivo
                 if df_recortado.empty:
-                    if "omoda" in consulta_limpia:
-                        df_recortado = df_contexto[df_contexto['Modelo'].astype(str).str.lower().str.contains("omoda", na=False)].head(80)
-                    else:
-                        df_recortado = df_contexto.head(40)
+                    df_recortado = df_contexto[df_contexto['Modelo'].astype(str).str.lower().str.contains("omoda", na=False)].head(60)
 
                 df_base.drop(columns=['score'], errors='ignore')
 
             resumen_excel = df_recortado[['Modelo', 'Nombre de la Pieza', 'Código de Referencia', 'Operación Técnica']].to_string(index=False)
         except Exception as e:
             return f"❌ Error interno al procesar el filtro de relevancia: {str(e)}"
+            
         # =====================================================================
         # 🧠 3. PROMPT MAESTRO ULTRA-FLEXIBLE PARA GEMINI (DAR TODO)
         # =====================================================================
