@@ -221,248 +221,84 @@ def buscador_inteligente_excel(consulta_usuario, df_contexto):
             
         client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
-       # 🎯 DICCIONARIO MASIVO DE SINÓNIMOS TÉCNICOS (Extraído del catálogo oficial)
+        # 🎯 1. DICCIONARIO CORREGIDO (Clasificado por raíces y términos compuestos)
         sinonimos_posventa = {
-            # --- Modelos y Motorizaciones ---
-            "hibrido": "hev",
-            "enchufable": "phev",
-            "electrico": "bev",
-            "gasolina": "ice",
-            "turbo": "230t",
-            
-            # --- Operaciones de Carrocería, Pintura y Estética ---
-            "pulir": "polishing",
-            "pulido": "polishing",
-            "abrillantar": "polishing",
-            "pintar": "paint",
-            "pintura": "paint",
-            "barniz": "paint",
-            "paragolpes": "bumper",
-            "defensa": "bumper",
-            "parachoques": "bumper",
-            "rejilla": "grille",
-            "calandra": "grille",
-            "moldura": "protector",
-            "embellecedor": "trim",
-            "anagrama": "emblem",
-            "logo": "logo",
-            "emblema": "emblem",
-            "capo": "hood",
-            "aleta": "fender",
-            "puerta": "door",
-            "porton": "tailgate",
-            "maletero": "trunk",
-            "techo": "roof",
-            "solar": "sunroof",
-            "retrovisor": "mirror",
-            "espejo": "mirror",
-            "cristal": "glass",
-            "luna": "glass",
-            "parabrisas": "windshield",
-            "elevalunas": "regulator",
-            "maneta": "handle",
-            "tirador": "handle",
-            "cerradura": "lock",
-            "bisagra": "hinge",
-            "goma": "weatherstrip",
-            "lamina": "film",
-            
-            # --- Iluminación y Electricidad ---
-            "faro": "headlamp",
-            "piloto": "lamp",
-            "optica": "headlamp",
-            "led": "led",
-            "intermitente": "turn",
-            "antiniebla": "fog",
-            "bombilla": "bulb",
-            "cable": "wire",
-            "cableado": "harness",
-            "instalacion": "harness",
-            "mazo": "harness",
-            "conector": "connector",
-            "bateria": "battery",
-            "alternador": "alternator",
-            "arranque": "starter",
-            "fusible": "fuse",
-            "rele": "relay",
-            "bocina": "horn",
-            "pito": "horn",
-            "cuadro": "cluster",
-            "instrumentos": "instrument",
-            "pantalla": "display",
-            "radio": "audio",
-            "altavoz": "speaker",
-            "camara": "camera",
-            "radar": "radar",
-            "sensor": "sensor",
-            "parking": "parking",
-            
-            # --- Frenos y Suspensión ---
-            "freno": "brake",
-            "pastillas": "pads",
-            "disco": "disc",
-            "pinza": "caliper",
-            "latiguillo": "hose",
-            "bomba": "cylinder",
-            "abs": "abs",
-            "freno mano": "parking",
-            "amortiguador": "absorber",
-            "muelle": "spring",
-            "suspension": "suspension",
-            "brazo": "arm",
-            "trapecio": "arm",
-            "rotula": "joint",
-            "copela": "bearing",
-            "barra": "bar",
-            "estabilizadora": "stabilizer",
-            "buge": "hub",
-            "cojinete": "bearing",
-            "rodamiento": "bearing",
-            "llanta": "wheel",
-            "neumatico": "tyre",
-            
-            # --- Motor, Admisión y Escape ---
-            "motor": "engine",
-            "culata": "head",
-            "bloque": "block",
-            "piston": "piston",
-            "biela": "rod",
-            "cigüeñal": "crankshaft",
-            "arbol": "shaft",
-            "levas": "camshaft",
-            "valvula": "valve",
-            "bujia": "plug",
-            "calentador": "glow",
-            "bobina": "coil",
-            "inyector": "injector",
-            "inyeccion": "injection",
-            "rampa": "rail",
-            "bomba gasoil": "fuel pump",
-            "bomba gasolina": "fuel pump",
-            "deposito": "tank",
-            "turbo": "turbocharger",
-            "intercooler": "intercooler",
-            "colector": "manifold",
-            "escape": "exhaust",
-            "silenciador": "muffler",
-            "catalizador": "catalyst",
-            "fap": "dpf",
-            "sonda": "sensor",
-            "lambda": "oxygen",
-            "egr": "egr",
-            "correa": "belt",
-            "distribucion": "timing",
-            "cadena": "chain",
-            "tensor": "tensioner",
-            "polea": "pulley",
-            "soporte": "mount",
-            "taco": "mount",
-            
-            # --- Refrigeración y Climatización ---
-            "radiador": "radiator",
-            "intercambiador": "cooler",
-            "ventilador": "fan",
-            "electroventilador": "fan",
-            "bomba agua": "water pump",
-            "termostato": "thermostat",
-            "manguito": "hose",
-            "anticongelante": "coolant",
-            "aire": "air",
-            "ac": "conditioner",
-            "clima": "conditioner",
-            "compresor": "compressor",
-            "condensador": "condenser",
-            "evaporador": "evaporator",
-            "calefaccion": "heater",
-            
-            # --- Transmisión y Dirección ---
-            "embrague": "clutch",
-            "bimasa": "flywheel",
-            "volante": "flywheel",
-            "caja": "transmission",
-            "cambio": "transmission",
-            "automatica": "at",
-            "manual": "mt",
-            "dcvt": "dcvt",
-            "dht": "dht",
-            "diferencial": "differential",
-            "palier": "shaft",
-            "transmision": "shaft",
-            "cardan": "shaft",
-            "cremallera": "steering",
-            "direccion": "steering",
-            "columna": "steering",
-            
-            # --- Mantenimiento e Interiores ---
-            "mantenimiento": "maintenance",
-            "revision": "maintenance",
-            "aceite": "oil",
-            "filtro": "filter",
-            "habitaculo": "cabin",
-            "polen": "cabin",
-            "asiento": "seat",
-            "tapiceria": "trim",
-            "volante": "steering wheel",
-            "salpicadero": "dashboard",
-            "guarnecido": "trim",
-            "consola": "console",
-            "alfombrilla": "mat",
-            "cinturon": "belt",
-            "airbag": "airbag",
-            "limpiaparabrisas": "wiper",
-            "limpialuneta": "wiper",
-            "escobilla": "blade",
-            "liquido": "fluid"
+            "pulir": "polishing", "pulido": "polishing", "abrillantar": "polishing",
+            "pintar": "paint", "pintura": "paint", "paragolpes": "bumper",
+            "defensa": "bumper", "parachoques": "bumper", "freno": "brake",
+            "pastillas": "pads", "faro": "headlamp", "piloto": "lamp",
+            "hibrido": "hev", "mantenimiento": "maintenance", "revision": "maintenance",
+            "aceite": "oil", "filtro": "filter", "embrague": "clutch",
+            "caja": "transmission", "cambio": "transmission", "ruido": "noise"
         }
 
-
-        # Limpiamos y preparamos la consulta
-        consulta_limpia = consulta_usuario.lower().replace("í", "i").replace("ó", "o")
-        palabras_usuario = consulta_limpia.split()
+        # Limpieza básica de la consulta original
+        consulta_limpia = consulta_usuario.lower().replace("í", "i").replace("ó", "o").strip()
         
-        # Traducimos las palabras clave al inglés usando el diccionario
-        palabras_busqueda = []
-        for p in palabras_usuario:
-            palabras_busqueda.append(p)  # Mantenemos la original (por si pone OMODA o JAECOO)
-            if p in sinonimos_posventa:
-                palabras_busqueda.append(sinonimos_posventa[p])
+        # Generamos los términos en inglés que corresponden a lo que el usuario ha escrito
+        terminos_ingles = []
+        for esp, eng in sinonimos_posventa.items():
+            if esp in consulta_limpia:
+                terminos_ingles.append(eng)
 
-        # 🔍 2. FILTRO ESTRICTO EN PYTHON (Ahorro total de tokens)
+        # 🔍 2. FILTRADO INTELIGENTE AVANZADO EN PYTHON
         try:
-            # Buscamos filas donde coincida cualquiera de las palabras (tanto en español como traducidas)
-            palabras_claves_finales = [p for p in palabras_busqueda if len(p) > 2]
-            
-            if palabras_claves_finales:
-                # Expresión regular para buscar coincidencias parciales
-                regex_busqueda = '|'.join(palabras_claves_finales)
-                
-                condicion = (
-                    df_contexto['Modelo'].astype(str).str.lower().str.contains(regex_busqueda, na=False) |
-                    df_contexto['Nombre de la Pieza'].astype(str).str.lower().str.contains(regex_busqueda, na=False) |
-                    df_contexto['Operación Técnica'].astype(str).str.lower().str.contains(regex_busqueda, na=False)
-                )
-                # Nos quedamos con un máximo de 40 filas. Esto consume MENOS DE 5.000 TOKENS (una miseria)
-                df_recortado = df_contexto[condicion].head(40)
+            # Regla de oro para tiempos manuales
+            terminos_manuales = ["manual", "adicional", "extra", "tiempo mas", "añadir horas", "universal"]
+            if any(tm in consulta_limpia for tm in terminos_manuales):
+                condicion = df_contexto['Operación Técnica'].astype(str).str.lower().str.contains("universal", na=False)
+                df_recortado = df_contexto[condicion].head(20)
             else:
-                df_recortado = df_contexto.head(20)
+                # Combinamos palabras clave detectadas (español + traducción inglesa)
+                palabras_clave = terminos_ingles + [p for p in consulta_limpia.split() if len(p) > 2 and p not in ["quiero", "para", "con", "del", "una", "uno"]]
                 
+                # 🔴 CRÍTICO: Eliminamos números sueltos como el '5' o '7' que corrompen el filtro regular
+                palabras_clave = [p for p in palabras_clave if not (p.isdigit() and len(p) == 1)]
+
+                if palabras_clave:
+                    # Buscaremos filas que contengan prioritariamente los términos mecánicos principales (ej: polishing, brake, pads...)
+                    conceptos_mecanicos = [p for p in palabras_clave if p in sinonimos_posventa.values() or p in sinonimos_posventa.keys()]
+                    
+                    if conceptos_mecanicos:
+                        regex_mecanica = '|'.join(conceptos_mecanicos)
+                        condicion = (
+                            df_contexto['Nombre de la Pieza'].astype(str).str.lower().str.contains(regex_mecanica, na=False) |
+                            df_contexto['Operación Técnica'].astype(str).str.lower().str.contains(regex_mecanica, na=False)
+                        )
+                        df_recortado = df_contexto[condicion]
+                        
+                        # Si además de la pieza/operación se especifica un modelo (ej: omoda, jaecoo), afinamos el tiro
+                        if "omoda" in consulta_limpia:
+                            df_recortado = df_recortado[df_recortado['Modelo'].astype(str).str.lower().str.contains("omoda", na=False)]
+                        elif "jaecoo" in consulta_limpia:
+                            df_recortado = df_recortado[df_recortado['Modelo'].astype(str).str.lower().str.contains("jaecoo", na=False)]
+                            
+                        df_recortado = df_recortado.head(50)
+                    else:
+                        # Si solo ponen texto genérico, hacemos un filtro básico por aproximación
+                        regex_genérica = '|'.join(palabras_clave)
+                        condicion = df_contexto['Operación Técnica'].astype(str).str.lower().str.contains(regex_genérica, na=False)
+                        df_recortado = df_contexto[condicion].head(40)
+                else:
+                    df_recortado = df_contexto.head(20)
+
             resumen_excel = df_recortado[['Modelo', 'Nombre de la Pieza', 'Código de Referencia', 'Operación Técnica']].to_string(index=False)
         except Exception as e:
             return f"❌ Error interno al filtrar el catálogo: {str(e)}"
 
-        # Si el filtro previo de Python se queda completamente vacío tras la traducción
         if df_recortado.empty:
             return "❌ No se ha encontrado esta operación en el catálogo oficial de la marca. Por favor, dirígete a la pestaña **📝 Solicitar Operación** en el menú lateral izquierdo para rellenar el formulario de solicitud y que Central pueda darla de alta."
 
-        # 🧠 3. PROMPT COMPACTO PARA GEMINI
+        # 🧠 3. PROMPT DE TRADUCCIÓN SEMÁNTICA PARA GEMINI
         prompt_sistema = (
             "Eres el Asistente de Búsqueda del catálogo de operaciones de OMODA & JAECOO España.\n\n"
-            "Analiza el extracto recortado del catálogo que tienes abajo y compáralo con la petición del usuario.\n\n"
+            "Analiza el extracto del catálogo que tienes abajo y busca las operaciones que coincidan con la petición del usuario.\n"
+            "Ten en cuenta que el usuario escribe en español (ej: 'pulir') y los textos del catálogo están en inglés ('polishing').\n\n"
             "REGLAS:\n"
-            "1. Si encuentras la operación o piezas que encajen con lo que pide el usuario, lístalas de forma clara con su Modelo, Nombre de la Pieza, Operación Técnica y su 'Código de Referencia' exacto.\n"
-            "2. Si la operación específica NO ESTÁ en el bloque inferior, responde exactamente con el mensaje de derivación al formulario de solicitud.\n"
+            "1. Muestra en una lista limpia en Markdown los resultados válidos indicando el Modelo, la Operación Técnica y su 'Código de Referencia' exacto.\n"
+            "2. Si el concepto exacto solicitado no se encuentra dentro del bloque de texto inferior, responde con el mensaje estricto de derivación al formulario.\n"
             "3. Prohibido inventar códigos.\n\n"
-            f"--- EXTRACTO OPTIMIZADO DEL CATÁLOGO --- \n{resumen_excel}"
+            f"--- EXTRACTO DEL CATÁLOGO --- \n{resumen_excel}"
         )
 
         response = client.models.generate_content(
@@ -474,7 +310,6 @@ def buscador_inteligente_excel(consulta_usuario, df_contexto):
             )
         )
         
-        # Sincronización del chivato del sidebar
         if "tokens_totales_input" not in st.session_state:
             st.session_state.tokens_totales_input = 0
             st.session_state.tokens_totales_output = 0
