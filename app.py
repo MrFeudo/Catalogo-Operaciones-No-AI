@@ -709,17 +709,12 @@ if check_password():
                         st.error(f"❌ Error de conexión con Google Sheets: {e}")
                         st.info("💡 Por seguridad, hemos guardado esta línea en la tabla inferior (Caché Local).")
                         st.session_state.lista_solicitudes.append(nueva_solicitud)
-                    
-                    if subida_exitosa:
-                    # 🟢 DISCLAMER EN VERDE PERMANENTE ANTES DE REFRESCAR
-                    st.success("✅ **Operación registrada con éxito.** La solicitud ha sido transmitida al departamento de Garantías de Central para su validación.")
-                    
-                    # Esperamos segundo y medio para que al mecánico le dé tiempo a leerlo con calma
-                    import time
-                    time.sleep(1.5)
-                    
-                    # Ahora sí, refrescamos y limpiamos el formulario por completo
-                    st.rerun()
+
+                        if subida_exitosa:
+                            st.success("✅ **Operación registrada con éxito.** La solicitud ha sido transmitida al departamento de Garantías de Central para su validación.")
+                            import time
+                            time.sleep(1.5)
+                            st.rerun()
                         
 # =========================================================================
     # PANTALLA 4: CONSULTORIO IA DE GARANTÍAS (VERSION DEFINITIVA)
