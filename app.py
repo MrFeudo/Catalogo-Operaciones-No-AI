@@ -214,61 +214,59 @@ opcion_menu = st.sidebar.radio(
     key="menu_navegacion_app"
 )
 
-# =========================================================================
-# FUNCIÓN: BUSCADOR INTELIGENTE EN CATÁLOGO EXCEL (TRADUCCIÓN AUTOMÁTICA)
-# =========================================================================
-def buscador_inteligente_excel(consulta_usuario):
-    """
-    Descarga el catálogo de operaciones desde GitHub, traduce la consulta 
-    del usuario de español a inglés y busca códigos exactos sin inventar.
-    """
+def buscador_inteligente_excel(consulta_usuario, df_contexto):
     try:
         if "GEMINI_API_KEY" not in st.secrets:
-            return "⚠️ **Error**: No se ha encontrado la clave API en st.secrets."
+            return "⚠️ **Error**: No se ha encontrado la clave API."
             
         client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
-        # 1. Descarga y limpieza del Excel desde el repositorio de GitHub
+        # Para evitar que pete por exceso de texto, extraemos una muestra limpia y única de las primeras 150 operaciones 
+        # que coincidan vagamente con las palabras del usuario, o un resumen compacto.
         try:
-            df = pd.read_excel(URL_GITHUB_EXCEL)
-            # Filtramos solo las columnas necesarias para ahorrar tokens y evitar ruido
-            columnas_claves = [col for col in ["Model", "Component", "Operation", "Code"] if col in df.columns]
-            resumen_excel = df[columnas_claves].drop_duplicates().to_string(index=False)
+            # Buscamos coincidencias básicas para reducir el tamaño
+            palabras = [p for p in consulta_usuario.lower().split() if len(p) > 2]
+            if palabras:
+                mascara = df_contexto.astype(str).relative_chunks = False
+                # Creamos un filtro rápido en el dataframe antes de enviárselo a la IA
+                condicion = df_contexto['Modelo'].str.contains('|'.join(palabras), case=False, na=False) | \
+                            df_contexto['Nombre de la Pieza'].str.contains('|'.join(palabras), case=False, na=False) | \
+                            df_contexto['Operación Técnica'].str.contains('|'.join(palabras), case=False, na=False)
+                df_recortado = df_contexto[condicion].head(80)
+            else:
+                df_recortado = df_contexto.head(50)
+                
+            resumen_excel = df_recortado[['Modelo', 'Nombre de la Pieza', 'Código de Referencia', 'Operación Técnica']].to_string(index=False)
         except Exception as e:
-            return f"❌ Error al conectar con el catálogo de operaciones en GitHub: {str(e)}"
+            return f"❌ Error al procesar el filtro del catálogo: {str(e)}"
 
-        # 2. PROMPT DE DIRECCIÓN TÉCNICA Y TRADUCCIÓN BILINGÜE
         prompt_sistema = (
             "Eres el Asistente de Búsqueda del catálogo de operaciones de OMODA & JAECOO España.\n\n"
-            "⚠️ CONTEXTO CRÍTICO: El usuario te va a preguntar en ESPAÑOL, pero el catálogo de operaciones "
-            "adjunto abajo (columnas 'Component' y 'Operation') está redactado estrictamente en INGLÉS. "
-            "Tu tarea principal es traducir mentalmente los términos mecánicos del usuario (ej. 'paragolpes' -> 'bumper', "
-            "'pastillas de freno' -> 'brake pads', 'mantenimiento' -> 'maintenance', 'faro' -> 'headlamp') y "
-            "buscar su correspondencia exacta en el Excel.\n\n"
-            "REGLAS INEXCUSABLES DE COMPORTAMIENTO:\n"
-            "1. Si encuentras operaciones que coincidan, lístalas de forma limpia usando Markdown (Modelo, Operación en inglés y el 'Code').\n"
-            "2. Si la pieza, el modelo o la operación concreta NO EXISTE de forma explícita en el listado, responde EXACTAMENTE con este mensaje:\n"
+            "El usuario te va a preguntar en ESPAÑOL, pero el catálogo de operaciones adjunto abajo está en INGLÉS. "
+            "Traduce mentalmente los términos (ej. 'pulir' -> 'polish/paint', 'paragolpes' -> 'bumper') y busca su correspondencia.\n\n"
+            "REGLAS:\n"
+            "1. Si encuentras operaciones en el listado que encajen con lo que pide (ej. pulir o pintar paneles), muéstraselas en una lista clara con su Código de Referencia.\n"
+            "2. Si la operación concreta NO EXISTE en el listado adjunto abajo para ese modelo, responde EXACTAMENTE esto:\n"
             "   '❌ No se ha encontrado esta operación en el catálogo oficial de la marca. Por favor, dirígete a la pestaña **📝 Solicitar Operación** en el menú lateral izquierdo para rellenar el formulario de solicitud y que Central pueda darla de alta.'\n"
-            "3. No inventes bajo ningún concepto códigos, letras ni nombres que no estén en el documento adjunto.\n\n"
-            f"--- CATÁLOGO REAL DE OPERACIONES (EN INGLÉS) ---\n{resumen_excel}"
+            "3. No inventes códigos ni nombres.\n\n"
+            f"--- EXTRACTO DEL CATÁLOGO --- \n{resumen_excel}"
         )
 
-        # 3. Llamada al modelo con temperatura ínfima (0.1) para evitar alucinaciones
         response = client.models.generate_content(
-            model='gemini-3.5-flash',
-            contents=[f"Consulta del taller en español: '{consulta_usuario}'"],
+            model='gemini-2.5-flash',
+            contents=[f"Consulta: '{consulta_usuario}'"],
             config=types.GenerateContentConfig(
                 system_instruction=prompt_sistema,
                 temperature=0.1
             )
         )
         
-        # Registro y blindaje del chivato de consumo de la barra lateral
+        # Actualización segura del chivato del sidebar
         if "tokens_totales_input" not in st.session_state:
             st.session_state.tokens_totales_input = 0
             st.session_state.tokens_totales_output = 0
             st.session_state.dinero_total_gastado = 0.0
-            st.session_state.ultima_consulta_info = "Ninguna consulta en esta sesión."
+            st.session_state.ultima_consulta_info = "Ninguna consulta."
 
         if response.text and response.usage_metadata:
             t_input = response.usage_metadata.prompt_token_count
@@ -280,10 +278,10 @@ def buscador_inteligente_excel(consulta_usuario):
             st.session_state.dinero_total_gastado += coste
             st.session_state.ultima_consulta_info = f"Última: In: {t_input} | Out: {t_output} (+{coste:.5f}$)"
             
-        return response.text if response.text else "⚠️ La IA no devolvió ninguna coincidencia."
+        return response.text if response.text else "❌ No se encontraron resultados."
     except Exception as e:
-        return f"❌ Error en el motor de búsqueda de la IA: {str(e)}"
-
+        return f"❌ Error en el motor de la IA: {str(e)}"
+        
 # =========================================================================
 # FUNCIÓN DEL CONSULTORIO DE IA (BLINDADA CONTRA ERRORES DE SESSION STATE)
 # =========================================================================
@@ -457,7 +455,7 @@ if check_password():
                     st.warning("⚠️ Introduce una descripción o término para realizar la búsqueda.")
                 else:
                     with st.spinner("🔍 Traduciendo y escaneando el catálogo de operaciones..."):
-                        resultado_busqueda = buscador_inteligente_excel(consulta_rapida)
+                        resultado_busqueda = buscador_inteligente_excel(consulta_rapida, data)
                         
                         st.markdown("#### ⚙️ Resultado de la Consulta:")
                         if "❌ No se ha encontrado" in resultado_busqueda:
