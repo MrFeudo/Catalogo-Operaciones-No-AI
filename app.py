@@ -221,76 +221,65 @@ def buscador_inteligente_excel(consulta_usuario, df_contexto):
             
         client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
-        # 🎯 1. DICCIONARIO EVOLUCIONADO (Raíces, Sinónimos y Electrificación)
+        # 🎯 1. DICCIONARIO AVANZADO DE COMPONENTES Y ACCIONES CRÍTICAS
         sinonimos_posventa = {
-            # Tecnologías de propulsión
+            # Techo Solar y Mecanismos
+            "techo": "sunroof", "solar": "sunroof", "sunroof": "sunroof",
+            "engrasar": "lubrication", "engrase": "lubrication", "lubricar": "lubrication", "lubricacion": "lubrication",
+            "limpiar": "cleaning", "limpieza": "cleaning",
+            # Motorizaciones y Alta Tensión
             "hibrido": "hev", "enchufable": "phev", "electrico": "bev", "ev": "bev",
-            
-            # 🔴 Batería de Alta Tensión / Tracción (EV/HEV)
-            "traccion": "traction battery", 
-            "alta tension": "high voltage battery",
-            "bateria de traccion": "traction battery",
-            "bateria de alta tension": "high voltage battery",
-            
-            # Batería auxiliar común (12V)
-            "bateria de 12v": "storage battery",
-            "bateria auxiliar": "storage battery",
-            "bateria 12v": "storage battery",
-            
-            # Si ponen "bateria" a secas, metemos ambas raíces para que el score suba con las dos y decida la IA
-            "bateria": "battery", 
-            
-            # Mecánica y Estética común
-            "pulir": "polishing", "pulido": "polishing", "abrillantar": "polishing",
-            "pintar": "paint", "pintura": "paint", "paragolpes": "bumper",
-            "defensa": "bumper", "parachoques": "bumper", "freno": "brake",
-            "pastillas": "pads", "faro": "headlamp", "piloto": "lamp",
-            "mantenimiento": "maintenance", "revision": "maintenance"
+            "traccion": "traction", "alta tension": "high voltage", "bateria": "battery",
+            # Operaciones Base
+            "cambiar": "replace", "cambio": "replace", "sustituir": "replace", "sustitucion": "replace",
+            "quitar": "remove", "poner": "reinstall", "desmontar": "remove", "montar": "reinstall",
+            # Carrocería e Iluminación
+            "pulir": "polishing", "pulido": "polishing", "pintar": "paint", "pintura": "paint", 
+            "paragolpes": "bumper", "defensa": "bumper", "parachoques": "bumper", 
+            "freno": "brake", "pastillas": "pads", "faro": "headlamp", "piloto": "lamp"
         }
 
-        # Limpieza absoluta de la consulta del usuario
+        # Limpieza absoluta de la cadena del usuario
         consulta_limpia = consulta_usuario.lower().replace("í", "i").replace("ó", "o").replace("á", "a").strip()
-        
-        # Separamos las palabras ignorando conectores genéricos y números sueltos de un solo dígito (como el '5' o '7')
         palabras_usuario = [p for p in consulta_limpia.split() if len(p) > 2 and p not in ["quiero", "para", "con", "del", "una", "uno"]]
         palabras_usuario = [p for p in palabras_usuario if not (p.isdigit() and len(p) == 1)]
 
-        # Añadimos las traducciones automáticas al saco de palabras de búsqueda
+        # Añadimos equivalencias en inglés al saco de búsqueda
         palabras_busqueda = list(palabras_usuario)
         for p in palabras_usuario:
             if p in sinonimos_posventa:
                 palabras_busqueda.append(sinonimos_posventa[p])
+        
+        # Eliminamos duplicados en la lista de palabras clave
+        palabras_busqueda = list(set(palabras_busqueda))
 
-        # 🔍 2. FILTRADO POR COINCIDENCIA FLEXIBLE (Puntuación de Filas)
+        # 🔍 2. NUEVO MOTOR DE SCORE POR INTERSECCIÓN REALTIVA
         try:
-            # Regla de oro automática para tiempos manuales adicionales
             if any(tm in consulta_limpia for tm in ["manual", "adicional", "extra", "tiempo mas", "universal"]):
                 df_recortado = df_contexto[df_contexto['Operación Técnica'].astype(str).str.lower().str.contains("universal", na=False)].head(20)
             else:
-                # Puntuamos cada fila del Excel según cuántas palabras clave contiene
-                regex_busqueda = '|'.join(palabras_busqueda)
-                
-                # Criba rápida inicial para no procesar todo el DataFrame si es enorme
-                # Filtramos las filas que tengan al menos una mención a los modelos o componentes principales
-                marcas_modelos = ["omoda", "jaecoo"]
-                filtro_marca = "|".join([m for m in marcas_modelos if m in consulta_limpia])
-                
-                df_base = df_contexto
-                if filtro_marca:
-                    df_base = df_contexto[df_contexto['Modelo'].astype(str).str.lower().str.contains(filtro_marca, na=False)]
-                
-                # Buscamos coincidencias de texto en las columnas clave
-                coincidencias = (
-                    df_base['Modelo'].astype(str).str.lower().str.contains(regex_busqueda, na=False).astype(int) +
-                    df_base['Nombre de la Pieza'].astype(str).str.lower().str.contains(regex_busqueda, na=False).astype(int) +
-                    df_base['Operación Técnica'].astype(str).str.lower().str.contains(regex_busqueda, na=False).astype(int)
-                )
-                
-                # Ordenamos las filas poniendo arriba las que más palabras clave coincidentes tengan
-                df_base['score'] = coincidencias
+                # Filtrado inicial opcional por marca para aligerar la memoria de Streamlit
+                df_base = df_contexto.copy()
+                if "omoda" in consulta_limpia:
+                    df_base = df_base[df_base['Modelo'].astype(str).str.lower().str.contains("omoda", na=False)]
+                elif "jaecoo" in consulta_limpia:
+                    df_base = df_base[df_base['Modelo'].astype(str).str.lower().str.contains("jaecoo", na=False)]
+
+                # Creamos una columna de puntuación a cero
+                df_base['score'] = 0
+
+                # 🔴 REGLA DE ORO: Cada palabra técnica clave que aparezca suma de forma independiente
+                for palabra in palabras_busqueda:
+                    # Buscamos la palabra en el modelo, pieza u operación técnica
+                    match_modelo = df_base['Modelo'].astype(str).str.lower().str.contains(palabra, na=False).astype(int)
+                    match_pieza = df_base['Nombre de la Pieza'].astype(str).str.lower().str.contains(palabra, na=False).astype(int)
+                    match_operacion = df_base['Operación Técnica'].astype(str).str.lower().str.contains(palabra, na=False).astype(int)
+                    
+                    # Sumamos la coincidencia (multiplicamos por 2 si coincide en la operación para darle prioridad)
+                    df_base['score'] += match_modelo + match_pieza + (match_operacion * 2)
+
+                # Nos quedamos con las 60 filas que tengan más puntuación real acumulada
                 df_recortado = df_base[df_base['score'] > 0].sort_values(by='score', ascending=False).head(60)
-                
-                # Limpiamos la columna auxiliar para no ensuciar el output
                 df_base.drop(columns=['score'], errors='ignore')
 
             resumen_excel = df_recortado[['Modelo', 'Nombre de la Pieza', 'Código de Referencia', 'Operación Técnica']].to_string(index=False)
@@ -303,13 +292,14 @@ def buscador_inteligente_excel(consulta_usuario, df_contexto):
         # 🧠 3. PROMPT DE TRADUCCIÓN SEMÁNTICA PARA GEMINI
         prompt_sistema = (
             "Eres el Asistente de Búsqueda del catálogo de operaciones de OMODA & JAECOO España.\n\n"
-            "Analiza el extracto ordenado del catálogo que tienes abajo y localiza las operaciones que coincidan con la petición del usuario.\n"
-            "Ten en cuenta las equivalencias de tecnologías eléctricas y componentes (ej: 'batería de tracción' o 'batería eléctrico' -> 'traction battery').\n\n"
+            "Analiza el extracto del catálogo de abajo (que viene ordenado de mayor a menor relevancia por Python) "
+            "y extrae de forma limpia todas las operaciones que coincidan con lo que pide el usuario.\n"
+            "Presta especial atención a operaciones de mantenimiento, engrase o sustitución (ej: 'sunroof lubrication', 'sunroof replace').\n\n"
             "REGLAS:\n"
             "1. Muestra en una lista limpia en Markdown los resultados válidos indicando el Modelo, la Operación Técnica y su 'Código de Referencia' exacto.\n"
-            "2. Si el concepto solicitado no se encuentra dentro del bloque de texto inferior, responde con el mensaje estricto de derivación al formulario.\n"
+            "2. Si el concepto exacto solicitado no se encuentra dentro del bloque inferior, responde con el mensaje estricto de derivación al formulario.\n"
             "3. Prohibido inventar códigos.\n\n"
-            f"--- EXTRACTO RELEVANTE DEL CATÁLOGO --- \n{resumen_excel}"
+            f"--- EXTRACTO DE ALTA RELEVANCIA --- \n{resumen_excel}"
         )
 
         response = client.models.generate_content(
@@ -329,7 +319,7 @@ def buscador_inteligente_excel(consulta_usuario, df_contexto):
 
         if response.text and response.usage_metadata:
             t_input = response.usage_metadata.prompt_token_count
-            t_output = response.usage_metadata.candidates_token_count
+            t_output = response.usage_metadata.candidates_count if hasattr(response.usage_metadata, 'candidates_count') else response.usage_metadata.candidates_token_count
             coste = ((t_input * 0.075) / 1_000_000) + ((t_output * 0.30) / 1_000_000)
             
             st.session_state.tokens_totales_input += t_input
