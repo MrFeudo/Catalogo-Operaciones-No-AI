@@ -332,9 +332,9 @@ def buscador_inteligente_excel(consulta_usuario, df_contexto):
                     match_ope = df_base['Operación Técnica'].astype(str).str.lower().str.contains(regex_final, na=False).astype(int)
                     
                     # Puntuamos las filas para ordenar por relevancia
-                    df_base['score'] += match_mod * 2
-                    df_base['score'] += match_pie * 5
-                    df_base['score'] += match_ope * 8
+                    df_base['score'] += match_mod * 7
+                    df_base['score'] += match_pie * 7
+                    df_base['score'] += match_ope * 7
 
                     # 🔴 CAMBIO CLAVE: Nos quedamos con las 80 mejores filas con puntuación.
                     # Al subir el límite a 80, nos aseguramos de que entren todas las variantes de motor (Térmico, HEV, BEV) de golpe.
