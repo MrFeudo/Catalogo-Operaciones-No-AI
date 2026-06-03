@@ -346,6 +346,52 @@ def buscador_inteligente_excel(consulta_usuario, df_contexto):
         except Exception as e:
             return f"❌ Error interno al procesar el filtro de relevancia: {str(e)}"
 
+        # 🧠 3. PROMPT MAESTRO FLEXIBLE
+        prompt_sistema = (
+            "Eres el Buscador Inteligente Avanzado del catálogo oficial de OMODA & JAECOO España.\n\n"
+            "MISION DE ANÁLISIS ABIERTO:\n"
+            "- El usuario es personal de taller y te va a pedir piezas mezclando motorizaciones o de forma genérica.\n"
+            "- Tu objetivo es mostrar TODAS las operaciones válidas que encuentres en el extracto inferior relacionadas con el componente solicitado.\n\n"
+            "GUÍA DE TRADUCCIÓN RÁPIDA:\n"
+            "- 'FR' = Front (Delantero) | 'RR' = Rear (Trasero)\n"
+            "- 'LH' = Left Hand (Izquierdo) | 'RH' = Right Hand (Derecho)\n"
+            "- 'Remove and reinstall' / 'Replace' = Cambiar, sustituir, reinstalar, desmontar y montar.\n\n"
+            "REGLAS DE SALIDA:\n"
+            "1. Devuelve los resultados organizados en una lista Markdown limpia y estructurada.\n"
+            "2. Si el componente solicitado no tiene ninguna relación con lo que hay en el extracto inferior, saca el mensaje oficial de derivación al formulario.\n"
+            "3. Prohibido inventar códigos de referencia.\n\n"
+            f"--- EXTRACTO DE AMPLIO ESPECTRO DEL CATÁLOGO --- \n{resumen_excel}"
+        )
+
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=[f"Consulta del operario de taller: '{consulta_usuario}'"],
+            config=types.GenerateContentConfig(
+                system_instruction=prompt_sistema,
+                temperature=0.1
+            )
+        )
+        
+        if "tokens_totales_input" not in st.session_state:
+            st.session_state.tokens_totales_input = 0
+            st.session_state.tokens_totales_output = 0
+            st.session_state.dinero_total_gastado = 0.0
+            st.session_state.ultima_consulta_info = "Ninguna consulta."
+
+        if response.text and response.usage_metadata:
+            t_input = response.usage_metadata.prompt_token_count
+            t_output = response.usage_metadata.candidates_token_count
+            coste = ((t_input * 0.075) / 1_000_000) + ((t_output * 0.30) / 1_000_000)
+            
+            st.session_state.tokens_totales_input += t_input
+            st.session_state.tokens_totales_output += t_output
+            st.session_state.dinero_total_gastado += coste
+            st.session_state.ultima_consulta_info = f"Última: In: {t_input} | Out: {t_output} (+{coste:.5f}$)"
+            
+        return response.text if response.text else "❌ No se encontraron coincidencias."
+    except Exception as e:
+        return f"❌ Error en el motor de la IA de Gemini: {str(e)}"
+
        # =====================================================================
         # 🧠 3. PROMPT MAESTRO CON CÁLCULO AUTOMÁTICO DE TIEMPOS (UTs y Minutos)
         # =====================================================================
