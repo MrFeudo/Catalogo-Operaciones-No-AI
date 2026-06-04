@@ -253,6 +253,73 @@ def buscador_inteligente_excel(consulta_usuario, df_contexto):
             "hibrido": "hev", "electrico": "bev", "gasolina": "ice"
         }
 
+        mapa_raices = {
+            # --- 🔌 SISTEMAS DE PROPULSIÓN, MOTOR Y CONTROL ---
+            "ecu": "ecu|engine control unit|engine control module",
+            "ems": "ems|engine management system",
+            "mcu": "mcu|motor control unit|motor control module",
+            "vcu": "vcu|vehicle control unit|vehicle control module",
+            "hcu": "hcu|hybrid control unit|hybrid control module",
+            "tcu": "tcu|transmission control unit|transmission control module",
+            "hpu": "hpu|hybrid powertrain unit",
+            "dct": "dct|dual clutch transmission|double clutch",
+            "cambio": "transmission|gearbox|dct", "caja": "transmission|gearbox",
+            
+            # --- 🛡️ SEGURIDAD, DIRECCIÓN Y FRENOS ---
+            "esp": "esp|electronic stability program|stability control",
+            "eps": "eps|electric power steering|steering control",
+            "direccion": "steering|eps", "asistida": "steering",
+            "epb": "epb|electrical park brake|parking brake",
+            "ipb": "ipb|integrated power brake|power brake",
+            "freno": "brake|ipb|epb|abs", "frenos": "brake|abs", "pastillas": "pads",
+            "abs": "abs|anti-lock brake system|anti lock",
+            "abm": "abm|air bag module|airbag module",
+            "airbag": "airbag|air bag|abm|srs", "srs": "srs|supplemental restraint system",
+            
+            # --- 🪟 CARROCERÍA, CONFORT E INFOTENIMIENTO ---
+            "bcm": "bcm|body control module|bdm", "bdm": "bcm|body control module|bdm",
+            "carroceria": "body control|bcm",
+            "icm": "icm|instrument cluster module|dashboard", "cuadro": "cluster|icm|instrument",
+            "climatizacion": "climate|clm|ac module|hvac", "clm": "climate|clm", "aire": "climate|hvac",
+            "ihu": "ihu|infotainment head unit|display|screen", "pantalla": "ihu|display|screen",
+            "cgw": "cgw|central gateway|gateway", "pasarela": "gateway|cgw",
+            "pas": "pas|passenger area system",
+            
+            # --- 👁️ ADAS, ASISTENCIAS Y SENSORES ---
+            "fcm": "fcm|front camera module|forward camera", "camara": "camera|fcm|avm",
+            "frm": "frm|front radar module|forward radar", "radar": "radar|frm|bsd",
+            "avm": "avm|around view monitor|360 camera", "periferica": "around view|avm",
+            "bsd": "bsd|blind spot detection|blind spot", "punto ciego": "blind spot|bsd",
+            "dss": "dss|driving support system", "asistencia": "support system|dss|adas",
+            "can": "can|controller area network|can bus", "red": "network|can|bus",
+            
+            # --- ⚡ SISTEMAS ELÉCTRICOS Y BATERÍAS (ALTA Y BAJA TENSIÓN) ---
+            "bms": "bms|battery management system",
+            "cdu": "cdu|conversion & distribution unit|conversion distribution",
+            "tpms": "tpms|tire pressure monitor|tyre pressure", "presion": "pressure|tpms",
+            "pdc": "pdc|park distance control|parking sensor", "aparcamiento": "park|pdc",
+            "tecu": "tecu|traction electric control unit|traction control module",
+            "bateria": "battery|storage battery|bms|tecu", "traccion": "traction", "alta tension": "high voltage",
+            
+            # --- 📍 POSICIONES Y LADOS ---
+            "delantero": "fr", "delantera": "fr", "frontal": "fr", "alante": "fr",
+            "trasero": "rr", "trasera": "rr", "posterior": "rr", "atras": "rr",
+            "izquierdo": "lh", "izquierda": "lh", "izq": "lh", "izda": "lh",
+            "derecho": "rh", "derecha": "rh", "der": "rh", "drcha": "rh",
+            
+            # --- 🛠️ ACCIONES RECURRENTES DEL CATÁLOGO ---
+            "sustituir": "remove and reinstall|replace|remove|reinstall",
+            "sustitucion": "remove and reinstall|replace|remove|reinstall",
+            "cambiar": "remove and reinstall|replace|remove|reinstall",
+            "cambio": "remove and reinstall|replace|remove|reinstall",
+            "reemplazar": "remove and reinstall|replace|remove|reinstall",
+            "reemplazo": "remove and reinstall|replace|remove|reinstall",
+            "reinstalar": "remove and reinstall|reinstall",
+            "desmontar": "remove", "montar": "reinstall",
+            "comprobar": "check|inspection|test", "verificar": "check|inspection|test", "diagnosis": "check|test",
+            "programar": "program|coding|software", "codificar": "program|coding|software", "actualizar": "update|flash"
+        }
+
         # Limpieza inicial de texto sin acentos
         consulta_limpia = consulta_usuario.lower().strip()
         for orig, dest in [("í", "i"), ("ó", "o"), ("á", "a"), ("é", "e"), ("ú", "u"), ("ñ", "n")]:
