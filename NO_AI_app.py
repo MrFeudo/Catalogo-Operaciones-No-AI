@@ -176,7 +176,7 @@ def buscador_tradicional_excel(consulta_usuario, df_contexto):
         # =====================================================================
         # 🎯 1. DICCIONARIO SEMÁNTICO (NÚCLEO DE TRADUCCIÓN)
         # =====================================================================
-        mapa_raices = {
+       mapa_raices = {
             # --- 🛠️ ACCIONES Y VERBOS ---
             "cambiar": "remove and reinstall|replace|remove|reinstall",
             "cambio": "remove and reinstall|replace|remove|reinstall",
@@ -193,23 +193,102 @@ def buscador_tradicional_excel(consulta_usuario, df_contexto):
             "limpiar": "clean|cleaning|wash",
             "pulir": "polishing|polish", "pulido": "polishing|polish",
             
-            # --- 🔌 ELECTRÓNICA Y MÓDULOS ---
+            # --- 🔌 ELECTRÓNICA, MÓDULOS Y SENSORES ADAS ---
             "ecu": "ecu|engine control unit", "mcu": "mcu|motor control unit",
             "vcu": "vcu|vehicle control unit", "tcu": "tcu|transmission control unit",
             "bcm": "bcm|body control module", "bdm": "bcm|bdm",
             "centralita": "control unit|control module|ecu|bcm|mcu",
             "modulo": "control module|module", "modulos": "module",
+            "fcm": "fcm|front camera module|forward camera", 
+            "camara": "camera|fcm|avm", "camaras": "camera",
+            "frm": "frm|front radar module|forward radar", 
+            "radar": "radar|frm|bsd", "radares": "radar",
+            "avm": "avm|around view monitor",
+            "bsd": "bsd|blind spot detection", "punto ciego": "blind spot|bsd",
+            "tpms": "tpms|tire pressure monitor", 
+            "pdc": "pdc|park distance control|parking sensor", 
+            "aparcamiento": "park|pdc|parking", 
+            "sensor": "sensor|probe|detector", "sensores": "sensor",
+            "sonda": "sensor|oxygen sensor|lambda", "lambda": "oxygen sensor|lambda",
 
-            # --- ⚡ BATERÍAS Y COMPONENTES ---
-            "bateria": "battery|storage battery|bms", "vateria": "battery", "baterias": "battery",
-            "cable": "wiring|harness|wire", "cableado": "wiring|harness",
-            "airbag": "airbag|air bag|srs|abm", "cinturon": "seatbelt|seat belt",
-            "hebilla": "buckle", "capo": "hood", "paragolpes": "bumper",
-            "faro": "headlamp|headlight", "piloto": "lamp|tail lamp",
+            # --- ⚙️ MOTOR, ADMISIÓN, ESCAPE Y REFRIGERACIÓN ---
+            "motor": "engine assy|motor|engine", "motores": "engine",
+            "culata": "cylinder head", "piston": "piston", "biela": "connecting rod",
+            "cigueñal": "crankshaft", "cigueñal": "crankshaft", "arbol": "camshaft", "levas": "camshaft",
+            "valvula": "valve|solenoid valve", "valvulas": "valve",
+            "turbo": "turbocharger|turbo", "turbocompresor": "turbocharger",
+            "intercooler": "intercooler|charge air cooler",
+            "colector": "manifold", "admision": "intake", "escape": "exhaust",
+            "catalizador": "catalytic converter|catalyst", "fap": "dpf|particulate filter",
+            "silenciador": "muffler|exhaust silencer", "radiador": "radiator", 
+            "intercambiador": "heat exchanger", "ventilador": "fan|cooling fan", 
+            "electroventilador": "cooling fan", "termostato": "thermostat",
+            "bomba": "pump|water pump|oil pump|fuel pump", "bombas": "pump",
+            "bomba agua": "water pump", "bomba aceite": "oil pump", "bomba combustible": "fuel pump",
             "canister": "canister|evap", "vapores": "canister|evap",
-            "filtro": "filter", "junta": "gasket|seal", "tubo": "pipe|hose",
+            "bujia": "spark plug", "bujias": "spark plug", "bobina": "ignition coil", "bobinas": "ignition coil",
 
-           # --- 📍 UBICACIONES, ORIENTACIÓN Y LADOS (AMPLIADO) ---
+            # --- 🚗 TRANSMISIÓN, CAJA DE CAMBIOS Y EMBRAGUE ---
+            "dct": "dct|dual clutch transmission", "caja": "transmission|gearbox", 
+            "caja cambios": "transmission|gearbox", "transmision": "transmission|propeller shaft|drive shaft",
+            "embrague": "clutch", "bimasa": "dual mass flywheel|flywheel", "volante motor": "flywheel",
+            "palier": "drive shaft|axle shaft|half shaft", "palieres": "drive shaft",
+            "diferencial": "differential", "reductora": "reducer", "selector": "selector|shifter",
+
+            # --- 🥾 CHASIS, SUSPENSIÓN, DIRECCIÓN Y FRENOS ---
+            "esp": "esp|electronic stability program", "eps": "eps|electric power steering",
+            "epb": "epb|electrical park brake", "ipb": "ipb|integrated power brake", "abs": "abs",
+            "freno": "brake|ipb|epb|abs", "frenos": "brake|abs",
+            "pastilla": "pads|brake pads", "pastillas": "pads|brake pads",
+            "disco": "disc|brake disc", "discos": "disc|brake disc",
+            "pinza": "caliper|brake caliper", "pinzas": "caliper", "latiguillo": "brake hose", 
+            "servo": "brake booster|power booster", "direccion": "steering|eps", 
+            "cremallera": "steering gear|steering rack", "mangueta": "knuckle|steering knuckle",
+            "amortiguador": "shock absorber|strut|damper", "amortiguadores": "shock absorber|strut",
+            "amortisguador": "shock absorber", "amortiguadore": "shock absorber", # Erratas taller
+            "muelle": "spring|coil spring", "muelles": "spring", "ballesta": "leaf spring",
+            "barra": "bar|stabilizer bar", "estabilizadora": "stabilizer",
+            "trapecio": "control arm|suspension arm|wishbone", "brazo": "control arm|suspension arm",
+            "buge": "hub|wheel hub", "buje": "hub|wheel hub", "cojinete": "bearing", "rodamiento": "bearing",
+
+            # --- 📦 CARROCERÍA, COLISIÓN Y CRISTALES ---
+            "capo": "hood|engine hood", "paragolpes": "bumper", "defensa": "bumper", "parachoques": "bumper",
+            "faro": "headlamp|headlight", "faros": "headlamp", "piloto": "lamp|rear lamp|tail lamp", "pilotos": "lamp|tail lamp",
+            "antiniebla": "fog lamp|foglight", "intermitente": "turn signal|indicator",
+            "espejo": "mirror", "retrovisor": "mirror|rearview mirror",
+            "aleta": "fender|wing", "aletas": "fender", "puerta": "door", "puertas": "door", 
+            "porton": "tailgate|back door|rear door", "techo": "sunroof|roof|panoramic roof", "solar": "sunroof",
+            "cristal": "glass|window", "luna": "windshield|windscreen|glass", "parabrisas": "windshield|windscreen",
+            "elevalunas": "window regulator|window lifter", "cerradura": "door lock|lock assy", "cierre": "lock|latch",
+            "manilla": "handle|door handle", "maneta": "handle", "moldura": "molding|trim", "molduras": "molding|trim",
+            "limpiaparabrisas": "wiper|wiper blade", "motor limpia": "wiper motor",
+
+            # --- 🪑 ASIENTOS, CUERNOS INTERIORES Y GUANECIDOS ---
+            "asiento": "seat assy|seat", "asientos": "seat", 
+            "respaldo": "backrest|seat back", "banqueta": "cushion|seat cushion",
+            "salpicadero": "dashboard|instrument panel", "consol": "console", "consola": "console",
+            "reposacabezas": "headrest|head restraint", "reposabrazos": "armrest",
+            "guarnecido": "trim|lining|panel", "tapizado": "trim|upholstery", "techo interior": "headlining|roof lining",
+            "alfombrilla": "mat|floor mat", "alfombra": "carpet", "guantera": "glove box",
+            "volante": "steering wheel", # Volante de dirección
+
+            # --- ⚡ BATERÍAS, CABLEADOS Y ELEMENTOS DE UNIÓN ---
+            "bateria": "battery|storage battery|bms", "vateria": "battery", "baterias": "battery",
+            "cable": "wiring|harness|wire|cable", "cableado": "wiring|harness|wire", 
+            "instalacion": "wiring|harness", "mazo": "harness|wiring|wire", # Mazo añadido
+            "fusible": "fuse", "fusibles": "fuse|box", "caja fusibles": "fuse block|fuse box",
+            "airbag": "airbag|air bag|srs|abm", "airbags": "airbag", "srs": "srs|supplemental restraint system",
+            "cinturon": "seatbelt|seat belt|belt", "cinturones": "seatbelt|seat belt",
+            "pretensor": "pretensioner", "hebilla": "buckle", "hebillas": "buckle",
+            "soporte": "bracket|support|mount|holder", "soportes": "bracket|support|mount",
+            "cuna": "subframe|cradle", "bandeja": "tray|salver",
+            "tapa": "cover|cap|lid", "cubierta": "cover|protector", "protector": "protector|shield|guard",
+            "varilla": "rod|stay", "tirante": "rod|link|stay", "placa": "plate", "panel": "panel",
+            "grapa": "clip|retainer", "tornillo": "bolt|screw", "tuerca": "nut", "abrazadera": "clamp|clip",
+            "filtro": "filter", "junta": "gasket|seal", "reten": "oil seal|seal", "tubo": "pipe|hose", 
+            "manguito": "hose", "conducto": "pipe|line|duct",
+
+            # --- 📍 UBICACIONES, ORIENTACIÓN Y LADOS ---
             "delantero": "fr|front", "delantera": "fr|front", "frontal": "fr|front", "alante": "fr|front",
             "trasero": "rr|rear", "trasera": "rr|rear", "posterior": "rr|rear", "atras": "rr|rear",
             "izquierdo": "lh|left|driver", "izquierda": "lh|left|driver", "izq": "lh|left", "izda": "lh|left",
@@ -227,15 +306,6 @@ def buscador_tradicional_excel(consulta_usuario, df_contexto):
             "ev": "ev|bev|electric", "electrico": "ev|bev|electric", "electrica": "ev|bev|electric",
             "phev": "phev|plug-in", "enchufable": "phev|plug-in",
             "gasolina": "ice|gasoline", "termico": "ice"
-        }
-
-        abreviaturas_modelos = {
-            "j5": "jaecoo 5", "jaecoo5": "jaecoo 5", "j-5": "jaecoo 5",
-            "j7": "jaecoo 7", "jaecoo7": "jaecoo 7", "j-7": "jaecoo 7",
-            "j8": "jaecoo 8", "jaecoo8": "jaecoo 8",
-            "o5": "omoda 5", "omoda5": "omoda 5", "o-5": "omoda 5",
-            "o7": "omoda 7", "omoda7": "omoda 7", "o-7": "omoda 7",
-            "o9": "omoda 9", "omoda9": "omoda 9", "o-9": "omoda 9"
         }
 
         # 1. Normalización de la consulta
