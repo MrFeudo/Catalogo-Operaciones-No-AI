@@ -171,9 +171,6 @@ opcion_menu = st.sidebar.radio(
     key="menu_navegacion_app"
 )
 
-# =====================================================================
-# 🔍 4. MOTOR DE TRADUCCIÓN Y BÚSQUEDA SEMÁNTICA LOCAL (SIN IA)
-# =====================================================================
 def buscador_tradicional_excel(consulta_usuario, df_contexto):
     try:
         # =====================================================================
@@ -407,16 +404,14 @@ def buscador_tradicional_excel(consulta_usuario, df_contexto):
             if any(tm in lista_palabras_usuario for tm in terminos_manuales):
                 df_resultados = df_contexto[df_contexto['Operación Técnica'].astype(str).str.lower().str.contains("universal", na=False)].head(20)
             else:
-                # 🚨 NUEVO: CREAMOS COPIA Y PURGAMOS CELDAS VACÍAS/NULAS EN COLUMNAS CRÍTICAS DE INMEDIATO
+                # 🛡️ PURGADO RADICAL DE CELDAS VACÍAS EN NOMBRE DE PIEZA O REF
                 df_base = df_contexto.copy()
-                
-                # Eliminamos filas donde 'Nombre de la Pieza' o 'Código de Referencia' sean NaN, None o celdas vacías
                 df_base = df_base[
                     (df_base['Nombre de la Pieza'].notna()) & (df_base['Nombre de la Pieza'].astype(str).str.strip() != "") &
                     (df_base['Código de Referencia'].notna()) & (df_base['Código de Referencia'].astype(str).str.strip() != "")
                 ]
                 
-                # Forzamos minúsculas internas temporales en los campos de mapeo para buscar sin conflicto
+                # Forzamos minúsculas internas temporales en los campos de mapeo
                 for col in ['Modelo', 'Nombre de la Pieza', 'Operación Técnica']:
                     df_base[col] = df_base[col].astype(str).str.lower().str.strip()
 
@@ -426,7 +421,7 @@ def buscador_tradicional_excel(consulta_usuario, df_contexto):
                 elif "jaecoo" in consulta_limpia:
                     df_base = df_base[df_base['Modelo'].str.contains("jaecoo", na=False)]
 
-                # 🛑 AISLAMIENTO ESTRICTO DE NÚMERO DE MODELO (EVITA MEZCLAR OMODA 5 CON 9, O JAECOO 5 CON 7/8)
+                # 🛑 AISLAMIENTO ESTRICTO DE NÚMERO DE MODELO (EVITA MEZCLAS)
                 modelos_numericos = ["5", "7", "8", "9"]
                 numero_detectado = None
                 
@@ -459,7 +454,7 @@ def buscador_tradicional_excel(consulta_usuario, df_contexto):
                     df_base = df_base[df_base['Nombre de la Pieza'].str.contains(regex_comp, na=False) | 
                                       df_base['Operación Técnica'].str.contains(regex_comp, na=False)]
 
-                # FILTROS SECUNDARIOS DE PURGA AUTOMÁTICA DE CABLES/SOPORTES/SENSORES
+                # FILTROS SECUNDARIOS DE PURGA AUTOMÁTICA
                 filtros_secundarios = {
                     "wiring|harness|wire": ["cable", "cableado", "instalacion", "mazo"],
                     "sensor": ["sensor", "sonda"],
@@ -476,7 +471,6 @@ def buscador_tradicional_excel(consulta_usuario, df_contexto):
                 # =====================================================================
                 # 📊 4. ALGORITMO DE CALCULADORA DE RELEVANCIA (SCORE REFINADO)
                 # =====================================================================
-                # Forzamos que si el usuario buscó por un número de modelo, este cuente para los puntos
                 if numero_detectado and numero_detectado not in palabras_regex:
                     palabras_regex.append(numero_detectado)
 
@@ -487,7 +481,6 @@ def buscador_tradicional_excel(consulta_usuario, df_contexto):
                     df_base['score'] += df_base['Nombre de la Pieza'].str.contains(regex_puntos, na=False).astype(int) * 10
                     df_base['score'] += df_base['Operación Técnica'].str.contains(regex_puntos, na=False).astype(int) * 10
                     
-                    # Ordenamos con prioridad absoluta a la mayor coincidencia e incrementamos el head a 80 para dar variedad de motores
                     df_resultados = df_base[df_base['score'] > 0].sort_values(by=['score'], ascending=False).head(80)
                 else:
                     df_resultados = df_base.head(40)
@@ -507,16 +500,16 @@ def buscador_tradicional_excel(consulta_usuario, df_contexto):
             if df_resultados.empty:
                 return None
 
-            # Con .loc[df_resultados.index] recuperamos los textos nativos idénticos al Excel maestro
             df_final_taller = df_contexto.loc[df_resultados.index].copy()
-            
-            # Ordenamos la salida alfabéticamente por modelo para estructurar visualmente la interfaz
             df_final_taller = df_final_taller.sort_values(by=['Modelo', 'Nombre de la Pieza'], ascending=[True, True])
             
             return df_final_taller[['Modelo', 'Nombre de la Pieza', 'Código de Referencia', 'Operación Técnica', 'Tiempo Estándar (UT/Horas)']]
 
         except Exception:
             return None
+
+    except Exception:
+        return None
 
 # ==========================================
 # 5. SISTEMA DE SEGURIDAD CONTRASEÑA
