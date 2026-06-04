@@ -223,29 +223,188 @@ def buscador_inteligente_excel(consulta_usuario, df_contexto):
 
         # 🎯 1. MAPEO SEMÁNTICO DE RAÍCES
         mapa_raices = {
+            # --- 🛠️ ACCIONES, VERBOS Y REGLAS DE TRABAJO ---
+            "cambiar": "remove and reinstall|replace|remove|reinstall",
+            "cambio": "remove and reinstall|replace|remove|reinstall",
+            "sustituir": "remove and reinstall|replace|remove|reinstall",
+            "sustitucion": "remove and reinstall|replace|remove|reinstall",
+            "reemplazar": "remove and reinstall|replace|remove|reinstall",
+            "reemplazo": "remove and reinstall|replace|remove|reinstall",
+            "desmontar": "remove", 
+            "montar": "reinstall",
+            "comprobar": "check|inspection|test|diagnostic|measurement",
+            "verificar": "check|inspection|test|diagnostic",
+            "revisar": "check|inspection|test|diagnostic",
+            "diagnosis": "check|inspection|test|diagnostic|troubleshooting",
+            "diagnostico": "check|inspection|test|diagnostic",
+            "actualizar": "refresh|update|software|flash",
+            "programar": "refresh|update|software|flash|coding|program",
+            "codificar": "refresh|update|software|flash|coding|program",
+            "reprogramar": "refresh|update|software|flash|coding|program",
+            "ajustar": "adjust|adjustment|alignment|calibrate|calibration",
+            "alinear": "alignment|adjust",
+            "calibrar": "calibrate|calibration",
+            "limpiar": "clean|cleaning|wash",
+            "pulir": "polishing|polish", "pulido": "polishing|polish",
+            
+            # --- 🔌 CENTRALITAS, MÓDULOS Y ELECTRÓNICA DE CONTROL ---
+            "ecu": "ecu|engine control unit|engine control module",
+            "ems": "ems|engine management system",
+            "mcu": "mcu|motor control unit|motor control module",
+            "vcu": "vcu|vehicle control unit|vehicle control module",
+            "hcu": "hcu|hybrid control unit|hybrid module",
+            "tcu": "tcu|transmission control unit|transmission module",
+            "hpu": "hpu|hybrid powertrain unit",
+            "tecu": "tecu|traction electric control unit",
+            "bcm": "bcm|body control module|bdm", 
+            "bdm": "bcm|body control module|bdm",
+            "icm": "icm|instrument cluster module", 
+            "clm": "climate|clm|hvac", 
+            "ihu": "ihu|infotainment head unit|display",
+            "cgw": "cgw|central gateway|gateway", 
+            "pas": "pas|passenger area system",
+            "tbox": "t-box|tbox|telematics|information communication module",
+            "centralita": "control unit|control module|ecu|bcm|mcu|vcu|tcu|hcu",
+            "centralitas": "control unit|control module",
+            "modulo": "control module|module", 
+            "modulos": "control module|module",
+
+            # --- ⚡ BATERÍAS, ALTA TENSIÓN Y SISTEMA ELÉCTRICO ---
+            "bateria": "battery|storage battery|bms|tecu", 
+            "vateria": "battery|storage battery", # Errata
+            "baterias": "battery|storage battery",
+            "traccion": "traction|traction battery", 
+            "alta tension": "high voltage",
+            "bms": "bms|battery management system",
+            "cdu": "cdu|conversion & distribution unit|conversion distribution",
+            "alternador": "alternator|generator",
+            "arranque": "starter|starter motor", "motor arranque": "starter",
+            "cable": "wiring|harness|wire|cable", 
+            "cableado": "wiring|harness|wire|cable", 
+            "instalacion": "wiring|harness",
+            "mazo": "wiring|harness",
+            "fusible": "fuse", "fusibles": "fuse|box", "caja fusibles": "fuse block|fuse box",
+            "bujia": "spark plug", "bujias": "spark plug",
+            "bobina": "ignition coil", "bobinas": "ignition coil",
+
+            # --- 🛡️ SEGURIDAD, ASISTENCIAS ADAS Y SENSORES ---
+            "fcm": "fcm|front camera module|forward camera|front view camera", 
+            "camara": "camera|fcm|avm|rear view", "camaras": "camera",
+            "frm": "frm|front radar module|forward radar", 
+            "radar": "radar|frm|bsd", "radares": "radar",
+            "avm": "avm|around view monitor|360 camera",
+            "bsd": "bsd|blind spot detection|blind spot monitoring", 
+            "punto ciego": "blind spot|bsd",
+            "tpms": "tpms|tire pressure monitor", 
+            "pdc": "pdc|park distance control|parking sensor", 
+            "aparcamiento": "park|pdc|parking", 
+            "sensor": "sensor|probe|detector", "sensores": "sensor",
+            "sonda": "sensor|oxygen sensor|lambda", "lambda": "oxygen sensor|lambda",
+            "airbag": "airbag|air bag|abm|srs|curtain airbag", 
+            "airbags": "airbag|air bag",
+            "abm": "abm|air bag module",
+            "srs": "srs|supplemental restraint system",
+            "cinturon": "seatbelt|seat belt|belt", "cinturones": "seatbelt|seat belt",
+            "hebilla": "buckle", "hebillas": "buckle",
+            "pretensor": "pretensioner",
+
+            # --- ⚙️ MOTOR, ADMISIÓN, ESCAPE Y REFRIGERACIÓN ---
+            "motor": "engine assy|motor|engine", "motores": "engine",
+            "culata": "cylinder head", "piston": "piston", "biela": "connecting rod",
+            "cigüeñal": "crankshaft", "arbol": "camshaft", "levas": "camshaft",
+            "valvula": "valve|solenoid valve", "valvulas": "valve",
+            "turbo": "turbocharger|turbo", "turbocompresor": "turbocharger",
+            "intercooler": "intercooler|charge air cooler",
+            "colector": "manifold", "admision": "intake", "escape": "exhaust",
+            "catalizador": "catalytic converter|catalyst", "fap": "dpf|particulate filter",
+            "silenciador": "muffler|exhaust silencer",
+            "radiador": "radiator", "intercambiador": "heat exchanger",
+            "ventilador": "fan|cooling fan", "electroventilador": "cooling fan",
+            "bomba": "pump|water pump|oil pump|fuel pump", "bombas": "pump",
+            "bomba agua": "water pump", "bomba aceite": "oil pump", "bomba combustible": "fuel pump",
+            "termostato": "thermostat",
+            "canister": "canister|evap canister", "vapores": "canister|evap|solenoid|pipe",
+
+            # --- 🚗 TRANSMISIÓN, CAJA DE CAMBIOS Y EMBRAGUE ---
+            "dct": "dct|dual clutch transmission|double clutch",
+            "cambio": "transmission|gearbox|dct|gearshift", 
+            "caja": "transmission|gearbox", "caja cambios": "transmission|gearbox",
+            "embrague": "clutch", "bimasa": "dual mass flywheel|flywheel",
+            "volante": "flywheel", # Nota: volante motor es flywheel, volante direccion es steering wheel
+            "volante motor": "flywheel",
+            "palier": "drive shaft|axle shaft|half shaft", "palieres": "drive shaft",
+            "transmision": "transmission|propeller shaft|drive shaft",
+            "diferencial": "differential", "reductora": "reducer",
+            "selector": "selector|shifter|gearshift lever",
+
+            # --- 🥾 CHASIS, SUSPENSIÓN Y FRENOS ---
+            "esp": "esp|electronic stability program",
+            "eps": "eps|electric power steering",
+            "epb": "epb|electrical park brake|parking brake",
+            "ipb": "ipb|integrated power brake|power brake",
+            "abs": "abs|anti-lock brake system",
+            "freno": "brake|ipb|epb|abs", "frenos": "brake|abs",
+            "pastilla": "pads|brake pads", "pastillas": "pads|brake pads",
+            "disco": "disc|brake disc", "discos": "disc|brake disc",
+            "pinza": "caliper|brake caliper", "pinzas": "caliper",
+            "latiguillo": "brake hose", "servo": "brake booster|power brake",
+            "amortiguador": "shock absorber|strut|damper", "amortiguadores": "shock absorber|strut",
+            "muelle": "spring|coil spring", "muelles": "spring",
+            "ballesta": "leaf spring",
+            "barra": "bar|stabilizer bar|rod", "estabilizadora": "stabilizer",
+            "trapecio": "control arm|suspension arm|wishbone", "brazo": "control arm|suspension arm",
+            "mangueta": "knuckle|steering knuckle",
+            "buge": "hub|wheel hub", "cojinete": "bearing", "rodamiento": "bearing",
+            "direccion": "steering|eps", "cremallera": "steering gear|steering rack",
+
+            # --- 📦 CARROCERÍA, INTERIOR, EXTERIOR Y COLISIÓN ---
+            "capo": "hood|engine hood",
+            "paragolpes": "bumper", "defensa": "bumper", "parachoques": "bumper",
+            "faro": "headlamp|headlight", "faros": "headlamp", 
+            "piloto": "lamp|rear lamp|tail lamp", "pilotos": "lamp|tail lamp",
+            "antiniebla": "fog lamp|foglight",
+            "intermitente": "turn signal|indicator",
+            "espejo": "mirror|rearview mirror", "retrovisor": "mirror|rearview mirror",
+            "aleta": "fender|wing", "aletas": "fender",
+            "puerta": "door", "puertas": "door", "porton": "tailgate|back door|rear door",
+            "techo": "sunroof|roof|panoramic roof", "solar": "sunroof",
+            "cristal": "glass|window", "luna": "windshield|windscreen|glass", "parabrisas": "windshield|windscreen",
+            "elevalunas": "window regulator|window lifter",
+            "cerradura": "door lock|lock assy", "cierre": "lock|latch",
+            "manilla": "handle|door handle", "maneta": "handle",
+            "asiento": "seat", "asientos": "seat",
+            "salpicadero": "dashboard|instrument panel",
+            "moldura": "molding|trim", "molduras": "molding|trim",
+            "limpiaparabrisas": "wiper|wiper blade", "limpiaparabrisas": "wiper", "motor limpia": "wiper motor",
+
+            # --- 🩻 SUPORTACIÓN, ELEMENTOS DE UNIÓN Y MENUDENCIA ---
+            "soporte": "bracket|support|mount|holder", "soportes": "bracket|support|mount",
+            "cuna": "subframe|cradle|bracket|salver|tray", 
+            "bandeja": "tray|salver",
+            "tapa": "cover|cap|lid", "cubierta": "cover|protector", "protector": "protector|shield|guard",
+            "varilla": "rod|stay", "tirante": "rod|link|stay",
+            "placa": "plate", "panel": "panel",
+            "grapa": "clip|retainer", "tornillo": "bolt|screw", "tuerca": "nut",
+            "abrazadera": "clamp|clip",
+
+            # --- 🧪 FLUIDOS, JUNTAS Y FILTROS ---
+            "filtro": "filter", "filtros": "filter",
+            "filtro aceite": "oil filter", "filtro aire": "air filter", "filtro habitaculo": "cabin filter|pollen filter",
+            "junta": "gasket|seal", "juntas": "gasket|seal", "reten": "oil seal|seal",
+            "aceite": "oil|lubricant", "liquido": "fluid|liquid", "refrigerante": "coolant",
+            "anticongelante": "coolant",
+            "tubo": "pipe|tube|hose", "manguito": "hose", "conducto": "pipe|line|duct",
+
+            # --- 📍 UBICACIONES, ORIENTACIÓN Y LADOS ---
             "delantero": "fr", "delantera": "fr", "frontal": "fr", "alante": "fr",
             "trasero": "rr", "trasera": "rr", "posterior": "rr", "atras": "rr",
             "izquierdo": "lh", "izquierda": "lh", "izq": "lh", "izda": "lh",
             "derecho": "rh", "derecha": "rh", "der": "rh", "drcha": "rh",
-            "sustituir": "remove and reinstall|replace|remove|reinstall",
-            "sustitucion": "remove and reinstall|replace|remove|reinstall",
-            "cambiar": "remove and reinstall|replace|remove|reinstall",
-            "cambio": "remove and reinstall|replace|remove|reinstall",
-            "reemplazar": "remove and reinstall|replace|remove|reinstall",
-            "reemplazo": "remove and reinstall|replace|remove|reinstall",
-            "reinstalar": "remove and reinstall|reinstall",
-            "actualizar": "refresh|update|upgrade",
-            "desmontar": "remove", "montar": "reinstall",
-            "cinturon": "seatbelt|seat belt|belt", "cinturones": "seatbelt|seat belt",
-            "pulir": "polishing|polish", "pulido": "polishing|polish",
-            "capo": "hood", "techo": "sunroof|roof", "solar": "sunroof",
-            "traccion": "traction", "alta tension": "high voltage", "bateria": "battery",
-            "vapores": "canister|evap|solenoid|pipe", "canister": "canister", "solenoide": "solenoid", "valvula": "solenoid",
-            "tubo": "pipe|hose", "manguito": "hose", "conducto": "pipe",
-            "paragolpes": "bumper", "defensa": "bumper", "parachoques": "bumper",
-            "freno": "brake", "pastillas": "pads", "faro": "headlamp", "piloto": "lamp"
+            "superior": "upper", "inferior": "lower", "interno": "inner", "externo": "outer",
+            "central": "central|middle", "lateral": "side"
         }
 
+        # --- DICCIONARIO DE EXPANSIÓN DE MODELOS (MANTENIDO) ---
         abreviaturas_modelos = {
             "j5": "jaecoo 5", "jaecoo5": "jaecoo 5", "j-5": "jaecoo 5",
             "j7": "jaecoo 7", "jaecoo7": "jaecoo 7", "j-7": "jaecoo 7",
@@ -253,74 +412,6 @@ def buscador_inteligente_excel(consulta_usuario, df_contexto):
             "o5": "omoda 5", "omoda5": "omoda 5", "o-5": "omoda 5",
             "hibrido": "hev", "electrico": "bev", "gasolina": "ice"
         }
-
-        mapa_raices = {
-            # --- 🔌 SISTEMAS DE PROPULSIÓN, MOTOR Y CONTROL ---
-            "ecu": "ecu|engine control unit|engine control module",
-            "ems": "ems|engine management system",
-            "mcu": "mcu|motor control unit|motor control module",
-            "vcu": "vcu|vehicle control unit|vehicle control module",
-            "hcu": "hcu|hybrid control unit|hybrid control module",
-            "tcu": "tcu|transmission control unit|transmission control module",
-            "hpu": "hpu|hybrid powertrain unit",
-            "dct": "dct|dual clutch transmission|double clutch",
-            "cambio": "transmission|gearbox|dct", "caja": "transmission|gearbox",
-            
-            # --- 🛡️ SEGURIDAD, DIRECCIÓN Y FRENOS ---
-            "esp": "esp|electronic stability program|stability control",
-            "eps": "eps|electric power steering|steering control",
-            "direccion": "steering|eps", "asistida": "steering",
-            "epb": "epb|electrical park brake|parking brake",
-            "ipb": "ipb|integrated power brake|power brake",
-            "freno": "brake|ipb|epb|abs", "frenos": "brake|abs", "pastillas": "pads",
-            "abs": "abs|anti-lock brake system|anti lock",
-            "abm": "abm|air bag module|airbag module",
-            "airbag": "airbag|air bag|abm|srs", "srs": "srs|supplemental restraint system",
-            
-            # --- 🪟 CARROCERÍA, CONFORT E INFOTENIMIENTO ---
-            "bcm": "bcm|body control module|bdm", "bdm": "bcm|body control module|bdm",
-            "carroceria": "body control|bcm",
-            "icm": "icm|instrument cluster module|dashboard", "cuadro": "cluster|icm|instrument",
-            "climatizacion": "climate|clm|ac module|hvac", "clm": "climate|clm", "aire": "climate|hvac",
-            "ihu": "ihu|infotainment head unit|display|screen", "pantalla": "ihu|display|screen",
-            "cgw": "cgw|central gateway|gateway", "pasarela": "gateway|cgw",
-            "pas": "pas|passenger area system",
-            
-            # --- 👁️ ADAS, ASISTENCIAS Y SENSORES ---
-            "fcm": "fcm|front camera module|forward camera", "camara": "camera|fcm|avm",
-            "frm": "frm|front radar module|forward radar", "radar": "radar|frm|bsd",
-            "avm": "avm|around view monitor|360 camera", "periferica": "around view|avm",
-            "bsd": "bsd|blind spot detection|blind spot", "punto ciego": "blind spot|bsd",
-            "dss": "dss|driving support system", "asistencia": "support system|dss|adas",
-            "can": "can|controller area network|can bus", "red": "network|can|bus",
-            
-            # --- ⚡ SISTEMAS ELÉCTRICOS Y BATERÍAS (ALTA Y BAJA TENSIÓN) ---
-            "bms": "bms|battery management system",
-            "cdu": "cdu|conversion & distribution unit|conversion distribution",
-            "tpms": "tpms|tire pressure monitor|tyre pressure", "presion": "pressure|tpms",
-            "pdc": "pdc|park distance control|parking sensor", "aparcamiento": "park|pdc",
-            "tecu": "tecu|traction electric control unit|traction control module",
-            "bateria": "battery|storage battery|bms|tecu", "traccion": "traction", "alta tension": "high voltage",
-            
-            # --- 📍 POSICIONES Y LADOS ---
-            "delantero": "fr", "delantera": "fr", "frontal": "fr", "alante": "fr",
-            "trasero": "rr", "trasera": "rr", "posterior": "rr", "atras": "rr",
-            "izquierdo": "lh", "izquierda": "lh", "izq": "lh", "izda": "lh",
-            "derecho": "rh", "derecha": "rh", "der": "rh", "drcha": "rh",
-            
-            # --- 🛠️ ACCIONES RECURRENTES DEL CATÁLOGO ---
-            "sustituir": "remove and reinstall|replace|remove|reinstall",
-            "sustitucion": "remove and reinstall|replace|remove|reinstall",
-            "cambiar": "remove and reinstall|replace|remove|reinstall",
-            "cambio": "remove and reinstall|replace|remove|reinstall",
-            "reemplazar": "remove and reinstall|replace|remove|reinstall",
-            "reemplazo": "remove and reinstall|replace|remove|reinstall",
-            "reinstalar": "remove and reinstall|reinstall",
-            "desmontar": "remove", "montar": "reinstall",
-            "comprobar": "check|inspection|test", "verificar": "check|inspection|test", "diagnosis": "check|test",
-            "programar": "program|coding|software", "codificar": "program|coding|code|software", "actualizar": "update|flash|refresh|update"
-        }
-
         # Limpieza inicial de texto sin acentos
         consulta_limpia = consulta_usuario.lower().strip()
         for orig, dest in [("í", "i"), ("ó", "o"), ("á", "a"), ("é", "e"), ("ú", "u"), ("ñ", "n")]:
