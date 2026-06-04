@@ -187,7 +187,7 @@ def buscador_tradicional_excel(consulta_usuario, df_contexto):
         }
 
         # =====================================================================
-        # 🎯 2. MEGA DICCIONARIO SEMÁNTICO (NÚCLEO DE TRADUCCIÓN)
+        # 🎯 2. MEGA DICCIONARIO SEMÁNTICO (NÚCLEO DE TRADUCCIÓN AMPLIADO)
         # =====================================================================
         mapa_raices = {
             # --- 🛠️ ACCIONES Y VERBOS ---
@@ -223,6 +223,7 @@ def buscador_tradicional_excel(consulta_usuario, df_contexto):
             "aparcamiento": "park|pdc|parking", 
             "sensor": "sensor|probe|detector", "sensores": "sensor",
             "sonda": "sensor|oxygen sensor|lambda", "lambda": "oxygen sensor|lambda",
+            "boton": "switch|button", "botones": "switch|button", "interruptor": "switch",
 
             # --- ⚙️ MOTOR, ADMISIÓN, ESCAPE Y REFRIGERACIÓN ---
             "motor": "engine assy|motor|engine", "motores": "engine",
@@ -273,7 +274,8 @@ def buscador_tradicional_excel(consulta_usuario, df_contexto):
             "porton": "tailgate|back door|rear door", "techo": "sunroof|roof|panoramic roof", "solar": "sunroof",
             "cristal": "glass|window", "luna": "windshield|windscreen|glass", "parabrisas": "windshield|windscreen",
             "elevalunas": "window regulator|window lifter", "cerradura": "door lock|lock assy", "cierre": "lock|latch",
-            "manilla": "handle|door handle", "maneta": "handle", "moldura": "molding|trim", "molduras": "molding|trim",
+            "manilla": "handle|door handle", "maneta": "handle", "manecilla": "handle|door handle", "manecillas": "handle",
+            "moldura": "molding|trim", "molduras": "molding|trim",
             "limpiaparabrisas": "wiper|wiper blade", "motor limpia": "wiper motor",
 
             # --- 🪑 ASIENTOS, COMPONENTES INTERIORES Y GUARNECIDOS ---
@@ -282,8 +284,11 @@ def buscador_tradicional_excel(consulta_usuario, df_contexto):
             "salpicadero": "dashboard|instrument panel", "consol": "console", "consola": "console",
             "reposacabezas": "headrest|head restraint", "reposabrazos": "armrest",
             "guarnecido": "trim|lining|panel", "tapizado": "trim|upholstery", "techo interior": "headlining|roof lining",
+            "panel puerta": "door trim|door panel", "paneles de puertas": "door trim|door trim panel",
+            "panel de puerta": "door trim|door panel", "paneles puerta": "door trim panel",
             "alfombrilla": "mat|floor mat", "alfombra": "carpet", "guantera": "glove box",
             "volante": "steering wheel",
+            "aireador": "air outlet|air vent|vent", "aireadores": "air outlet|vent",
 
             # --- ⚡ BATERÍAS, CABLEADOS Y ELEMENTOS DE UNIÓN ---
             "bateria": "battery|storage battery|bms", "vateria": "battery", "baterias": "battery",
@@ -297,9 +302,22 @@ def buscador_tradicional_excel(consulta_usuario, df_contexto):
             "cuna": "subframe|cradle", "bandeja": "tray|salver",
             "tapa": "cover|cap|lid", "cubierta": "cover|protector", "protector": "protector|shield|guard",
             "varilla": "rod|stay", "tirante": "rod|link|stay", "placa": "plate", "panel": "panel",
-            "grapa": "clip|retainer", "tornillo": "bolt|screw", "tuerca": "nut", "abrazadera": "clamp|clip",
+            "grapa": "clip|retainer", "tornillo": "bolt|screw", "tornillos": "bolt|screw",
+            "tuerca": "nut", "tuercas": "nut", "abrazadera": "clamp|clip",
             "filtro": "filter", "junta": "gasket|seal", "reten": "oil seal|seal", "tubo": "pipe|hose", 
             "manguito": "hose", "conducto": "pipe|line|duct",
+
+            # --- 🧪🧪 TOOOOODOS LOS LÍQUIDOS, FLUIDOS Y ACEITES DEL COCHE ---
+            "aceite": "oil|lubricant", "aceites": "oil",
+            "liquido": "fluid|liquid|coolant|oil", "liquidos": "fluid|liquid",
+            "refrigerante": "coolant|antifreeze", "anticongelante": "coolant|antifreeze",
+            "frenos": "brake fluid|brake liquid", "liquido frenos": "brake fluid",
+            "parabrisas": "washer fluid|washer liquid|wiper fluid", "limpiaparabrisas": "washer fluid|wiper fluid",
+            "valvulina": "gearbox oil|gear oil|transmission fluid", "transmision": "transmission fluid|gear oil",
+            "direccion": "steering fluid|power steering fluid", "hidraulico": "hydraulic fluid|hydraulic oil",
+            "climatizacion": "refrigerant|r1234yf|r134a|gas", "aire acondicionado": "refrigerant|gas",
+            "adblue": "adblue|ureas|urea", "urea": "urea|adblue",
+            "electrolito": "electrolyte",
 
             # --- 📍 UBICACIONES, ORIENTACIÓN Y LADOS ---
             "delantero": "fr|front", "delantera": "fr|front", "frontal": "fr|front", "alante": "fr|front",
