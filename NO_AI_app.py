@@ -434,29 +434,50 @@ def buscador_tradicional_excel(consulta_usuario, df_contexto):
             else:
                 df_resultados = df_base.head(40)
 
-            # =============================================================
-                # 🚗 CRIBA DE MARCA Y MODELO EXACTO (VERSIÓN TOTAL CON OMODA 9)
+           # =============================================================
+                # 🚗 CRIBA DE MARCA Y MODELO EXACTO INTEGRAL (ANTI-MEZCLAS)
                 # =============================================================
+                # 1. Forzamos filtro estricto de marca principal
                 if "omoda" in consulta_limpia:
                     df_base = df_base[df_base['Modelo'].str.contains("omoda", na=False)]
-                    # Filtro específico según el número de modelo OMODA
-                    if "5" in consulta_limpia:
-                        df_base = df_base[df_base['Modelo'].str.contains("5", na=False)]
-                    elif "7" in consulta_limpia:
-                        df_base = df_base[df_base['Modelo'].str.contains("7", na=False)]
-                    elif "9" in consulta_limpia:
-                        df_base = df_base[df_base['Modelo'].str.contains("9", na=False)]
-                        
                 elif "jaecoo" in consulta_limpia:
                     df_base = df_base[df_base['Modelo'].str.contains("jaecoo", na=False)]
-                    # Filtro específico según el número de modelo JAECOO
-                    if "5" in consulta_limpia:
-                        df_base = df_base[df_base['Modelo'].str.contains("5", na=False)]
-                    elif "7" in consulta_limpia:
-                        df_base = df_base[df_base['Modelo'].str.contains("7", na=False)]
-                    elif "8" in consulta_limpia:
-                        df_base = df_base[df_base['Modelo'].str.contains("8", na=False)]
 
+                # 2. Rompemos los empates aislando el número exacto del modelo si existe en la consulta
+                modelos_numericos = ["5", "7", "8", "9"]
+                numero_detectado = None
+                
+                for num in modelos_numericos:
+                    # Comprobamos si el número está como palabra suelta (ej: "jaecoo 8") o pegada ("jaecoo8")
+                    if num in lista_palabras_usuario or any(f"jaecoo{num}" in w or f"omoda{num}" in w for w in lista_palabras_usuario) or num in consulta_limpia:
+                        numero_detectado = num
+                        break # Nos quedamos con el primer número de modelo detectado
+                
+                if numero_detectado:
+                    # Filtramos drásticamente: El modelo en el catálogo DEBE contener ese número
+                    df_base = df_base[df_base['Modelo'].str.contains(numero_detectado, na=False)]
+
+                # [ ... Aquí se mantiene intacto el bucle de componentes y filtros secundarios ... ]
+
+                # =============================================================
+                # 📊 ALGORITMO DE PUNTUACIÓN (SCORE CORREGIDO)
+                # =============================================================
+                # Forzamos que si el usuario escribió un número de modelo, este cuente para el algoritmo
+                if numero_detectado and numero_detected not in palabras_regex:
+                    palabras_regex.append(numero_detectado)
+
+                df_base['score'] = 0
+                if palabras_regex:
+                    regex_puntos = '|'.join(palabras_regex)
+                    df_base['score'] += df_base['Modelo'].str.contains(regex_puntos, na=False).astype(int) * 10 # Más peso al modelo
+                    df_base['score'] += df_base['Nombre de la Pieza'].str.contains(regex_puntos, na=False).astype(int) * 10
+                    df_base['score'] += df_base['Operación Técnica'].str.contains(regex_puntos, na=False).astype(int) * 10
+                    
+                    # Ordenamos con prioridad absoluta al score de relevancia más alto
+                    df_resultados = df_base[df_base['score'] > 0].sort_values(by=['score'], ascending=False).head(80)
+                else:
+                    df_resultados = df_base.head(40)
+                    
         if df_resultados.empty:
             return None
 
