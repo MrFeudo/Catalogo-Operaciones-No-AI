@@ -220,7 +220,7 @@ def buscador_tradicional_excel(consulta_usuario, df_contexto):
             # Sinónimos de habitáculo y lados del vehículo (Piloto / Copiloto)
             "conductor": "driver|lh|left", "piloto": "driver|lh|left",
             "copiloto": "passenger|rh|right", "pasajero": "passenger|rh|right", "acompañante": "passenger|rh|right",
-            "acompanante": "passenger|rh|right"
+            "acompanante": "passenger|rh|right",
             
             # --- 🔋 MOTORIZACIONES ---
             "hev": "hev|hybrid", "hibrido": "hev|hybrid", "hibrida": "hev|hybrid",
