@@ -3,15 +3,8 @@ import pandas as pd
 import datetime
 import io
 import unicodedata
-from google import genai
-from google.genai import types
-from google.oauth2 import service_account
-from PIL import Image
 
-def normalizar_texto(texto):
-    texto = str(texto)
-    return ''.join(c for c in unicodedata.normalize('NFD', texto) if unicodedata.category(c) != 'Mn').lower()
-
+# Set page configuration
 st.set_page_config(page_title="Buscador Técnico OMODA & JAECOO", layout="wide")
 
 # =========================================================================
@@ -37,7 +30,6 @@ IDIOMAS = {
         "menu_titulo": "### 🗺️ Menú de Navegación",
         "menu_radio": "Selecciona una herramienta:",
         "menu_taller": "📋 Tiempos de Taller",
-        "menu_precios": "💰 Precios de Recambios",
         "menu_solicitar": "📝 Solicitar Operación",
         "pass_titulo": "🔐 Acceso Red de Dealers",
         "pass_input": "Introduce la contraseña de acceso:",
@@ -53,19 +45,10 @@ IDIOMAS = {
         "res_taller": "### 📋 Resultados encontrados: {} operaciones",
         "warn_taller": "⚠️ No se encontraron operaciones con los criterios seleccionados.",
         "err_taller": "Error al procesar la base de datos de tiempos: {}",
-        "precios_titulo": "💰 Maestro de Tarifas y Precios de Recambios",
-        "precios_sub": "Consulta oficializada de precios y tarifas de distribución vigentes.",
-        "f_buscar_recambio": "🔍 Buscar por Código de recambio o Descripción de pieza:",
-        "f_mercado_precios": "Filtrar por Mercado / Organización:",
-        "f_tarifa": "Filtrar por Tipo de Tarifa:",
-        "res_precios": "### 📦 {} referencias de recambios localizadas",
-        "warn_precios": "⚠️ No se encontraron recambios con los criterios seleccionados.",
-        "err_precios": "Error al procesar el maestro de precios: {}",
         "todos": "Todos",
         "todas": "Todas",
-        "filtro_modelo": "Filtrar por Modelo:",
         "solicitar_titulo": "📝 Solicitud de Operaciones Adicionales de Mano de Obra",
-        "solicitar_sub": "Utilice este formulario para solicitar el alta de nuevas operaciones o precios en el maestro de HQ.",
+        "solicitar_sub": "Utilice este formulario para solicitar el alta de nuevas operaciones en el maestro de HQ.",
         "form_sub": "Datos de la Solicitud (Campos obligatorios *)",
         "form_marca": "Marca del vehículo *",
         "form_modelo": "INTRODUCIR MODELO *",
@@ -76,18 +59,15 @@ IDIOMAS = {
         "form_ref": "REFERENCIA DE PIEZA (Opcional)",
         "form_ref_holder": "Ej. 7365747465AA",
         "form_op": "OPERACIÓN QUE SE SOLICITA AÑADIR *",
-        "form_op_holder": "Describa detalladamente la operation técnica o falta de precio que requiere el taller...",
+        "form_op_holder": "Describa detalladamente la operación técnica o falta de precio que requiere el taller...",
         "form_btn": "Enviar Solicitud a Central",
         "err_campos": "❌ Por favor, rellene todos los campos obligatorios (*).",
-        "err_vin_corto": "❌ El VIN introducido es demasiado corto. Revíselo.",
-        "success_sheet": "✅ ¡Solicitud registrada con éxito! Los datos se han volcado a la plantilla de Central.",
-        "warn_contingencia": "⚠️ Formulario correcto, guardado en modo de contingencia local."
+        "err_vin_corto": "❌ El VIN introducido es demasiado corto. Revíselo."
     },
     "English": {
         "menu_titulo": "### 🗺️ Navigation Menu",
         "menu_radio": "Select a tool:",
         "menu_taller": "📋 Workshop Times",
-        "menu_precios": "💰 Spare Parts Prices",
         "menu_solicitar": "📝 Request Operation",
         "pass_titulo": "🔐 Dealer Network Access",
         "pass_input": "Enter access password:",
@@ -103,19 +83,10 @@ IDIOMAS = {
         "res_taller": "### 📋 Results found: {} operations",
         "warn_taller": "⚠️ No operations found matching the selected criteria.",
         "err_taller": "Error processing workshop times database: {}",
-        "precios_titulo": "💰 Master Rate & Spare Parts Prices",
-        "precios_sub": "Official consultation of current prices and distribution rates.",
-        "f_buscar_recambio": "🔍 Search by Part Code or Description:",
-        "f_mercado_precios": "Filter by Market / Organization:",
-        "f_tarifa": "Filter by Rate Type:",
-        "res_precios": "### 📦 {} spare parts references located",
-        "warn_precios": "⚠️ No spare parts found matching the selected criteria.",
-        "err_precios": "Error processing master price list: {}",
         "todos": "All",
         "todas": "All",
-        "filtro_modelo": "Filter by Model:",
         "solicitar_titulo": "📝 Request for Additional Labor Operations",
-        "solicitar_sub": "Use this form to request new operations or prices to be added to HQ master list.",
+        "solicitar_sub": "Use this form to request new operations to be added to HQ master list.",
         "form_sub": "Request Details (* Required fields)",
         "form_marca": "Vehicle Brand *",
         "form_modelo": "ENTER MODEL *",
@@ -126,12 +97,10 @@ IDIOMAS = {
         "form_ref": "PART REFERENCE (Optional)",
         "form_ref_holder": "e.g., 7365747465AA",
         "form_op": "OPERATION REQUESTED TO BE ADDED *",
-        "form_op_holder": "Describe in detail the technical operation or missing price required by the workshop...",
+        "form_op_holder": "Describe in detail the technical operation required by the workshop...",
         "form_btn": "Send Request to HQ",
         "err_campos": "❌ Please fill in all required fields (*).",
-        "err_vin_corto": "❌ The entered VIN is too short. Please check it.",
-        "success_sheet": "✅ Request successfully registered! Data transferred to the HQ template.",
-        "warn_contingencia": "⚠️ Form valid, saved in local contingency mode."
+        "err_vin_corto": "❌ The entered VIN is too short. Please check it."
     },
     "Chinese (中文)": {
         "menu_titulo": "### 🗺️ 导航菜单",
@@ -153,19 +122,10 @@ IDIOMAS = {
         "res_taller": "### 📋 找到的结果: {} 个操作",
         "warn_taller": "⚠️ 未找到符合选择条件的工时操作。",
         "err_taller": "处理车间工时数据库时出错: {}",
-        "precios_titulo": "💰 零售价与零配件价格总表",
-        "precios_sub": "官方查询现行价格及分销费率。",
-        "f_buscar_recambio": "🔍 按零件代码或描述搜索:",
-        "f_mercado_precios": "按市场 / 组织筛选:",
-        "f_tarifa": "按费率类型筛选:",
-        "res_precios": "### 📦 已定位 {} 个零配件参考",
-        "warn_precios": "⚠️ 未找到符合选择条件的零配件。",
-        "err_precios": "处理价格总表时出错: {}",
         "todos": "全部",
         "todas": "全部",
-        "filtro_modelo": "按车型过滤:",
         "solicitar_titulo": "📝 申请新增工时操作",
-        "solicitar_sub": "使用此表单申请在总部(HQ)主数据中添加新工时操作 or 价格。",
+        "solicitar_sub": "使用此表单申请在总部(HQ)主数据中添加新工时操作。",
         "form_sub": "申请信息 (* 为必填项)",
         "form_marca": "车辆品牌 *",
         "form_modelo": "输入车型 *",
@@ -176,17 +136,15 @@ IDIOMAS = {
         "form_ref": "零件编号 (选填)",
         "form_ref_holder": "例如: 7365747465AA",
         "form_op": "申请添加的操作内容 *",
-        "form_op_holder": "请详细描述车间所需的工时操作 or 缺失的价格...",
+        "form_op_holder": "请详细描述车间所需的工时操作...",
         "form_btn": "发送申请至总部",
         "err_campos": "❌ 请填写所有必填项 (*)。",
-        "err_vin_corto": "❌ 输入的 VIN 太短，请检查。",
-        "success_sheet": "✅ 申请登记成功！数据已同步至总部模板。",
-        "warn_contingencia": "⚠️ 表单正确，已保存至本地应急模式。"
+        "err_vin_corto": "❌ 输入的 VIN 太短，请检查。"
     }
 }
 
 # ==========================================
-# 3. BARRA LATERAL: LOGO + SELECCIÓN IDIOMA + MENÚ
+# 3. BARRA LATERAL: CONFIGURACIÓN E IDIOMA
 # ==========================================
 try:
     st.sidebar.image("logo_empresa.png", use_container_width=True)
@@ -195,7 +153,6 @@ except Exception:
 
 st.sidebar.markdown("---")
 
-# CORRECCIÓN DE SEGURIDAD: Añadimos 'key' explícita para evitar duplicación de ID en recargas
 idioma_seleccionado = st.sidebar.selectbox(
     "🌐 Language / Idioma / 语言:",
     ["Español", "English", "Chinese (中文)"],
@@ -206,7 +163,7 @@ st.session_state.idioma = idioma_seleccionado
 txt = IDIOMAS[st.session_state.idioma]
 
 st.sidebar.markdown("---")
-st.sidebar.sidebar_markdown_target = st.sidebar.markdown(txt["menu_titulo"])
+st.sidebar.markdown(txt["menu_titulo"])
 
 opcion_menu = st.sidebar.radio(
     txt["menu_radio"],
@@ -214,8 +171,12 @@ opcion_menu = st.sidebar.radio(
     key="menu_navegacion_app"
 )
 
-mapa_raices = {
-            # --- 🛠️ ACCIONES, VERBOS Y REGLAS DE TRABAJO ---
+# =====================================================================
+# 🔍 4. MOTOR DE TRADUCCIÓN Y BÚSQUEDA SEMÁNTICA LOCAL (SIN IA)
+# =====================================================================
+def buscador_tradicional_excel(consulta_usuario, df_contexto):
+    try:
+        mapa_raices = {
             "cambiar": "remove and reinstall|replace|remove|reinstall",
             "cambio": "remove and reinstall|replace|remove|reinstall",
             "sustituir": "remove and reinstall|replace|remove|reinstall",
@@ -239,7 +200,6 @@ mapa_raices = {
             "limpiar": "clean|cleaning|wash",
             "pulir": "polishing|polish", "pulido": "polishing|polish",
             
-            # --- 🔌 CENTRALITAS, MÓDULOS Y ELECTRÓNICA DE CONTROL ---
             "ecu": "ecu|engine control unit|engine control module",
             "ems": "ems|engine management system",
             "mcu": "mcu|motor control unit|motor control module",
@@ -261,7 +221,6 @@ mapa_raices = {
             "modulo": "control module|module", 
             "modulos": "control module|module",
 
-            # --- ⚡ BATERÍAS, ALTA TENSIÓN Y SISTEMA ELÉCTRICO ---
             "bateria": "battery|storage battery|bms|tecu", 
             "vateria": "battery|storage battery", 
             "baterias": "battery|storage battery",
@@ -279,7 +238,6 @@ mapa_raices = {
             "bujia": "spark plug", "bujias": "spark plug",
             "bobina": "ignition coil", "bobinas": "ignition coil",
 
-            # --- 🛡️ SEGURIDAD, ASISTENCIAS ADAS Y SENSORES ---
             "fcm": "fcm|front camera module|forward camera|front view camera", 
             "camara": "camera|fcm|avm|rear view", "camaras": "camera",
             "frm": "frm|front radar module|forward radar", 
@@ -300,7 +258,6 @@ mapa_raices = {
             "hebilla": "buckle", "hebillas": "buckle",
             "pretensor": "pretensioner",
 
-            # --- ⚙️ MOTOR, ADMISIÓN, ESCAPE Y REFRIGERACIÓN ---
             "motor": "engine assy|motor|engine", "motores": "engine",
             "culata": "cylinder head", "piston": "piston", "biela": "connecting rod",
             "cigüeñal": "crankshaft", "arbol": "camshaft", "levas": "camshaft",
@@ -317,7 +274,6 @@ mapa_raices = {
             "termostato": "thermostat",
             "canister": "canister|evap canister", "vapores": "canister|evap|solenoid|pipe",
 
-            # --- 🚗 TRANSMISIÓN, CAJA DE CAMBIOS Y EMBRAGUE ---
             "dct": "dct|dual clutch transmission|double clutch",
             "cambio": "transmission|gearbox|dct|gearshift", 
             "caja": "transmission|gearbox", "caja cambios": "transmission|gearbox",
@@ -328,7 +284,6 @@ mapa_raices = {
             "diferencial": "differential", "reductora": "reducer",
             "selector": "selector|shifter|gearshift lever",
 
-            # --- 🥾 CHASIS, SUSPENSIÓN Y FRENOS ---
             "esp": "esp|electronic stability program",
             "eps": "eps|electric power steering",
             "epb": "epb|electrical park brake|parking brake",
@@ -348,7 +303,6 @@ mapa_raices = {
             "buge": "hub|wheel hub", "cojinete": "bearing", "rodamiento": "bearing",
             "direccion": "steering|eps", "cremallera": "steering gear|steering rack",
 
-            # --- 📦 CARROCERÍA, INTERIOR, EXTERIOR Y COLISIÓN ---
             "capo": "hood|engine hood",
             "paragolpes": "bumper", "defensa": "bumper", "parachoques": "bumper",
             "faro": "headlamp|headlight", "faros": "headlamp", 
@@ -366,9 +320,8 @@ mapa_raices = {
             "asiento": "seat", "asientos": "seat",
             "salpicadero": "dashboard|instrument panel",
             "moldura": "molding|trim", "molduras": "molding|trim",
-            "limpiaparabrisas": "wiper|wiper blade", "limpiaparabrisas": "wiper", "motor limpia": "wiper motor",
+            "limpiaparabrisas": "wiper|wiper blade", "motor limpia": "wiper motor",
 
-            # --- 🩻 SUPORTACIÓN, ELEMENTOS DE UNIÓN Y MENUDENCIA ---
             "soporte": "bracket|support|mount|holder", "soportes": "bracket|support|mount",
             "cuna": "subframe|cradle|bracket|salver|tray", 
             "bandeja": "tray|salver",
@@ -378,7 +331,6 @@ mapa_raices = {
             "grapa": "clip|retainer", "tornillo": "bolt|screw", "tuerca": "nut",
             "abrazadera": "clamp|clip",
 
-            # --- 🧪 FLUIDOS, JUNTAS Y FILTROS ---
             "filtro": "filter", "filtros": "filter",
             "filtro aceite": "oil filter", "filtro aire": "air filter", "filtro habitaculo": "cabin filter|pollen filter",
             "junta": "gasket|seal", "juntas": "gasket|seal", "reten": "oil seal|seal",
@@ -386,7 +338,6 @@ mapa_raices = {
             "anticongelante": "coolant",
             "tubo": "pipe|tube|hose", "manguito": "hose", "conducto": "pipe|line|duct",
 
-            # --- 📍 UBICACIONES, ORIENTACIÓN Y LADOS ---
             "delantero": "fr", "delantera": "fr", "frontal": "fr", "alante": "fr",
             "trasero": "rr", "trasera": "rr", "posterior": "rr", "atras": "rr",
             "izquierdo": "lh", "izquierda": "lh", "izq": "lh", "izda": "lh",
@@ -395,7 +346,6 @@ mapa_raices = {
             "central": "central|middle", "lateral": "side"
         }
 
-        # --- DICCIONARIO DE EXPANSIÓN DE MODELOS ---
         abreviaturas_modelos = {
             "j5": "jaecoo 5", "jaecoo5": "jaecoo 5", "j-5": "jaecoo 5",
             "j7": "jaecoo 7", "jaecoo7": "jaecoo 7", "j-7": "jaecoo 7",
@@ -404,19 +354,16 @@ mapa_raices = {
             "hibrido": "hev", "electrico": "bev", "gasolina": "ice"
         }
 
-        # Limpieza inicial de texto sin acentos
         consulta_limpia = consulta_usuario.lower().strip()
         for orig, dest in [("í", "i"), ("ó", "o"), ("á", "a"), ("é", "e"), ("ú", "u"), ("ñ", "n")]:
             consulta_limpia = consulta_limpia.replace(orig, dest)
 
-        # Expandimos los modelos
         for abrev, mod_real in abreviaturas_modelos.items():
             if abrev in consulta_limpia.split() or abrev in consulta_limpia:
                 consulta_limpia = consulta_limpia.replace(abrev, mod_real)
 
         lista_palabras_usuario = consulta_limpia.split()
 
-        # Construimos las raíces traducidas al inglés
         palabras_regex = []
         for esp, eng in mapa_raices.items():
             if esp in consulta_limpia:
@@ -429,122 +376,101 @@ mapa_raices = {
 
         palabras_regex = list(set(palabras_regex))
 
-        # =====================================================================
-        # 🔍 2. MOTOR DE FILTRADO TRADICIONAL (APERTURA TOTAL SIN IA)
-        # =====================================================================
-        try:
-            terminos_manuales = ["manual", "adicional", "extra", "tiempo mas", "añadir horas", "universal", "marron", "baremo no"]
-            if any(tm in lista_palabras_usuario for tm in terminos_manuales):
-                df_resultados = df_contexto[df_contexto['Operación Técnica'].astype(str).str.lower().str.contains("universal", na=False)].head(20)
+        terminos_manuales = ["manual", "adicional", "extra", "tiempo mas", "añadir horas", "universal", "marron", "baremo no"]
+        if any(tm in lista_palabras_usuario for tm in terminos_manuales):
+            df_resultados = df_contexto[df_contexto['Operación Técnica'].astype(str).str.lower().str.contains("universal", na=False)].head(20)
+        else:
+            df_base = df_contexto.copy()
+            
+            for col in ['Modelo', 'Nombre de la Pieza', 'Operación Técnica']:
+                df_base[col] = df_base[col].astype(str).str.lower().str.strip()
+
+            if "omoda" in consulta_limpia:
+                df_base = df_base[df_base['Modelo'].str.contains("omoda", na=False)]
+            elif "jaecoo" in consulta_limpia:
+                df_base = df_base[df_base['Modelo'].str.contains("jaecoo", na=False)]
+
+            componentes_encontrados = []
+            palabras_excluidas_criba = [
+                "cambiar", "cambio", "sustituir", "sustitucion", "reemplazar", "reemplazo",
+                "desmontar", "montar", "programar", "codificar", "actualizar", "reprogramar",
+                "delantero", "delantera", "frontal", "alante", "trasero", "trasera", "posterior", "atras",
+                "izquierdo", "izquierda", "izq", "izda", "derecho", "derecha", "der", "drcha",
+                "superior", "inferior", "interno", "externo", "central", "lateral", "ajustar", "alinear", "calibrar"
+            ]
+            
+            for esp, eng in mapa_raices.items():
+                if esp in consulta_limpia and esp not in palabras_excluidas_criba:
+                    componentes_encontrados.extend(eng.split('|'))
+            
+            if componentes_encontrados:
+                regex_comp = '|'.join(set(componentes_encontrados))
+                df_base = df_base[df_base['Nombre de la Pieza'].str.contains(regex_comp, na=False) | 
+                                  df_base['Operación Técnica'].str.contains(regex_comp, na=False)]
+
+            filtros_secundarios = {
+                "wiring|harness|wire": ["cable", "cableado", "instalacion", "mazo"],
+                "sensor": ["sensor", "sonda"],
+                "bracket|salver|tray|support|pressure|rod|plate": ["soporte", "cuna", "bandeja", "tapa", "cubierta", "varilla", "placa"]
+            }
+            
+            for eng_purgar, esp_palabras in filtros_secundarios.items():
+                usuario_pide_secundario = any(w in lista_palabras_usuario for w in esp_palabras)
+                if not usuario_pide_secundario:
+                    condicion_purgar = df_base['Nombre de la Pieza'].str.contains(eng_purgar, na=False) | \
+                                       df_base['Operación Técnica'].str.contains(eng_purgar, na=False)
+                    df_base = df_base[~condicion_purgar]
+
+            df_base['score'] = 0
+            if palabras_regex:
+                regex_puntos = '|'.join(palabras_regex)
+                df_base['score'] += df_base['Modelo'].str.contains(regex_puntos, na=False).astype(int) * 5
+                df_base['score'] += df_base['Nombre de la Pieza'].str.contains(regex_puntos, na=False).astype(int) * 10
+                df_base['score'] += df_base['Operación Técnica'].str.contains(regex_puntos, na=False).astype(int) * 10
+                
+                df_resultados = df_base[df_base['score'] > 0].sort_values(by=['score', 'Modelo', 'Nombre de la Pieza'], ascending=[False, True, True]).head(80)
             else:
-                df_base = df_contexto.copy()
-                
-                # Forzamos minúsculas internas para que Python empareje bien
-                for col in ['Modelo', 'Nombre de la Pieza', 'Operación Técnica']:
-                    df_base[col] = df_base[col].astype(str).str.lower().str.strip()
+                df_resultados = df_base.head(40)
 
-                # Criba por marca principal
-                if "omoda" in consulta_limpia:
-                    df_base = df_base[df_base['Modelo'].str.contains("omoda", na=False)]
-                elif "jaecoo" in consulta_limpia:
-                    df_base = df_base[df_base['Modelo'].str.contains("jaecoo", na=False)]
-
-                # Intersección obligatoria del componente base (IGNORANDO ACCIONES Y ORIENTACIONES)
-                componentes_encontrados = []
-                palabras_excluidas_criba = [
-                    "cambiar", "cambio", "sustituir", "sustitucion", "reemplazar", "reemplazo",
-                    "desmontar", "montar", "programar", "codificar", "actualizar", "reprogramar",
-                    "delantero", "delantera", "frontal", "alante", "trasero", "trasera", "posterior", "atras",
-                    "izquierdo", "izquierda", "izq", "izda", "derecho", "derecha", "der", "drcha",
-                    "superior", "inferior", "interno", "externo", "central", "lateral", "ajustar", "alinear", "calibrar"
-                ]
-                
-                for esp, eng in mapa_raices.items():
-                    if esp in consulta_limpia and esp not in palabras_excluidas_criba:
-                        componentes_encontrados.extend(eng.split('|'))
-                
-                if componentes_encontrados:
-                    regex_comp = '|'.join(set(componentes_encontrados))
-                    df_base = df_base[df_base['Nombre de la Pieza'].str.contains(regex_comp, na=False) | 
-                                      df_base['Operación Técnica'].str.contains(regex_comp, na=False)]
-
-                # Algoritmo de exclusión por palabra exacta independiente
-                filtros_secundarios = {
-                    "wiring|harness|wire": ["cable", "cableado", "instalacion", "mazo"],
-                    "sensor": ["sensor", "sonda"],
-                    "bracket|salver|tray|support|pressure|rod|plate": ["soporte", "cuna", "bandeja", "tapa", "cubierta", "varilla", "placa"]
-                }
-                
-                for eng_purgar, esp_palabras in filtros_secundarios.items():
-                    usuario_pide_secundario = any(w in lista_palabras_usuario for w in esp_palabras)
-                    if not usuario_pide_secundario:
-                        condicion_purgar = df_base['Nombre de la Pieza'].str.contains(eng_purgar, na=False) | \
-                                           df_base['Operación Técnica'].str.contains(eng_purgar, na=False)
-                        df_base = df_base[~condicion_purgar]
-
-                # Algoritmo de Puntuación (Score) de coincidencia semántica
-                df_base['score'] = 0
-                if palabras_regex:
-                    regex_puntos = '|'.join(palabras_regex)
-                    df_base['score'] += df_base['Modelo'].str.contains(regex_puntos, na=False).astype(int) * 5
-                    df_base['score'] += df_base['Nombre de la Pieza'].str.contains(regex_puntos, na=False).astype(int) * 10
-                    df_base['score'] += df_base['Operación Técnica'].str.contains(regex_puntos, na=False).astype(int) * 10
-                    
-                    # Apertura total: Nos quedamos con hasta las 80 mejores coincidencias para dar variedad de motores
-                    df_resultados = df_base[df_base['score'] > 0].sort_values(by=['score', 'Modelo', 'Nombre de la Pieza'], ascending=[False, True, True]).head(80)
-                else:
-                    df_resultados = df_base.head(40)
-
-                # Red de seguridad si el filtro es hiper-estricto y se vacía
-                if df_resultados.empty:
-                    if "omoda" in consulta_limpia:
-                        df_resultados = df_contexto[df_contexto['Modelo'].astype(str).str.lower().str.contains("omoda", na=False)].head(60)
-                    elif "jaecoo" in consulta_limpia:
-                        df_resultados = df_contexto[df_contexto['Modelo'].astype(str).str.lower().str.contains("jaecoo", na=False)].head(60)
-                    else:
-                        df_resultados = df_contexto.head(40)
-
-            # =====================================================================
-            # 🔴 3. RETORNO DE FILAS SIN ALTERAR (INGLES ORIGINAL Y ORDENADO)
-            # =====================================================================
             if df_resultados.empty:
-                return None
+                if "omoda" in consulta_limpia:
+                    df_resultados = df_contexto[df_contexto['Modelo'].astype(str).str.lower().str.contains("omoda", na=False)].head(60)
+                elif "jaecoo" in consulta_limpia:
+                    df_resultados = df_contexto[df_contexto['Modelo'].astype(str).str.lower().str.contains("jaecoo", na=False)].head(60)
+                else:
+                    df_resultados = df_contexto.head(40)
 
-            # Recuperamos las celdas nativas inalteradas del catálogo original de Central
-            df_final_taller = df_contexto.loc[df_resultados.index].copy()
-            
-            # Ordenamos primero por Modelo para agrupar limpiamente la salida en la interfaz
-            df_final_taller = df_final_taller.sort_values(by=['Modelo', 'Nombre de la Pieza'], ascending=[True, True])
-            
-            return df_final_taller[['Modelo', 'Nombre de la Pieza', 'Código de Referencia', 'Operación Técnica', 'Tiempo Estándar (UT/Horas)']]
+        if df_resultados.empty:
+            return None
 
-        except Exception as e:
-            return f"❌ Error interno al procesar el filtro de relevancia: {str(e)}"
+        df_final_taller = df_contexto.loc[df_resultados.index].copy()
+        df_final_taller = df_final_taller.sort_values(by=['Modelo', 'Nombre de la Pieza'], ascending=[True, True])
+        
+        return df_final_taller[['Modelo', 'Nombre de la Pieza', 'Código de Referencia', 'Operación Técnica', 'Tiempo Estándar (UT/Horas)']]
 
     except Exception as e:
-        return f"❌ Error en el motor de búsqueda: {str(e)}"
-        
+        return None
+
 # ==========================================
-# 4. SISTEMA DE SEGURIDAD CONTRASEÑA
+# 5. SISTEMA DE SEGURIDAD CONTRASEÑA
 # ==========================================
 def check_password():
     if not st.session_state.authenticated:
         st.title(txt["pass_titulo"])
-        # Añadimos key única al password input también para blindar el acceso contra duplicados
         password = st.text_input(txt["pass_input"], type="password", key="pass_input_unico")
         if st.button(txt["pass_boton"], key="pass_btn_unico"):
             if password == "DealersOJ2026":
                 st.session_state.authenticated = True
                 st.rerun()
             else:
-                st.error(txt["error_pass"] if "error_pass" in txt else txt.get("pass_error", "❌ Contraseña incorrecta"))
+                st.error(txt.get("pass_error", "❌ Contraseña incorrecta"))
         return False
     return True
 
 if check_password():
     
-  # =========================================================================
-    # PANTALLA 1: TIEMPOS DE TALLER (CON ESTADO PERSISTENTE DE IA)
+    # =========================================================================
+    # PANTALLA 1: TIEMPOS DE TALLER (CON MOTOR DE TRADUCCIÓN LOCAL)
     # =========================================================================
     if opcion_menu == txt["menu_taller"]:
         
@@ -583,46 +509,45 @@ if check_password():
             st.write(txt["taller_sub"])
             st.markdown("---")
 
-            # 🛡️ INICIALIZADOR DEL ESTADO DE BÚSQUEDA (Evita que el resultado desaparezca)
-            if "resultado_ia_excel" not in st.session_state:
-                st.session_state.resultado_ia_excel = None
+            if "resultado_tradicional_excel" not in st.session_state:
+                st.session_state.resultado_tradicional_excel = None
 
             # =================================================================
-            # 🤖 SECCIÓN A: ASISTENTE IA DE BÚSQUEDA BILINGÜE
+            # 🤖 SECCIÓN A: ASISTENTE TRADICIONAL DE BÚSQUEDA BILINGÜE
             # =================================================================
             st.subheader("🤖 Buscar operación")
-            st.write("Escribe tu consulta en español. La IA traducirá los términos mecánicos y buscará en las columnas en inglés.")
+            st.write("Escribe tu consulta en español (ej: cambiar airbag delantero jaecoo 7). El sistema traducirá los términos y buscará en inglés.")
             
             consulta_rapida = st.text_input(
                 "¿Qué operación, pieza o modelo necesitas localizar?",
                 placeholder="Ejemplo: cambiar pastillas de freno delanteras del omoda 5 / desmontar paragolpes jaecoo 7...",
-                key="campo_consulta_ia_excel"
+                key="campo_consulta_tradicional_excel"
             )
 
             st.warning("""
             ⚠️ **RECORDATORIO** Antes de tramitar cualquier reclamación, verifique obligatoriamente que **la pieza a reclamar coincide con el pedido exacto realizado a Recambios** para esta reparación. 
             """)
 
-            if st.button("Buscar operación", type="secondary", width='stretch'):
+            if st.button("Buscar operación", type="primary"):
                 if not consulta_rapida.strip():
                     st.warning("⚠️ Introduce una descripción o término para realizar la búsqueda.")
                 else:
                     with st.spinner("🔍 Traduciendo y escaneando el catálogo de operaciones..."):
-                        # Guardamos el resultado en la sesión persistente
-                        st.session_state.resultado_ia_excel = buscador_inteligente_excel(consulta_rapida, data)
-                        st.rerun()
+                        st.session_state.resultado_tradicional_excel = buscador_tradicional_excel(consulta_rapida, data)
 
-            # RENDERIZADO ESTÁTICO DEL RESULTADO: Si hay algo guardado, se pinta sí o sí
-            if st.session_state.resultado_ia_excel:
-                st.markdown("#### ⚙️ Resultado de la Consulta:")
-                if "❌ No se ha encontrado" in st.session_state.resultado_ia_excel:
-                    st.error(st.session_state.resultado_ia_excel)
-                else:
-                    st.info(st.session_state.resultado_ia_excel)
+            # RENDERIZADO DEL RESULTADO TRADICIONAL EN DATAFRAME INTERACTIVO
+            if st.session_state.resultado_tradicional_excel is not None:
+                st.markdown("#### 🎯 Operaciones encontradas en el catálogo oficial:")
                 
-                # Botón auxiliar opcional para limpiar la pantalla de la IA
-                if st.button("🗑️ Limpiar búsqueda de la IA", key="btn_limpiar_ia"):
-                    st.session_state.resultado_ia_excel = None
+                # Pintamos los resultados de forma limpia e interactiva
+                st.dataframe(
+                    st.session_state.resultado_tradicional_excel,
+                    use_container_width=True,
+                    hide_index=True
+                )
+                
+                if st.button("🗑️ Limpiar búsqueda", key="btn_limpiar_tradicional"):
+                    st.session_state.resultado_tradicional_excel = None
                     st.rerun()
 
             st.markdown("---")
@@ -646,15 +571,12 @@ if check_password():
             with col_m:
                 if 'Mercado / Organización' in data.columns:
                     mercados_disponibles = [txt["todos"]] + [str(m).strip() for m in data['Mercado / Organización'].unique() if str(m).strip() != ""]
-                    
                     indice_defecto = 0
                     for idx, m in enumerate(mercados_disponibles):
                         if "spain" in m.lower() or "oj spain" in m.lower():
                             indice_defecto = idx
                             break
-                    
-                    market_label = txt["f_mercado_taller"]
-                    mercado_seleccionado = st.selectbox(market_label, mercados_disponibles, index=indice_defecto)
+                    mercado_seleccionado = st.selectbox(txt["f_mercado_taller"], mercados_disponibles, index=indice_defecto)
                 else:
                     mercado_seleccionado = txt["todos"]
                     
@@ -696,7 +618,7 @@ if check_password():
             st.error(txt["err_taller"].format(e))
 
     # =========================================================================
-    # PANTALLA 3: SOLICITUD DE OPERACIONES ADICIONALES (CONEXIÓN GOOGLE SHEETS)
+    # PANTALLA 2: SOLICITUD DE OPERACIONES ADICIONALES (CONEXIÓN GOOGLE SHEETS)
     # =========================================================================
     elif opcion_menu == txt["menu_solicitar"]:
         st.title(txt["solicitar_titulo"])
@@ -751,7 +673,6 @@ if check_password():
             codigo_producto_auto = MAPEO_MODELOS[modelo_comercial]
             st.text_input(txt["form_hq_code"], value=codigo_producto_auto, disabled=True)
         
-        # Formulario estructurado
         with st.form("hq_operation_form", clear_on_submit=True):
             c1, c2 = st.columns(2)
             with c1:
@@ -778,7 +699,6 @@ if check_password():
                     
                     subida_exitosa = False
                     
-                    # 1. Intentar conectar y leer el estado actual de la nube
                     try:
                         from streamlit_gsheets import GSheetsConnection
                         conn = st.connection("gsheets", type=GSheetsConnection)
@@ -803,7 +723,6 @@ if check_password():
                         df_cloud = pd.DataFrame(columns=columnas_orden)
                         spreadsheet_url = ""
                     
-                    # 2. Estructurar la nueva fila
                     nueva_solicitud = {
                         "SN": int(nuevo_sn),
                         "Submitted on": str(ahora.strftime("%Y-%m-%d %H:%M:%S")),
@@ -819,7 +738,6 @@ if check_password():
                         "DEALER": str(dealer)
                     }
                     
-                    # 3. Intentar subir los datos a Google Sheets
                     try:
                         df_nuevo = pd.DataFrame([nueva_solicitud])
                         df_nuevo = df_nuevo.reindex(columns=columnas_orden)
@@ -835,17 +753,15 @@ if check_password():
                             st.session_state.lista_solicitudes.append(nueva_solicitud)
                             subida_exitosa = True
                         else:
-                            raise ValueError("No se encontró la URL del archivo de Sheets en st.secrets.")
+                            raise ValueError("No se encontró la URL de Sheets.")
                             
                     except Exception as e:
                         st.error(f"❌ Error de conexión con Google Sheets: {e}")
-                        st.info("💡 Por seguridad, hemos guardado esta línea en la tabla inferior (Caché Local).")
+                        st.info("💡 Solicitud guardada temporalmente en caché local.")
                         st.session_state.lista_solicitudes.append(nueva_solicitud)
 
-                        if subida_exitosa:
-                            st.success("✅ **Operación registrada con éxito.** La solicitud ha sido transmitida al departamento de Garantías de Central para su validación.")
-                            import time
-                            time.sleep(1.5)
-                            st.rerun()
-                        
-
+                    if subida_exitosa:
+                        st.success("✅ **Operación registrada con éxito.** Transmitida al departamento de Garantías de Central.")
+                        import time
+                        time.sleep(1.5)
+                        st.rerun()
