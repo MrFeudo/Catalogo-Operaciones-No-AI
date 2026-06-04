@@ -174,343 +174,179 @@ opcion_menu = st.sidebar.radio(
 def buscador_tradicional_excel(consulta_usuario, df_contexto):
     try:
         # =====================================================================
-        # 🎯 1. MEGA SUPER MACRO DICCIONARIO SEMÁNTICO (VERSIÓN TRADICIONAL BLINDADA)
+        # 🎯 1. DICCIONARIO SEMÁNTICO ULTRA-EXPANDIDO (ACCIONES Y ENERGÍAS)
         # =====================================================================
         mapa_raices = {
-            # --- 🛠️ ACCIONES, VERBOS Y REGLAS DE TRABAJO ---
+            # --- 🛠️ ACCIONES Y VERBOS ---
             "cambiar": "remove and reinstall|replace|remove|reinstall",
             "cambio": "remove and reinstall|replace|remove|reinstall",
             "sustituir": "remove and reinstall|replace|remove|reinstall",
             "sustitucion": "remove and reinstall|replace|remove|reinstall",
             "reemplazar": "remove and reinstall|replace|remove|reinstall",
-            "reemplazo": "remove and reinstall|replace|remove|reinstall",
-            "desmontar": "remove", 
-            "montar": "reinstall",
+            "desmontar": "remove", "montar": "reinstall",
             "comprobar": "check|inspection|test|diagnostic|measurement",
             "verificar": "check|inspection|test|diagnostic",
             "revisar": "check|inspection|test|diagnostic",
-            "diagnosis": "check|inspection|test|diagnostic|troubleshooting",
-            "diagnostico": "check|inspection|test|diagnostic",
             "actualizar": "refresh|update|software|flash",
             "programar": "refresh|update|software|flash|coding|program",
-            "codificar": "refresh|update|software|flash|coding|program",
-            "reprogramar": "refresh|update|software|flash|coding|program",
             "ajustar": "adjust|adjustment|alignment|calibrate|calibration",
-            "alinear": "alignment|adjust",
-            "calibrar": "calibrate|calibration",
             "limpiar": "clean|cleaning|wash",
             "pulir": "polishing|polish", "pulido": "polishing|polish",
             
-            # --- 🔌 CENTRALITAS, MÓDULOS Y ELECTRÓNICA DE CONTROL ---
-            "ecu": "ecu|engine control unit|engine control module",
-            "ems": "ems|engine management system",
-            "mcu": "mcu|motor control unit|motor control module",
-            "vcu": "vcu|vehicle control unit|vehicle control module",
-            "hcu": "hcu|hybrid control unit|hybrid module",
-            "tcu": "tcu|transmission control unit|transmission module",
-            "hpu": "hpu|hybrid powertrain unit",
-            "tecu": "tecu|traction electric control unit",
-            "bcm": "bcm|body control module|bdm", 
-            "bdm": "bcm|body control module|bdm",
-            "icm": "icm|instrument cluster module", 
-            "clm": "climate|clm|hvac", 
-            "ihu": "ihu|infotainment head unit|display",
-            "cgw": "cgw|central gateway|gateway", 
-            "pas": "pas|passenger area system",
-            "tbox": "t-box|tbox|telematics|information communication module",
-            "centralita": "control unit|control module|ecu|bcm|mcu|vcu|tcu|hcu",
-            "centralitas": "control unit|control module",
-            "modulo": "control module|module", 
-            "modulos": "control module|module",
+            # --- 🔌 ELECTRÓNICA Y MÓDULOS ---
+            "ecu": "ecu|engine control unit", "mcu": "mcu|motor control unit",
+            "vcu": "vcu|vehicle control unit", "tcu": "tcu|transmission control unit",
+            "bcm": "bcm|body control module", "bdm": "bcm|bdm",
+            "centralita": "control unit|control module|ecu|bcm|mcu",
+            "modulo": "control module|module", "modulos": "module",
 
-            # --- ⚡ BATERÍAS, ALTA TENSIÓN Y SISTEMA ELÉCTRICO ---
-            "bateria": "battery|storage battery|bms|tecu", 
-            "vateria": "battery|storage battery", 
-            "baterias": "battery|storage battery",
-            "traccion": "traction|traction battery", 
-            "alta tension": "high voltage",
-            "bms": "bms|battery management system",
-            "cdu": "cdu|conversion & distribution unit|conversion distribution",
-            "alternador": "alternator|generator",
-            "arranque": "starter|starter motor", "motor arranque": "starter",
-            "cable": "wiring|harness|wire|cable", 
-            "cableado": "wiring|harness|wire|cable", 
-            "instalacion": "wiring|harness",
-            "mazo": "wiring|harness",
-            "fusible": "fuse", "fusibles": "fuse|box", "caja fusibles": "fuse block|fuse box",
-            "bujia": "spark plug", "bujias": "spark plug",
-            "bobina": "ignition coil", "bobinas": "ignition coil",
+            # --- ⚡ BATERÍAS Y ELEC. ---
+            "bateria": "battery|storage battery|bms", "vateria": "battery", 
+            "cable": "wiring|harness|wire", "cableado": "wiring|harness",
+            "airbag": "airbag|air bag|srs|abm", "cinturon": "seatbelt|seat belt",
+            "hebilla": "buckle", "capo": "hood", "paragolpes": "bumper",
+            "faro": "headlamp|headlight", "piloto": "lamp|tail lamp",
+            "canister": "canister|evap", "vapores": "canister|evap",
+            "filtro": "filter", "junta": "gasket|seal", "tubo": "pipe|hose",
 
-            # --- 🛡️ SEGURIDAD, ASISTENCIAS ADAS Y SENSORES ---
-            "fcm": "fcm|front camera module|forward camera|front view camera", 
-            "camara": "camera|fcm|avm|rear view", "camaras": "camera",
-            "frm": "frm|front radar module|forward radar", 
-            "radar": "radar|frm|bsd", "radares": "radar",
-            "avm": "avm|around view monitor|360 camera",
-            "bsd": "bsd|blind spot detection|blind spot monitoring", 
-            "punto ciego": "blind spot|bsd",
-            "tpms": "tpms|tire pressure monitor", 
-            "pdc": "pdc|park distance control|parking sensor", 
-            "aparcamiento": "park|pdc|parking", 
-            "sensor": "sensor|probe|detector", "sensores": "sensor",
-            "sonda": "sensor|oxygen sensor|lambda", "lambda": "oxygen sensor|lambda",
-            "airbag": "airbag|air bag|abm|srs|curtain airbag", 
-            "airbags": "airbag|air bag",
-            "abm": "abm|air bag module",
-            "srs": "srs|supplemental restraint system",
-            "cinturon": "seatbelt|seat belt|belt", "cinturones": "seatbelt|seat belt",
-            "hebilla": "buckle", "hebillas": "buckle",
-            "pretensor": "pretensioner",
-
-            # --- ⚙️ MOTOR, ADMISIÓN, ESCAPE Y REFRIGERACIÓN ---
-            "motor": "engine assy|motor|engine", "motores": "engine",
-            "culata": "cylinder head", "piston": "piston", "biela": "connecting rod",
-            "cigüeñal": "crankshaft", "arbol": "camshaft", "levas": "camshaft",
-            "valvula": "valve|solenoid valve", "valvulas": "valve",
-            "turbo": "turbocharger|turbo", "turbocompresor": "turbocharger",
-            "intercooler": "intercooler|charge air cooler",
-            "colector": "manifold", "admision": "intake", "escape": "exhaust",
-            "catalizador": "catalytic converter|catalyst", "fap": "dpf|particulate filter",
-            "silenciador": "muffler|exhaust silencer",
-            "radiador": "radiator", "intercambiador": "heat exchanger",
-            "ventilador": "fan|cooling fan", "electroventilador": "cooling fan",
-            "bomba": "pump|water pump|oil pump|fuel pump", "bombas": "pump",
-            "bomba agua": "water pump", "bomba aceite": "oil pump", "bomba combustible": "fuel pump",
-            "termostato": "thermostat",
-            "canister": "canister|evap canister", "vapores": "canister|evap|solenoid|pipe",
-
-            # --- 🚗 TRANSMISIÓN, CAJA DE CAMBIOS Y EMBRAGUE ---
-            "dct": "dct|dual clutch transmission|double clutch",
-            "cambio": "transmission|gearbox|dct|gearshift", 
-            "caja": "transmission|gearbox", "caja cambios": "transmission|gearbox",
-            "embrague": "clutch", "bimasa": "dual mass flywheel|flywheel",
-            "volante": "flywheel", "volante motor": "flywheel",
-            "palier": "drive shaft|axle shaft|half shaft", "palieres": "drive shaft",
-            "transmision": "transmission|propeller shaft|drive shaft",
-            "diferencial": "differential", "reductora": "reducer",
-            "selector": "selector|shifter|gearshift lever",
-
-            # --- 🥾 CHASIS, SUSPENSIÓN Y FRENOS ---
-            "esp": "esp|electronic stability program",
-            "eps": "eps|electric power steering",
-            "epb": "epb|electrical park brake|parking brake",
-            "ipb": "ipb|integrated power brake|power brake",
-            "abs": "abs|anti-lock brake system",
-            "freno": "brake|ipb|epb|abs", "frenos": "brake|abs",
-            "pastilla": "pads|brake pads", "pastillas": "pads|brake pads",
-            "disco": "disc|brake disc", "discos": "disc|brake disc",
-            "pinza": "caliper|brake caliper", "pinzas": "caliper",
-            "latiguillo": "brake hose", "servo": "brake booster|power booster",
-            "amortiguador": "shock absorber|strut|damper", "amortiguadores": "shock absorber|strut",
-            "muelle": "spring|coil spring", "muelles": "spring",
-            "ballesta": "leaf spring",
-            "barra": "bar|stabilizer bar|rod", "estabilizadora": "stabilizer",
-            "trapecio": "control arm|suspension arm|wishbone", "brazo": "control arm|suspension arm",
-            "mangueta": "knuckle|steering knuckle",
-            "buge": "hub|wheel hub", "cojinete": "bearing", "rodamiento": "bearing",
-            "direccion": "steering|eps", "cremallera": "steering gear|steering rack",
-
-            # --- 📦 CARROCERÍA, INTERIOR, EXTERIOR Y COLISIÓN ---
-            "capo": "hood|engine hood",
-            "paragolpes": "bumper", "defensa": "bumper", "parachoques": "bumper",
-            "faro": "headlamp|headlight", "faros": "headlamp", 
-            "piloto": "lamp|rear lamp|tail lamp", "pilotos": "lamp|tail lamp",
-            "antiniebla": "fog lamp|foglight",
-            "intermitente": "turn signal|indicator",
-            "espejo": "mirror|rearview mirror", "retrovisor": "mirror|rearview mirror",
-            "aleta": "fender|wing", "aletas": "fender",
-            "puerta": "door", "puertas": "door", "porton": "tailgate|back door|rear door",
-            "techo": "sunroof|roof|panoramic roof", "solar": "sunroof",
-            "cristal": "glass|window", "luna": "windshield|windscreen|glass", "parabrisas": "windshield|windscreen",
-            "elevalunas": "window regulator|window lifter",
-            "cerradura": "door lock|lock assy", "cierre": "lock|latch",
-            "manilla": "handle|door handle", "maneta": "handle",
-            "asiento": "seat", "asientos": "seat",
-            "salpicadero": "dashboard|instrument panel",
-            "moldura": "molding|trim", "molduras": "molding|trim",
-            "limpiaparabrisas": "wiper|wiper blade", "motor limpia": "wiper motor",
-
-            # --- 🩻 SUPORTACIÓN, ELEMENTOS DE UNIÓN Y MENUDENCIA ---
-            "soporte": "bracket|support|mount|holder", "soportes": "bracket|support|mount",
-            "cuna": "subframe|cradle|bracket|salver|tray", 
-            "bandeja": "tray|salver",
-            "tapa": "cover|cap|lid", "cubierta": "cover|protector", "protector": "protector|shield|guard",
-            "varilla": "rod|stay", "tirante": "rod|link|stay",
-            "placa": "plate", "panel": "panel",
-            "grapa": "clip|retainer", "tornillo": "bolt|screw", "tuerca": "nut",
-            "abrazadera": "clamp|clip",
-
-            # --- 🧪 FLUIDOS, JUNTAS Y FILTROS ---
-            "filtro": "filter", "filtros": "filter",
-            "filtro aceite": "oil filter", "filtro aire": "air filter", "filtro habitaculo": "cabin filter|pollen filter",
-            "junta": "gasket|seal", "juntas": "gasket|seal", "reten": "oil seal|seal",
-            "aceite": "oil|lubricant", "liquido": "fluid|liquid", "refrigerante": "coolant",
-            "anticongelante": "coolant",
-            "tubo": "pipe|tube|hose", "manguito": "hose", "conducto": "pipe|line|duct",
-
-            # --- 📍 UBICACIONES, ORIENTACIÓN Y LADOS ---
-            "delantero": "fr", "delantera": "fr", "frontal": "fr", "alante": "fr",
-            "trasero": "rr", "trasera": "rr", "posterior": "rr", "atras": "rr",
-            "izquierdo": "lh", "izquierda": "lh", "izq": "lh", "izda": "lh",
-            "derecho": "rh", "derecha": "rh", "der": "rh", "drcha": "rh",
-            "superior": "upper", "inferior": "lower", "interno": "inner", "externo": "outer",
-            "central": "central|middle", "lateral": "side"
+            # --- 📍 UBICACIONES ---
+            "delantero": "fr|front", "delantera": "fr|front", "frontal": "fr|front",
+            "trasero": "rr|rear", "trasera": "rr|rear", "posterior": "rr|rear",
+            "izquierdo": "lh|left", "izquierda": "lh|left",
+            "derecho": "rh|right", "derecha": "rh|right",
+            
+            # --- 🔋 MOTORIZACIONES Y ENERGÍAS (CRÍTICO) ---
+            "hev": "hev|hybrid", "hibrido": "hev|hybrid", "hibrida": "hev|hybrid",
+            "ev": "ev|bev|electric", "electrico": "ev|bev|electric", "electrica": "ev|bev|electric",
+            "phev": "phev|plug-in", "enchufable": "phev|plug-in",
+            "gasolina": "ice|gasoline", "termico": "ice", "atm": "ice"
         }
 
-        # --- DICCIONARIO DE EXPANSIÓN DE MODELOS COMERCIALES ---
+        # Diccionario rápido de conversión de modelos pegados
         abreviaturas_modelos = {
             "j5": "jaecoo 5", "jaecoo5": "jaecoo 5", "j-5": "jaecoo 5",
             "j7": "jaecoo 7", "jaecoo7": "jaecoo 7", "j-7": "jaecoo 7",
             "j8": "jaecoo 8", "jaecoo8": "jaecoo 8",
             "o5": "omoda 5", "omoda5": "omoda 5", "o-5": "omoda 5",
             "o7": "omoda 7", "omoda7": "omoda 7", "o-7": "omoda 7",
-            "o9": "omoda 9", "omoda9": "omoda 9", "o-9": "omoda 9",
-            "hibrido": "hev", "electrico": "bev", "gasolina": "ice"
+            "o9": "omoda 9", "omoda9": "omoda 9", "o-9": "omoda 9"
         }
 
-        # =====================================================================
-        # 🧹 2. LIMPIEZA Y NORMALIZACIÓN DE TEXTO DE ENTRADA
-        # =====================================================================
+        # 1. Normalización de la consulta del usuario
         consulta_limpia = consulta_usuario.lower().strip()
         for orig, dest in [("í", "i"), ("ó", "o"), ("á", "a"), ("é", "e"), ("ú", "u"), ("ñ", "n")]:
             consulta_limpia = consulta_limpia.replace(orig, dest)
 
-        # Reemplazamos abreviaturas pegadas por su nombre oficial expandido
+        # Expandimos los modelos si vienen juntos (ej: j7 -> jaecoo 7)
         for abrev, mod_real in abreviaturas_modelos.items():
             if abrev in consulta_limpia.split() or abrev in consulta_limpia:
                 consulta_limpia = consulta_limpia.replace(abrev, mod_real)
 
         lista_palabras_usuario = consulta_limpia.split()
 
-        # Construimos el mapeo de raíces traducidas al inglés para el cálculo de puntos
-        palabras_regex = []
-        for esp, eng in mapa_raices.items():
-            if esp in consulta_limpia:
-                palabras_regex.extend(eng.split('|'))
+        # =====================================================================
+        # 🧪 2. PREPARACIÓN DE LA BASE DE DATOS (LIMPIEZA DE VACÍOS)
+        # =====================================================================
+        df_base = df_contexto.copy()
+        
+        # Filtro obligatorio: Eliminamos celdas corruptas o vacías de raíz
+        df_base = df_base[
+            (df_base['Nombre de la Pieza'].notna()) & (df_base['Nombre de la Pieza'].astype(str).str.strip() != "") &
+            (df_base['Código de Referencia'].notna()) & (df_base['Código de Referencia'].astype(str).str.strip() != "") &
+            (df_base['Operación Técnica'].notna()) & (df_base['Operación Técnica'].astype(str).str.strip() != "")
+        ]
 
-        # Añadimos palabras sueltas válidas tecleadas por el técnico
-        for p in lista_palabras_usuario:
-            if len(p) > 2 and p not in ["quiero", "para", "con", "del", "una", "uno", "el", "la", "los", "las", "este", "un", "de"]:
-                if not (p.isdigit() and len(p) == 1):
-                    palabras_regex.append(p)
+        # Creamos columnas auxiliares en minúsculas para realizar el escaneo interno
+        df_base['mod_low'] = df_base['Modelo'].astype(str).str.lower().str.strip()
+        df_base['pieza_low'] = df_base['Nombre de la Pieza'].astype(str).str.lower().str.strip()
+        df_base['op_low'] = df_base['Operación Técnica'].astype(str).str.lower().str.strip()
 
-        palabras_regex = list(set(palabras_regex))
+        # Inicializamos el casillero de puntos
+        df_base['score'] = 0
 
         # =====================================================================
-        # 🔍 3. MOTOR DE FILTRADO EXCLUSIVO (APERTURA TOTAL LOCAL)
+        # 📊 3. ALGORITMO DE ASIGNACIÓN DE PUNTOS (SISTEMA INDEXADO)
         # =====================================================================
-        try:
-            terminos_manuales = ["manual", "adicional", "extra", "tiempo mas", "añadir horas", "universal", "marron", "baremo no"]
-            if any(tm in lista_palabras_usuario for tm in terminos_manuales):
-                df_resultados = df_contexto[df_contexto['Operación Técnica'].astype(str).str.lower().str.contains("universal", na=False)].head(20)
-            else:
-                # 🛡️ PURGADO RADICAL DE CELDAS VACÍAS EN NOMBRE DE PIEZA O REF
-                df_base = df_contexto.copy()
-                df_base = df_base[
-                    (df_base['Nombre de la Pieza'].notna()) & (df_base['Nombre de la Pieza'].astype(str).str.strip() != "") &
-                    (df_base['Código de Referencia'].notna()) & (df_base['Código de Referencia'].astype(str).str.strip() != "")
-                ]
-                
-                # Forzamos minúsculas internas temporales en los campos de mapeo
-                for col in ['Modelo', 'Nombre de la Pieza', 'Operación Técnica']:
-                    df_base[col] = df_base[col].astype(str).str.lower().str.strip()
+        
+        # A. PUNTOS POR MARCA PRINCIPAL (Filtro base)
+        if "omoda" in consulta_limpia:
+            df_base['score'] += df_base['mod_low'].str.contains("omoda", na=False).astype(int) * 50
+        elif "jaecoo" in consulta_limpia:
+            df_base['score'] += df_base['mod_low'].str.contains("jaecoo", na=False).astype(int) * 50
 
-                # 🚗 CRIBA FILTRADA DE MARCA PRINCIPAL
-                if "omoda" in consulta_limpia:
-                    df_base = df_base[df_base['Modelo'].str.contains("omoda", na=False)]
-                elif "jaecoo" in consulta_limpia:
-                    df_base = df_base[df_base['Modelo'].str.contains("jaecoo", na=False)]
+        # B. PUNTOS POR NÚMERO DE MODELO EXACTO (Filtro estricto de silueta)
+        modelos_numericos = ["5", "7", "8", "9"]
+        num_detectado = None
+        for num in modelos_numericos:
+            if num in lista_palabras_usuario or any(f"omoda{num}" in w or f"jaecoo{num}" in w for w in lista_palabras_usuario) or num in consulta_limpia:
+                num_detectado = num
+                break
+        
+        if num_detectado:
+            # Si coincide el número, gana 100 puntos. Si NO coincide, pierde 200 (penalización para borrar otros coches)
+            df_base['score'] += df_base['mod_low'].str.contains(num_detectado, na=False).astype(int) * 100
+            df_base['score'] -= (~df_base['mod_low'].str.contains(num_detectado, na=False)).astype(int) * 200
 
-                # 🛑 AISLAMIENTO ESTRICTO DE NÚMERO DE MODELO (EVITA MEZCLAS)
-                modelos_numericos = ["5", "7", "8", "9"]
-                numero_detectado = None
-                
-                for num in modelos_numericos:
-                    if num in lista_palabras_usuario or any(f"omoda{num}" in w or f"jaecoo{num}" in w for w in lista_palabras_usuario) or num in consulta_limpia:
-                        numero_detectado = num
-                        break
-                
-                # Si el usuario especificó un coche (ej: Omoda 9), borramos de raíz los demás modelos (5, 7)
-                if numero_detectado:
-                    df_base = df_base[df_base['Modelo'].str.contains(numero_detectado, na=False)]
-
-                # INTERSECCIÓN OBLIGATORIA DEL COMPONENTE BASE (IGNORANDO VERBOS Y UBICACIONES)
-                componentes_encontrados = []
-                palabras_excluidas_criba = [
-                    "cambiar", "cambio", "sustituir", "sustitucion", "reemplazar", "reemplazo",
-                    "desmontar", "montar", "programar", "codificar", "actualizar", "reprogramar",
-                    "delantero", "delantera", "frontal", "alante", "trasero", "trasera", "posterior", "atras",
-                    "izquierdo", "izquierda", "izq", "izda", "derecho", "derecha", "der", "drcha",
-                    "superior", "inferior", "interno", "externo", "central", "lateral", "ajustar", "alinear", "calibrar",
-                    "pulir", "pulido", "limpiar"
-                ]
-                
-                for esp, eng in mapa_raices.items():
-                    if esp in consulta_limpia and esp not in palabras_excluidas_criba:
-                        componentes_encontrados.extend(eng.split('|'))
-                
-                if componentes_encontrados:
-                    regex_comp = '|'.join(set(componentes_encontrados))
-                    df_base = df_base[df_base['Nombre de la Pieza'].str.contains(regex_comp, na=False) | 
-                                      df_base['Operación Técnica'].str.contains(regex_comp, na=False)]
-
-                # FILTROS SECUNDARIOS DE PURGA AUTOMÁTICA
-                filtros_secundarios = {
-                    "wiring|harness|wire": ["cable", "cableado", "instalacion", "mazo"],
-                    "sensor": ["sensor", "sonda"],
-                    "bracket|salver|tray|support|pressure|rod|plate": ["soporte", "cuna", "bandeja", "tapa", "cubierta", "varilla", "placa"]
-                }
-                
-                for eng_purgar, esp_palabras in filtros_secundarios.items():
-                    usuario_pide_secundario = any(w in lista_palabras_usuario for w in esp_palabras)
-                    if not usuario_pide_secundario:
-                        condicion_purgar = df_base['Nombre de la Pieza'].str.contains(eng_purgar, na=False) | \
-                                           df_base['Operación Técnica'].str.contains(eng_purgar, na=False)
-                        df_base = df_base[~condicion_purgar]
-
-                # =====================================================================
-                # 📊 4. ALGORITMO DE CALCULADORA DE RELEVANCIA (SCORE REFINADO)
-                # =====================================================================
-                if numero_detectado and numero_detectado not in palabras_regex:
-                    palabras_regex.append(numero_detectado)
-
-                df_base['score'] = 0
-                if palabras_regex:
-                    regex_puntos = '|'.join(palabras_regex)
-                    df_base['score'] += df_base['Modelo'].str.contains(regex_puntos, na=False).astype(int) * 15
-                    df_base['score'] += df_base['Nombre de la Pieza'].str.contains(regex_puntos, na=False).astype(int) * 10
-                    df_base['score'] += df_base['Operación Técnica'].str.contains(regex_puntos, na=False).astype(int) * 10
-                    
-                    df_resultados = df_base[df_base['score'] > 0].sort_values(by=['score'], ascending=False).head(80)
-                else:
-                    df_resultados = df_base.head(40)
-
-                # Red de seguridad si se vacía por un filtro hiper-estricto
-                if df_resultados.empty:
-                    if "omoda" in consulta_limpia:
-                        df_resultados = df_contexto[df_contexto['Modelo'].astype(str).str.lower().str.contains("omoda", na=False)].head(60)
-                    elif "jaecoo" in consulta_limpia:
-                        df_resultados = df_contexto[df_contexto['Modelo'].astype(str).str.lower().str.contains("jaecoo", na=False)].head(60)
-                    else:
-                        df_resultados = df_contexto.head(40)
-
-            # =====================================================================
-            # 🔴 5. RETORNO DIRECTO DE CELDAS ORIGINALES EN INGLÉS DE CENTRAL
-            # =====================================================================
-            if df_resultados.empty:
-                return None
-
-            df_final_taller = df_contexto.loc[df_resultados.index].copy()
-            df_final_taller = df_final_taller.sort_values(by=['Modelo', 'Nombre de la Pieza'], ascending=[True, True])
+        # C. PUNTOS POR MOTORIZACIÓN / ENERGÍA (Gasolina, HEV, PHEV, EV)
+        energias_claves = ["hev", "phev", "ev", "ice", "hybrid", "electric", "gasolina", "enchufable", "hibrido"]
+        energia_solicitada = any(eng in consulta_limpia for eng in energias_claves)
+        
+        if energia_solicitada:
+            # Buscamos qué raíces inglesas corresponden a lo que pidió el usuario
+            raices_energia = []
+            for esp, eng in mapa_raices.items():
+                if esp in ["hev", "hibrido", "hibrida", "ev", "electrico", "electrica", "phev", "enchufable", "gasolina", "termico"] and esp in consulta_limpia:
+                    raices_energia.extend(eng.split('|'))
             
-            return df_final_taller[['Modelo', 'Nombre de la Pieza', 'Código de Referencia', 'Operación Técnica', 'Tiempo Estándar (UT/Horas)']]
+            if raices_energia:
+                regex_eng = '|'.join(set(raices_energia))
+                # Si el modelo contiene la motorización exacta, gana 80 puntos de ventaja
+                df_base['score'] += df_base['mod_low'].str.contains(regex_eng, na=False).astype(int) * 80
+                # Si el usuario pide explícitamente una energía, penalizamos levemente los modelos puros de otras para limpiar
+                if "ev" in consulta_limpia or "electrico" in consulta_limpia:
+                    # Si es eléctrico, restamos puntos a los que digan hibrido, phev o gasolina en el nombre
+                    df_base['score'] -= df_base['mod_low'].str.contains("hev|phev|ice|hybrid|gasoline", na=False).astype(int) * 50
 
-        except Exception:
+        # D. PUNTOS POR PALABRAS CLAVE TÉCNICAS (El núcleo de la avería)
+        for palabra in lista_palabras_usuario:
+            # Ignoramos conectores comunes
+            if palabra in ["quiero", "para", "con", "del", "una", "uno", "el", "la", "los", "las", "este", "un", "de", "omoda", "jaecoo", "5", "7", "8", "9"]:
+                continue
+            
+            # Buscamos si la palabra tiene traducción técnica en nuestro mega diccionario
+            terminos_ingleses = []
+            if palabra in mapa_raices:
+                terminos_ingleses.extend(mapa_raices[palabra].split('|'))
+            else:
+                if len(palabra) > 2: # Si no está en el mapa pero es larga, la buscamos tal cual (ej: códigos o siglas)
+                    terminos_ingleses.append(palabra)
+            
+            if terminos_ingleses:
+                regex_tecnica = '|'.join(set(terminos_ingleses))
+                # Multiplicamos el score: coincidir en pieza u operación da la máxima puntuación (120 puntos)
+                df_base['score'] += df_base['pieza_low'].str.contains(regex_tecnica, na=False).astype(int) * 120
+                df_base['score'] += df_base['op_low'].str.contains(regex_tecnica, na=False).astype(int) * 120
+
+        # =====================================================================
+        # 🔴 4. FILTRADO Y EXTRACCIÓN DE RESULTADOS GANADORES
+        # =====================================================================
+        # Solo nos quedamos con las filas que tengan una puntuación positiva y superior a la penalización base
+        # Esto elimina de golpe los "cambios de neumáticos" porque su puntuación se quedará en 0 o negativa
+        df_filtrado_final = df_base[df_base['score'] > 30]
+
+        if df_filtrado_final.empty:
             return None
+
+        # Ordenamos los resultados de mayor a menor puntuación (relevancia pura)
+        df_ordenado = df_filtrado_final.sort_values(by=['score', 'Modelo'], ascending=[False, True]).head(60)
+
+        # Recuperamos las celdas limpias, inalteradas y en inglés oficial del df_contexto original
+        df_output = df_contexto.loc[df_ordenado.index].copy()
+        
+        return df_output[['Modelo', 'Nombre de la Pieza', 'Código de Referencia', 'Operación Técnica', 'Tiempo Estándar (UT/Horas)']]
 
     except Exception:
         return None
-
 # ==========================================
 # 5. SISTEMA DE SEGURIDAD CONTRASEÑA
 # ==========================================
