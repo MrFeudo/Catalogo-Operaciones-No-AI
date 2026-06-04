@@ -174,7 +174,20 @@ opcion_menu = st.sidebar.radio(
 def buscador_tradicional_excel(consulta_usuario, df_contexto):
     try:
         # =====================================================================
-        # 🎯 1. DICCIONARIO SEMÁNTICO (NÚCLEO DE TRADUCCIÓN)
+        # 🚗 1. DICCIONARIO DE EXPANSIÓN DE MODELOS COMERCIALES
+        # =====================================================================
+        abreviaturas_modelos = {
+            "j5": "jaecoo 5", "jaecoo5": "jaecoo 5", "j-5": "jaecoo 5",
+            "j7": "jaecoo 7", "jaecoo7": "jaecoo 7", "j-7": "jaecoo 7",
+            "j8": "jaecoo 8", "jaecoo8": "jaecoo 8",
+            "o5": "omoda 5", "omoda5": "omoda 5", "o-5": "omoda 5",
+            "o7": "omoda 7", "omoda7": "omoda 7", "o-7": "omoda 7",
+            "o9": "omoda 9", "omoda9": "omoda 9", "o-9": "omoda 9",
+            "hibrido": "hev", "electrico": "bev", "gasolina": "ice"
+        }
+
+        # =====================================================================
+        # 🎯 2. MEGA DICCIONARIO SEMÁNTICO (NÚCLEO DE TRADUCCIÓN)
         # =====================================================================
         mapa_raices = {
             # --- 🛠️ ACCIONES Y VERBOS ---
@@ -214,7 +227,7 @@ def buscador_tradicional_excel(consulta_usuario, df_contexto):
             # --- ⚙️ MOTOR, ADMISIÓN, ESCAPE Y REFRIGERACIÓN ---
             "motor": "engine assy|motor|engine", "motores": "engine",
             "culata": "cylinder head", "piston": "piston", "biela": "connecting rod",
-            "cigueñal": "crankshaft", "cigueñal": "crankshaft", "arbol": "camshaft", "levas": "camshaft",
+            "cigueñal": "crankshaft", "arbol": "camshaft", "levas": "camshaft",
             "valvula": "valve|solenoid valve", "valvulas": "valve",
             "turbo": "turbocharger|turbo", "turbocompresor": "turbocharger",
             "intercooler": "intercooler|charge air cooler",
@@ -245,7 +258,7 @@ def buscador_tradicional_excel(consulta_usuario, df_contexto):
             "servo": "brake booster|power booster", "direccion": "steering|eps", 
             "cremallera": "steering gear|steering rack", "mangueta": "knuckle|steering knuckle",
             "amortiguador": "shock absorber|strut|damper", "amortiguadores": "shock absorber|strut",
-            "amortisguador": "shock absorber", "amortiguadore": "shock absorber", # Erratas taller
+            "amortisguador": "shock absorber", "amortiguadore": "shock absorber",
             "muelle": "spring|coil spring", "muelles": "spring", "ballesta": "leaf spring",
             "barra": "bar|stabilizer bar", "estabilizadora": "stabilizer",
             "trapecio": "control arm|suspension arm|wishbone", "brazo": "control arm|suspension arm",
@@ -263,19 +276,19 @@ def buscador_tradicional_excel(consulta_usuario, df_contexto):
             "manilla": "handle|door handle", "maneta": "handle", "moldura": "molding|trim", "molduras": "molding|trim",
             "limpiaparabrisas": "wiper|wiper blade", "motor limpia": "wiper motor",
 
-            # --- 🪑 ASIENTOS, CUERNOS INTERIORES Y GUANECIDOS ---
+            # --- 🪑 ASIENTOS, COMPONENTES INTERIORES Y GUARNECIDOS ---
             "asiento": "seat assy|seat", "asientos": "seat", 
             "respaldo": "backrest|seat back", "banqueta": "cushion|seat cushion",
             "salpicadero": "dashboard|instrument panel", "consol": "console", "consola": "console",
             "reposacabezas": "headrest|head restraint", "reposabrazos": "armrest",
             "guarnecido": "trim|lining|panel", "tapizado": "trim|upholstery", "techo interior": "headlining|roof lining",
             "alfombrilla": "mat|floor mat", "alfombra": "carpet", "guantera": "glove box",
-            "volante": "steering wheel", # Volante de dirección
+            "volante": "steering wheel",
 
             # --- ⚡ BATERÍAS, CABLEADOS Y ELEMENTOS DE UNIÓN ---
             "bateria": "battery|storage battery|bms", "vateria": "battery", "baterias": "battery",
             "cable": "wiring|harness|wire|cable", "cableado": "wiring|harness|wire", 
-            "instalacion": "wiring|harness", "mazo": "harness|wiring|wire", # Mazo añadido
+            "instalacion": "wiring|harness", "mazo": "harness|wiring|wire",
             "fusible": "fuse", "fusibles": "fuse|box", "caja fusibles": "fuse block|fuse box",
             "airbag": "airbag|air bag|srs|abm", "airbags": "airbag", "srs": "srs|supplemental restraint system",
             "cinturon": "seatbelt|seat belt|belt", "cinturones": "seatbelt|seat belt",
@@ -308,11 +321,14 @@ def buscador_tradicional_excel(consulta_usuario, df_contexto):
             "gasolina": "ice|gasoline", "termico": "ice"
         }
 
-        # 1. Normalización de la consulta
+        # =====================================================================
+        # 🧹 3. NORMALIZACIÓN Y LIMPIEZA DE LA CONSULTA
+        # =====================================================================
         consulta_limpia = consulta_usuario.lower().strip()
         for orig, dest in [("í", "i"), ("ó", "o"), ("á", "a"), ("é", "e"), ("ú", "u"), ("ñ", "n")]:
             consulta_limpia = consulta_limpia.replace(orig, dest)
 
+        # Mapeamos abreviaturas de modelos pegadas antes de trocear la frase
         for abrev, mod_real in abreviaturas_modelos.items():
             if abrev in consulta_limpia.split() or abrev in consulta_limpia:
                 consulta_limpia = consulta_limpia.replace(abrev, mod_real)
@@ -320,7 +336,7 @@ def buscador_tradicional_excel(consulta_usuario, df_contexto):
         lista_palabras_usuario = consulta_limpia.split()
 
         # =====================================================================
-        # 🧹 2. FILTRADO INICIAL DE CELDAS VACÍAS
+        # 🗑️ 4. FILTRADO DE FILAS FANTASMA (CELDAS VACÍAS EN EL EXCEL)
         # =====================================================================
         df_base = df_contexto.copy()
         df_base = df_base[
@@ -329,7 +345,7 @@ def buscador_tradicional_excel(consulta_usuario, df_contexto):
             (df_base['Operación Técnica'].notna()) & (df_base['Operación Técnica'].astype(str).str.strip() != "")
         ]
 
-        # Campos de búsqueda unificados en minúsculas
+        # Creamos la columna indexada de rastreo en minúsculas
         df_base['search_field'] = (
             df_base['Modelo'].astype(str).str.lower() + " " + 
             df_base['Nombre de la Pieza'].astype(str).str.lower() + " " + 
@@ -337,38 +353,37 @@ def buscador_tradicional_excel(consulta_usuario, df_contexto):
         )
 
         # =====================================================================
-        # ⚔️ 3. FILTRADO BOOLEANO ESTRICTO (EL MÁRMOL DEL ESCULTOR)
+        # ⚔️ 5. FILTRADO BOOLEANO ESTRICTO (PALABRA A PALABRA)
         # =====================================================================
-        # Vamos a ir reduciendo el dataframe palabra por palabra de la consulta
         for palabra in lista_palabras_usuario:
             # Ignoramos conectores inservibles
             if palabra in ["quiero", "para", "con", "del", "una", "uno", "el", "la", "los", "las", "este", "un", "de"]:
                 continue
             
-            # Determinamos qué tiene que buscar Python en el Excel para esta palabra
+            # Si la palabra está en nuestro mapa, preparamos la regex exacta con sus traducciones
             if palabra in mapa_raices:
-                # Si está en el diccionario, creamos una regex de palabra exacta (\b) con sus traducciones
                 traducciones = mapa_raices[palabra].split('|')
+                # Forzamos fronteras de palabra exacta (\b) en inglés
                 regex_palabra = '|'.join([rf'\b{t}\b' for t in traducciones])
-                # Mantenemos también la palabra original en español por si viniera así en el Excel
+                # Mantener el español original exacto por seguridad
                 regex_palabra += rf'|\b{palabra}\b'
             else:
-                # Si es una palabra libre (un código, un número de modelo, etc.), buscamos coincidencia exacta
+                # Si es una referencia, código numérico o palabra libre, buscamos match exacto
                 regex_palabra = rf'\b{palabra}\b'
             
-            # APLICAMOS EL FILTRO FILO DE NAVAJA: La fila DEBE contener el término obligatoriamente
+            # Reducimos drásticamente el DataFrame: la fila DEBE cumplir la condición técnica
             df_base = df_base[df_base['search_field'].str.contains(regex_palabra, regex=True, na=False)]
 
         # =====================================================================
-        # 🔴 4. RETORNO DE RESULTADOS
+        # 🔴 6. RETORNO ORDENADO DE DATOS FINALES
         # =====================================================================
         if df_base.empty:
             return None
 
-        # Si hay demasiados resultados, limitamos a los primeros 60
+        # Acotamos a un máximo de 60 resultados útiles para el frontend
         df_final = df_base.head(60)
         
-        # Recuperamos las celdas limpias originales en inglés técnico
+        # Sincronizamos los índices con los textos originales limpios en inglés técnico
         df_output = df_contexto.loc[df_final.index].copy()
         df_output = df_output.sort_values(by=['Modelo', 'Nombre de la Pieza'], ascending=[True, True])
         
