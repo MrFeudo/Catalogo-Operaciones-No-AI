@@ -174,7 +174,7 @@ opcion_menu = st.sidebar.radio(
 def buscador_tradicional_excel(consulta_usuario, df_contexto):
     try:
         # =====================================================================
-        # 🎯 1. DICCIONARIO SEMÁNTICO ULTRA-EXPANDIDO (ACCIONES Y ENERGÍAS)
+        # 🎯 1. DICCIONARIO SEMÁNTICO (NÚCLEO DE TRADUCCIÓN)
         # =====================================================================
         mapa_raices = {
             # --- 🛠️ ACCIONES Y VERBOS ---
@@ -200,8 +200,8 @@ def buscador_tradicional_excel(consulta_usuario, df_contexto):
             "centralita": "control unit|control module|ecu|bcm|mcu",
             "modulo": "control module|module", "modulos": "module",
 
-            # --- ⚡ BATERÍAS Y ELEC. ---
-            "bateria": "battery|storage battery|bms", "vateria": "battery", 
+            # --- ⚡ BATERÍAS Y COMPONENTES ---
+            "bateria": "battery|storage battery|bms", "vateria": "battery", "baterias": "battery",
             "cable": "wiring|harness|wire", "cableado": "wiring|harness",
             "airbag": "airbag|air bag|srs|abm", "cinturon": "seatbelt|seat belt",
             "hebilla": "buckle", "capo": "hood", "paragolpes": "bumper",
@@ -215,11 +215,11 @@ def buscador_tradicional_excel(consulta_usuario, df_contexto):
             "izquierdo": "lh|left", "izquierda": "lh|left",
             "derecho": "rh|right", "derecha": "rh|right",
             
-            # --- 🔋 MOTORIZACIONES Y ENERGÍAS ---
+            # --- 🔋 MOTORIZACIONES ---
             "hev": "hev|hybrid", "hibrido": "hev|hybrid", "hibrida": "hev|hybrid",
             "ev": "ev|bev|electric", "electrico": "ev|bev|electric", "electrica": "ev|bev|electric",
             "phev": "phev|plug-in", "enchufable": "phev|plug-in",
-            "gasolina": "ice|gasoline", "termico": "ice", "atm": "ice"
+            "gasolina": "ice|gasoline", "termico": "ice"
         }
 
         abreviaturas_modelos = {
@@ -231,6 +231,7 @@ def buscador_tradicional_excel(consulta_usuario, df_contexto):
             "o9": "omoda 9", "omoda9": "omoda 9", "o-9": "omoda 9"
         }
 
+        # 1. Normalización de la consulta
         consulta_limpia = consulta_usuario.lower().strip()
         for orig, dest in [("í", "i"), ("ó", "o"), ("á", "a"), ("é", "e"), ("ú", "u"), ("ñ", "n")]:
             consulta_limpia = consulta_limpia.replace(orig, dest)
@@ -242,7 +243,7 @@ def buscador_tradicional_excel(consulta_usuario, df_contexto):
         lista_palabras_usuario = consulta_limpia.split()
 
         # =====================================================================
-        # 🧪 2. PREPARACIÓN DE LA BASE DE DATOS (LIMPIEZA DE VACÍOS)
+        # 🧹 2. FILTRADO INICIAL DE CELDAS VACÍAS
         # =====================================================================
         df_base = df_contexto.copy()
         df_base = df_base[
@@ -251,76 +252,48 @@ def buscador_tradicional_excel(consulta_usuario, df_contexto):
             (df_base['Operación Técnica'].notna()) & (df_base['Operación Técnica'].astype(str).str.strip() != "")
         ]
 
-        df_base['mod_low'] = df_base['Modelo'].astype(str).str.lower().str.strip()
-        df_base['pieza_low'] = df_base['Nombre de la Pieza'].astype(str).str.lower().str.strip()
-        df_base['op_low'] = df_base['Operación Técnica'].astype(str).str.lower().str.strip()
-
-        df_base['score'] = 0
+        # Campos de búsqueda unificados en minúsculas
+        df_base['search_field'] = (
+            df_base['Modelo'].astype(str).str.lower() + " " + 
+            df_base['Nombre de la Pieza'].astype(str).str.lower() + " " + 
+            df_base['Operación Técnica'].astype(str).str.lower()
+        )
 
         # =====================================================================
-        # 📊 3. ALGORITMO DE ASIGNACIÓN DE PUNTOS INDEXADO POR PALABRA EXACTA
+        # ⚔️ 3. FILTRADO BOOLEANO ESTRICTO (EL MÁRMOL DEL ESCULTOR)
         # =====================================================================
-        if "omoda" in consulta_limpia:
-            df_base['score'] += df_base['mod_low'].str.contains(r'\bomoda\b', regex=True, na=False).astype(int) * 50
-        elif "jaecoo" in consulta_limpia:
-            df_base['score'] += df_base['mod_low'].str.contains(r'\bjaecoo\b', regex=True, na=False).astype(int) * 50
-
-        modelos_numericos = ["5", "7", "8", "9"]
-        num_detectado = None
-        for num in modelos_numericos:
-            if num in lista_palabras_usuario or any(f"omoda{num}" in w or f"jaecoo{num}" in w for w in lista_palabras_usuario) or num in consulta_limpia:
-                num_detectado = num
-                break
-        
-        if num_detectado:
-            # Filtro estricto: Si el modelo no tiene el número, penalización destructiva inmediata
-            df_base['score'] += df_base['mod_low'].str.contains(rf'\b{num_detectado}\b', regex=True, na=False).astype(int) * 200
-            df_base['score'] -= (~df_base['mod_low'].str.contains(rf'\b{num_detectado}\b', regex=True, na=False)).astype(int) * 500
-
-        # Puntos por motorización
-        energias_claves = ["hev", "phev", "ev", "ice", "hybrid", "electric", "gasolina", "enchufable", "hibrido"]
-        if any(eng in consulta_limpia for eng in energias_claves):
-            raices_energia = []
-            for esp, eng in mapa_raices.items():
-                if esp in ["hev", "hibrido", "hibrida", "ev", "electrico", "electrica", "phev", "enchufable", "gasolina"] and esp in consulta_limpia:
-                    raices_energia.extend(eng.split('|'))
-            
-            if raices_energia:
-                # Forzamos fronteras de palabra exacta para las motorizaciones
-                regex_eng = '|'.join([rf'\b{r}\b' for r in set(raices_energia)])
-                df_base['score'] += df_base['mod_low'].str.contains(regex_eng, regex=True, na=False).astype(int) * 150
-                if "ev" in consulta_limpia or "electrico" in consulta_limpia:
-                    df_base['score'] -= df_base['mod_low'].str.contains(r'\b(hev|phev|ice|hybrid|gasoline)\b', regex=True, na=False).astype(int) * 100
-
-        # Puntos nucleares por componentes y acciones
+        # Vamos a ir reduciendo el dataframe palabra por palabra de la consulta
         for palabra in lista_palabras_usuario:
-            if palabra in ["quiero", "para", "con", "del", "una", "uno", "el", "la", "los", "las", "este", "un", "de", "omoda", "jaecoo", "5", "7", "8", "9"]:
+            # Ignoramos conectores inservibles
+            if palabra in ["quiero", "para", "con", "del", "una", "uno", "el", "la", "los", "las", "este", "un", "de"]:
                 continue
             
-            terminos_ingleses = []
+            # Determinamos qué tiene que buscar Python en el Excel para esta palabra
             if palabra in mapa_raices:
-                terminos_ingleses.extend(mapa_raices[palabra].split('|'))
+                # Si está en el diccionario, creamos una regex de palabra exacta (\b) con sus traducciones
+                traducciones = mapa_raices[palabra].split('|')
+                regex_palabra = '|'.join([rf'\b{t}\b' for t in traducciones])
+                # Mantenemos también la palabra original en español por si viniera así en el Excel
+                regex_palabra += rf'|\b{palabra}\b'
             else:
-                if len(palabra) > 2:
-                    terminos_ingleses.append(palabra)
+                # Si es una palabra libre (un código, un número de modelo, etc.), buscamos coincidencia exacta
+                regex_palabra = rf'\b{palabra}\b'
             
-            if terminos_ingleses:
-                # 🛑 CAMBIO RADICAL: Construimos la regex forzando límites de palabra exacta (\b)
-                regex_tecnica = '|'.join([rf'\b{t}\b' for t in set(terminos_ingleses)])
-                df_base['score'] += df_base['pieza_low'].str.contains(regex_tecnica, regex=True, na=False).astype(int) * 300
-                df_base['score'] += df_base['op_low'].str.contains(regex_tecnica, regex=True, na=False).astype(int) * 300
+            # APLICAMOS EL FILTRO FILO DE NAVAJA: La fila DEBE contener el término obligatoriamente
+            df_base = df_base[df_base['search_field'].str.contains(regex_palabra, regex=True, na=False)]
 
         # =====================================================================
-        # 🔴 4. EXTRACCIÓN DE GANADORES (BARRERA DE CORTE ALTA)
+        # 🔴 4. RETORNO DE RESULTADOS
         # =====================================================================
-        # Subimos el listón: Si no ha cazado al menos el componente o acción principal, la fila va fuera
-        df_filtrado_final = df_base[df_base['score'] > 150]
-
-        if df_filtrado_final.empty:
+        if df_base.empty:
             return None
 
-        df_ordenado = df_filtrado_final.sort_values(by=['score', 'Modelo'], ascending=[False, True]).head(60)
-        df_output = df_contexto.loc[df_ordenado.index].copy()
+        # Si hay demasiados resultados, limitamos a los primeros 60
+        df_final = df_base.head(60)
+        
+        # Recuperamos las celdas limpias originales en inglés técnico
+        df_output = df_contexto.loc[df_final.index].copy()
+        df_output = df_output.sort_values(by=['Modelo', 'Nombre de la Pieza'], ascending=[True, True])
         
         return df_output[['Modelo', 'Nombre de la Pieza', 'Código de Referencia', 'Operación Técnica', 'Tiempo Estándar (UT/Horas)']]
 
