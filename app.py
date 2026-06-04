@@ -234,6 +234,7 @@ def buscador_inteligente_excel(consulta_usuario, df_contexto):
             "reemplazar": "remove and reinstall|replace|remove|reinstall",
             "reemplazo": "remove and reinstall|replace|remove|reinstall",
             "reinstalar": "remove and reinstall|reinstall",
+            "actualizar": "refresh|update|upgrade",
             "desmontar": "remove", "montar": "reinstall",
             "cinturon": "seatbelt|seat belt|belt", "cinturones": "seatbelt|seat belt",
             "pulir": "polishing|polish", "pulido": "polishing|polish",
