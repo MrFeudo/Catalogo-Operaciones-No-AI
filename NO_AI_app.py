@@ -209,11 +209,18 @@ def buscador_tradicional_excel(consulta_usuario, df_contexto):
             "canister": "canister|evap", "vapores": "canister|evap",
             "filtro": "filter", "junta": "gasket|seal", "tubo": "pipe|hose",
 
-            # --- 📍 UBICACIONES ---
-            "delantero": "fr|front", "delantera": "fr|front", "frontal": "fr|front",
-            "trasero": "rr|rear", "trasera": "rr|rear", "posterior": "rr|rear",
-            "izquierdo": "lh|left", "izquierda": "lh|left",
-            "derecho": "rh|right", "derecha": "rh|right",
+           # --- 📍 UBICACIONES, ORIENTACIÓN Y LADOS (AMPLIADO) ---
+            "delantero": "fr|front", "delantera": "fr|front", "frontal": "fr|front", "alante": "fr|front",
+            "trasero": "rr|rear", "trasera": "rr|rear", "posterior": "rr|rear", "atras": "rr|rear",
+            "izquierdo": "lh|left|driver", "izquierda": "lh|left|driver", "izq": "lh|left", "izda": "lh|left",
+            "derecho": "rh|right|passenger", "derecha": "rh|right|passenger", "der": "rh|right", "drcha": "rh|right",
+            "superior": "upper", "inferior": "lower", "interno": "inner", "externo": "outer",
+            "central": "central|middle", "lateral": "side",
+            
+            # Sinónimos de habitáculo y lados del vehículo (Piloto / Copiloto)
+            "conductor": "driver|lh|left", "piloto": "driver|lh|left",
+            "copiloto": "passenger|rh|right", "pasajero": "passenger|rh|right", "acompañante": "passenger|rh|right",
+            "acompanante": "passenger|rh|right"
             
             # --- 🔋 MOTORIZACIONES ---
             "hev": "hev|hybrid", "hibrido": "hev|hybrid", "hibrida": "hev|hybrid",
