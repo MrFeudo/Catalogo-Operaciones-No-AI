@@ -176,7 +176,7 @@ def buscador_tradicional_excel(consulta_usuario, df_contexto):
         # =====================================================================
         # 🎯 1. DICCIONARIO SEMÁNTICO (NÚCLEO DE TRADUCCIÓN)
         # =====================================================================
-       mapa_raices = {
+        mapa_raices = {
             # --- 🛠️ ACCIONES Y VERBOS ---
             "cambiar": "remove and reinstall|replace|remove|reinstall",
             "cambio": "remove and reinstall|replace|remove|reinstall",
