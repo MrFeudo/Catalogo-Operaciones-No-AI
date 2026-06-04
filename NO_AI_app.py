@@ -351,6 +351,8 @@ def buscador_tradicional_excel(consulta_usuario, df_contexto):
             "j7": "jaecoo 7", "jaecoo7": "jaecoo 7", "j-7": "jaecoo 7",
             "j8": "jaecoo 8", "jaecoo8": "jaecoo 8",
             "o5": "omoda 5", "omoda5": "omoda 5", "o-5": "omoda 5",
+            "o7": "omoda 7", "omoda7": "omoda 7", "o-7": "omoda 7",
+            "o9": "omoda 9", "omoda9": "omoda 9", "o-9": "omoda 9", 
             "hibrido": "hev", "electrico": "bev", "gasolina": "ice"
         }
 
@@ -432,13 +434,28 @@ def buscador_tradicional_excel(consulta_usuario, df_contexto):
             else:
                 df_resultados = df_base.head(40)
 
-            if df_resultados.empty:
+            # =============================================================
+                # 🚗 CRIBA DE MARCA Y MODELO EXACTO (VERSIÓN TOTAL CON OMODA 9)
+                # =============================================================
                 if "omoda" in consulta_limpia:
-                    df_resultados = df_contexto[df_contexto['Modelo'].astype(str).str.lower().str.contains("omoda", na=False)].head(60)
+                    df_base = df_base[df_base['Modelo'].str.contains("omoda", na=False)]
+                    # Filtro específico según el número de modelo OMODA
+                    if "5" in consulta_limpia:
+                        df_base = df_base[df_base['Modelo'].str.contains("5", na=False)]
+                    elif "7" in consulta_limpia:
+                        df_base = df_base[df_base['Modelo'].str.contains("7", na=False)]
+                    elif "9" in consulta_limpia:
+                        df_base = df_base[df_base['Modelo'].str.contains("9", na=False)]
+                        
                 elif "jaecoo" in consulta_limpia:
-                    df_resultados = df_contexto[df_contexto['Modelo'].astype(str).str.lower().str.contains("jaecoo", na=False)].head(60)
-                else:
-                    df_resultados = df_contexto.head(40)
+                    df_base = df_base[df_base['Modelo'].str.contains("jaecoo", na=False)]
+                    # Filtro específico según el número de modelo JAECOO
+                    if "5" in consulta_limpia:
+                        df_base = df_base[df_base['Modelo'].str.contains("5", na=False)]
+                    elif "7" in consulta_limpia:
+                        df_base = df_base[df_base['Modelo'].str.contains("7", na=False)]
+                    elif "8" in consulta_limpia:
+                        df_base = df_base[df_base['Modelo'].str.contains("8", na=False)]
 
         if df_resultados.empty:
             return None
