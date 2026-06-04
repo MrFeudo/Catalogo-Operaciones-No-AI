@@ -210,7 +210,7 @@ st.sidebar.sidebar_markdown_target = st.sidebar.markdown(txt["menu_titulo"])
 
 opcion_menu = st.sidebar.radio(
     txt["menu_radio"],
-    [txt["menu_taller"], txt["menu_solicitar"], "🧠 Consultorio Técnico IA"],
+    [txt["menu_taller"], txt["menu_solicitar"],
     key="menu_navegacion_app"
 )
 
@@ -732,103 +732,6 @@ def buscador_inteligente_excel(consulta_usuario, df_contexto):
     except Exception as e:
         return f"❌ Error en el motor de la IA de Gemini: {str(e)}"
         
-# =========================================================================
-# FUNCIÓN DEL CONSULTORIO DE IA (BLINDADA CONTRA ERRORES DE SESSION STATE)
-# =========================================================================
-def consultar_ia_garantias(descripcion_averia, archivo_imagen=None):
-    """
-    Procesa la consulta técnica aplicando un criterio estricto de Central.
-    Fuerza respuestas ultra-estructuradas, con frases cortas, veredictos
-    inmediatos y respaldo explícito en los artículos de la política.
-    """
-    try:
-        if "GEMINI_API_KEY" not in st.secrets:
-            return "⚠️ **Error de Configuración**: No se ha encontrado la clave 'GEMINI_API_KEY' en st.secrets."
-            
-        client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
-
-        try:
-            with open("Politica_conocimiento.txt", "r", encoding="utf-8") as f:
-                politica_texto = f.read()
-        except FileNotFoundError:
-            politica_texto = "Política oficial no disponible localmente. Exigir cumplimiento normativo general."
-
-        # PROMPT DE SISTEMA: Establece el tono imperativo, directo y la obligación de citar la política
-        prompt_sistema = (
-            "Eres un Ingeniero de Garantías Senior para OMODA & JAECOO España. Your task is to issue definitive rulings.\n\n"
-            "REGLAS CRÍTICAS DE ESTILO Y FORMATO:\n"
-            "1. Frases cortas, cortantes y directas. Evita la paja y los párrafos densos. Usa Markdown exhaustivo (negritas y listas).\n"
-            "2. Prohibido incluir cualquier tipo de saludo, introducción o transición. Empieza DIRECTAMENTE con el bloque del Dictamen Preliminar.\n"
-            "3. Cada argumento técnico o decisión técnica DEBE citar obligatoriamente la Sección, Artículo o Punto exacto de la política adjunta.\n\n"
-            f"--- POLÍTICA DE CONOCIMIENTO OFICIAL ---\n{politica_texto}"
-        )
-
-        contenidos = []
-        
-        # Procesamiento y compresión efímera de imágenes (máximo 2)
-        if archivo_imagen is not None:
-            lista_archivos = archivo_imagen if isinstance(archivo_imagen, list) else [archivo_imagen]
-            for archivo in lista_archivos[:2]:
-                imagen_pil = Image.open(io.BytesIO(archivo.read() if hasattr(archivo, 'read') else archivo))
-                imagen_pil.thumbnail((1024, 1024))
-                contenidos.append(imagen_pil)
-            
-       # PROMPT DE USUARIO: Criterio laxo para actualizaciones de software integrado
-        prompt_usuario = (
-            f"Caso reportado por el taller:\n'{descripcion_averia}'\n\n"
-            "Genera el dictamen técnico estructurado. No incluyas introducciones. "
-            "Usa frases muy cortas. Sigue estrictamente este orden y pautas:\n\n"
-            "**📢 VEREDICTO INMEDIATO Y DICTAMEN DE COBERTURA**\n"
-            "- Indica en la primera línea si el caso se **ACEPTA**, se **RECHAZA** o si requiere **PRE-AUTORIZACIÓN** (Cita Sección y Artículo).\n"
-            "- Argumenta la decisión basándote en la política (aplica la regla de que daños ocultos bajo guarnecidos/consolas en transporte o que lleguen así a puerto SÍ se cubren).\n\n"
-            "**1. EVALUACIÓN Y CATEGORÍA TÉCNICA**\n"
-            "- **Componente afectado**: Identifícalo en negrita.\n"
-            "- **Criticidad**: Evalúala (🔴 Crítico / 🟡 Medio / 🟢 Bajo).\n"
-            "- **Naturaleza**: Tipifica el fallo (mecánico, eléctrico, estético, software) con frases de una sola línea.\n\n"
-            "**2. ANÁLISIS DE LA EVIDENCIA VISUAL (FOTOS)**\n"
-            "- Si NO hay imágenes: Muestra una tabla Markdown detallando las fotos o capturas exactas que debe subir el taller. "
-            "⚠️ REGLA DE LAXITUD PARA SOFTWARE: Si el caso es una actualización de software, NO exijas vídeo. Especifica en la tabla que es suficiente con aportar dos fotos: una de la versión de software anterior y otra de la nueva versión ya instalada en el vehículo.\n"
-            "- Si SÍ hay imágenes: Describe en puntos breves los hallazgos técnicos (marcas, versiones de pantalla, etc.).\n\n"
-            "**3. ACCIÓN REQUERIDA Y PROTOCOLO DE TRABAJO**\n"
-            "- Lista numerada (1, 2, 3...) muy escueta con las instrucciones técnicas exactas que debe ejecutar el operario para resolver o certificar la incidencia."
-        )
-        contenidos.append(prompt_usuario)
-
-        # Ejecución con temperatura baja (0.3) para garantizar precisión y evitar divagaciones
-        response = client.models.generate_content(
-            model='gemini-3.1-flash-lite',
-            contents=contenidos,
-            config=types.GenerateContentConfig(
-                system_instruction=prompt_sistema,
-                temperature=0.3
-            )
-        )
-        
-        # 🛡️ INTERCEPCIÓN Y SEGURO DE INICIALIZACIÓN (Evita el fallo que te ha saltado)
-        if "tokens_totales_input" not in st.session_state:
-            st.session_state.tokens_totales_input = 0
-        if "tokens_totales_output" not in st.session_state:
-            st.session_state.tokens_totales_output = 0
-        if "dinero_total_gastado" not in st.session_state:
-            st.session_state.dinero_total_gastado = 0.0
-        if "ultima_consulta_info" not in st.session_state:
-            st.session_state.ultima_consulta_info = "Ninguna consulta en esta sesión."
-
-        # Inyección segura de métricas tras verificar que existen
-        if response.text and response.usage_metadata:
-            t_input = response.usage_metadata.prompt_token_count
-            t_output = response.usage_metadata.candidates_token_count
-            coste_estimado = ((t_input * 0.075) / 1_000_000) + ((t_output * 0.30) / 1_000_000)
-            
-            st.session_state.tokens_totales_input += t_input
-            st.session_state.tokens_totales_output += t_output
-            st.session_state.dinero_total_gastado += coste_estimado
-            st.session_state.ultima_consulta_info = f"Última: In: {t_input} | Out: {t_output} (+{coste_estimado:.5f}$)"
-            
-        return response.text if response.text else "⚠️ La IA procesó la solicitud pero no devolvió contenido."
-
-    except Exception as e:
-        return f"❌ **Error en la API de Gemini**:\n```text\n{str(e)}\n```"
 # ==========================================
 # 4. SISTEMA DE SEGURIDAD CONTRASEÑA
 # ==========================================
@@ -1153,77 +1056,4 @@ if check_password():
                             time.sleep(1.5)
                             st.rerun()
                         
-# =========================================================================
-    # PANTALLA 4: CONSULTORIO IA DE GARANTÍAS (VERSION DEFINITIVA)
-    # =========================================================================
-    elif opcion_menu == "🧠 Consultorio Técnico IA":
-        st.title("🤖 Consultor Técnico de Garantías (Inteligencia Artificial)")
-        st.write("Analiza de forma preliminar si una avería está cubierta según el manual de políticas oficial e identifica los pasos técnicos a seguir.")
-        st.markdown("---")
 
-        # Inicializamos la variable en la sesión para que el informe no se borre al refrescar
-        if "resultado_consultorio" not in st.session_state:
-            st.session_state.resultado_consultorio = None
-
-        st.subheader("📝 Detalles de la Consulta")
-        descripcion_averia = st.text_area(
-            "Descripción de la avería o síntomas del vehículo:",
-            placeholder="Ejemplo: Cliente reporta ruido metálico al girar el volante a la izquierda en OMODA 5...",
-            height=150
-        )
-        
-        # Cargador múltiple blindado a un máximo de 2 fotos y 20MB por archivo
-        archivos_imagenes = st.file_uploader(
-            "📸 Adjuntar evidencias o fotos de la avería (Máximo 2 imágenes - 20MB máx por archivo):", 
-            type=["jpg", "jpeg", "png"],
-            accept_multiple_files=True,
-            key="cargador_imagenes_taller"
-        )
-        
-        archivos_validos = []
-        peso_correcto = True
-        
-        if archivos_imagenes:
-            if len(archivos_imagenes) > 2:
-                st.error("❌ **Error**: El sistema solo acepta un máximo de 2 imágenes por consulta.")
-                peso_correcto = False
-            else:
-                for archivo in archivos_imagenes:
-                    if archivo.size > 20 * 1024 * 1024:
-                        st.error(f"❌ **El archivo '{archivo.name}' supera el límite permitido de 20 MB.**")
-                        peso_correcto = False
-                if peso_correcto:
-                    archivos_validos = archivos_imagenes
-        
-        # Botón de envío
-        if st.button("🔍 Enviar Consulta a la IA", type="primary", use_container_width=True):
-            if not descripcion_averia.strip():
-                st.error("⚠️ Por favor, introduce una descripción de la avería antes de realizar la consulta.")
-            elif archivos_imagenes and len(archivos_imagenes) > 2:
-                st.error("❌ Corrige la cantidad de imágenes antes de continuar.")
-            elif archivos_imagenes and not peso_correcto:
-                st.error("❌ Una o más imágenes superan los 20 MB.")
-            else:
-                with st.spinner("🧠 Analizando la documentación oficial y generando el informe técnico..."):
-                    parametro_imagenes = archivos_validos if archivos_validos else None
-                    # Guardamos el resultado en el estado de la sesión
-                    st.session_state.resultado_consultorio = consultar_ia_garantias(descripcion_averia, parametro_imagenes)
-
-        # RENDERIZADO PERSISTENTE (Fuera del botón para que no desaparezca nada)
-        if st.session_state.resultado_consultorio:
-            st.markdown("### 📋 Informe de Diagnóstico Generado")
-            st.markdown(st.session_state.resultado_consultorio)
-            st.success("✅ Análisis preliminar finalizado.")
-            
-            st.markdown("<br>", unsafe_allow_html=True)
-            
-            # 💛 EL DISCLAIMER EN AMARILLO FIJO Y RESALTADO ABAJO DEL TODO
-            st.warning("""
-            #### ⚠️ NOTA OBLIGATORIA DE CENTRAL
-            Este informe constituye una **valoración preliminar e informativa** basada exclusivamente en los síntomas y evidencias gráficas aportadas por el taller. 
-            
-            Para validar definitivamente el diagnóstico técnico, proceder con la autorización de la reparación bajo garantía o reportar de forma oficial un fallo de fabricación de origen, **es obligatorio abrir un canal oficial en la plataforma aportando el bastidor (VIN) completo**:
-            
-            * 🛠️ **¿Dudas sobre el diagnóstico técnico o el proceso de reparación?** Abra un **Ticket de Asistencia Técnica** en el sistema o envíe un correo detallado a: [soportetecnico@omodaes.com](mailto:soportetecnico@omodaes.com)
-            * 📝 **¿Consultas sobre los plazos de cobertura de garantía o tramitación?** Contacte de forma directa con el departamento administrativo en: [garantias@omodaes.com](mailto:garantias@omodaes.com)
-            """)
