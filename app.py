@@ -318,7 +318,7 @@ def buscador_inteligente_excel(consulta_usuario, df_contexto):
             "reinstalar": "remove and reinstall|reinstall",
             "desmontar": "remove", "montar": "reinstall",
             "comprobar": "check|inspection|test", "verificar": "check|inspection|test", "diagnosis": "check|test",
-            "programar": "program|coding|software", "codificar": "program|coding|software", "actualizar": "update|flash"
+            "programar": "program|coding|software", "codificar": "program|coding|code|software", "actualizar": "update|flash|refresh|update"
         }
 
         # Limpieza inicial de texto sin acentos
