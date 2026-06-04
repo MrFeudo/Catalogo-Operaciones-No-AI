@@ -243,8 +243,8 @@ def buscador_tradicional_excel(consulta_usuario, df_contexto):
             "bujia": "spark plug", "bujias": "spark plug", "bobina": "ignition coil", "bobinas": "ignition coil",
 
             # --- 🚗 TRANSMISIÓN, CAJA DE CAMBIOS Y EMBRAGUE ---
-            "dct": "dct|dual clutch transmission", "caja": "transmission|gearbox", 
-            "caja cambios": "transmission|gearbox", "transmision": "transmission|propeller shaft|drive shaft",
+            "dct": "dct|dual clutch transmission|dht", "caja": "transmission|gearbox|dht", 
+            "caja cambios": "transmission|gearbox|dht", "transmision": "transmission|propeller shaft|drive shaft|dht",
             "embrague": "clutch", "bimasa": "dual mass flywheel|flywheel", "volante motor": "flywheel",
             "palier": "drive shaft|axle shaft|half shaft", "palieres": "drive shaft",
             "diferencial": "differential", "reductora": "reducer", "selector": "selector|shifter",
