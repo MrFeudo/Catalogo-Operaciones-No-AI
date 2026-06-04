@@ -210,7 +210,7 @@ st.sidebar.sidebar_markdown_target = st.sidebar.markdown(txt["menu_titulo"])
 
 opcion_menu = st.sidebar.radio(
     txt["menu_radio"],
-    [txt["menu_taller"], txt["menu_solicitar"]]
+    [txt["menu_taller"], txt["menu_solicitar"]],  
     key="menu_navegacion_app"
 )
 
