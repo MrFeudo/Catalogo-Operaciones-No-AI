@@ -176,7 +176,11 @@ opcion_menu = st.sidebar.radio(
 # =====================================================================
 def buscador_tradicional_excel(consulta_usuario, df_contexto):
     try:
+        # =====================================================================
+        # 🎯 1. MEGA SUPER MACRO DICCIONARIO SEMÁNTICO (VERSIÓN TRADICIONAL BLINDADA)
+        # =====================================================================
         mapa_raices = {
+            # --- 🛠️ ACCIONES, VERBOS Y REGLAS DE TRABAJO ---
             "cambiar": "remove and reinstall|replace|remove|reinstall",
             "cambio": "remove and reinstall|replace|remove|reinstall",
             "sustituir": "remove and reinstall|replace|remove|reinstall",
@@ -200,6 +204,7 @@ def buscador_tradicional_excel(consulta_usuario, df_contexto):
             "limpiar": "clean|cleaning|wash",
             "pulir": "polishing|polish", "pulido": "polishing|polish",
             
+            # --- 🔌 CENTRALITAS, MÓDULOS Y ELECTRÓNICA DE CONTROL ---
             "ecu": "ecu|engine control unit|engine control module",
             "ems": "ems|engine management system",
             "mcu": "mcu|motor control unit|motor control module",
@@ -221,6 +226,7 @@ def buscador_tradicional_excel(consulta_usuario, df_contexto):
             "modulo": "control module|module", 
             "modulos": "control module|module",
 
+            # --- ⚡ BATERÍAS, ALTA TENSIÓN Y SISTEMA ELÉCTRICO ---
             "bateria": "battery|storage battery|bms|tecu", 
             "vateria": "battery|storage battery", 
             "baterias": "battery|storage battery",
@@ -238,6 +244,7 @@ def buscador_tradicional_excel(consulta_usuario, df_contexto):
             "bujia": "spark plug", "bujias": "spark plug",
             "bobina": "ignition coil", "bobinas": "ignition coil",
 
+            # --- 🛡️ SEGURIDAD, ASISTENCIAS ADAS Y SENSORES ---
             "fcm": "fcm|front camera module|forward camera|front view camera", 
             "camara": "camera|fcm|avm|rear view", "camaras": "camera",
             "frm": "frm|front radar module|forward radar", 
@@ -258,6 +265,7 @@ def buscador_tradicional_excel(consulta_usuario, df_contexto):
             "hebilla": "buckle", "hebillas": "buckle",
             "pretensor": "pretensioner",
 
+            # --- ⚙️ MOTOR, ADMISIÓN, ESCAPE Y REFRIGERACIÓN ---
             "motor": "engine assy|motor|engine", "motores": "engine",
             "culata": "cylinder head", "piston": "piston", "biela": "connecting rod",
             "cigüeñal": "crankshaft", "arbol": "camshaft", "levas": "camshaft",
@@ -274,6 +282,7 @@ def buscador_tradicional_excel(consulta_usuario, df_contexto):
             "termostato": "thermostat",
             "canister": "canister|evap canister", "vapores": "canister|evap|solenoid|pipe",
 
+            # --- 🚗 TRANSMISIÓN, CAJA DE CAMBIOS Y EMBRAGUE ---
             "dct": "dct|dual clutch transmission|double clutch",
             "cambio": "transmission|gearbox|dct|gearshift", 
             "caja": "transmission|gearbox", "caja cambios": "transmission|gearbox",
@@ -284,6 +293,7 @@ def buscador_tradicional_excel(consulta_usuario, df_contexto):
             "diferencial": "differential", "reductora": "reducer",
             "selector": "selector|shifter|gearshift lever",
 
+            # --- 🥾 CHASIS, SUSPENSIÓN Y FRENOS ---
             "esp": "esp|electronic stability program",
             "eps": "eps|electric power steering",
             "epb": "epb|electrical park brake|parking brake",
@@ -293,7 +303,7 @@ def buscador_tradicional_excel(consulta_usuario, df_contexto):
             "pastilla": "pads|brake pads", "pastillas": "pads|brake pads",
             "disco": "disc|brake disc", "discos": "disc|brake disc",
             "pinza": "caliper|brake caliper", "pinzas": "caliper",
-            "latiguillo": "brake hose", "servo": "brake booster|power brake",
+            "latiguillo": "brake hose", "servo": "brake booster|power booster",
             "amortiguador": "shock absorber|strut|damper", "amortiguadores": "shock absorber|strut",
             "muelle": "spring|coil spring", "muelles": "spring",
             "ballesta": "leaf spring",
@@ -303,6 +313,7 @@ def buscador_tradicional_excel(consulta_usuario, df_contexto):
             "buge": "hub|wheel hub", "cojinete": "bearing", "rodamiento": "bearing",
             "direccion": "steering|eps", "cremallera": "steering gear|steering rack",
 
+            # --- 📦 CARROCERÍA, INTERIOR, EXTERIOR Y COLISIÓN ---
             "capo": "hood|engine hood",
             "paragolpes": "bumper", "defensa": "bumper", "parachoques": "bumper",
             "faro": "headlamp|headlight", "faros": "headlamp", 
@@ -322,6 +333,7 @@ def buscador_tradicional_excel(consulta_usuario, df_contexto):
             "moldura": "molding|trim", "molduras": "molding|trim",
             "limpiaparabrisas": "wiper|wiper blade", "motor limpia": "wiper motor",
 
+            # --- 🩻 SUPORTACIÓN, ELEMENTOS DE UNIÓN Y MENUDENCIA ---
             "soporte": "bracket|support|mount|holder", "soportes": "bracket|support|mount",
             "cuna": "subframe|cradle|bracket|salver|tray", 
             "bandeja": "tray|salver",
@@ -331,6 +343,7 @@ def buscador_tradicional_excel(consulta_usuario, df_contexto):
             "grapa": "clip|retainer", "tornillo": "bolt|screw", "tuerca": "nut",
             "abrazadera": "clamp|clip",
 
+            # --- 🧪 FLUIDOS, JUNTAS Y FILTROS ---
             "filtro": "filter", "filtros": "filter",
             "filtro aceite": "oil filter", "filtro aire": "air filter", "filtro habitaculo": "cabin filter|pollen filter",
             "junta": "gasket|seal", "juntas": "gasket|seal", "reten": "oil seal|seal",
@@ -338,6 +351,7 @@ def buscador_tradicional_excel(consulta_usuario, df_contexto):
             "anticongelante": "coolant",
             "tubo": "pipe|tube|hose", "manguito": "hose", "conducto": "pipe|line|duct",
 
+            # --- 📍 UBICACIONES, ORIENTACIÓN Y LADOS ---
             "delantero": "fr", "delantera": "fr", "frontal": "fr", "alante": "fr",
             "trasero": "rr", "trasera": "rr", "posterior": "rr", "atras": "rr",
             "izquierdo": "lh", "izquierda": "lh", "izq": "lh", "izda": "lh",
@@ -346,31 +360,38 @@ def buscador_tradicional_excel(consulta_usuario, df_contexto):
             "central": "central|middle", "lateral": "side"
         }
 
+        # --- DICCIONARIO DE EXPANSIÓN DE MODELOS COMERCIALES ---
         abreviaturas_modelos = {
             "j5": "jaecoo 5", "jaecoo5": "jaecoo 5", "j-5": "jaecoo 5",
             "j7": "jaecoo 7", "jaecoo7": "jaecoo 7", "j-7": "jaecoo 7",
             "j8": "jaecoo 8", "jaecoo8": "jaecoo 8",
             "o5": "omoda 5", "omoda5": "omoda 5", "o-5": "omoda 5",
             "o7": "omoda 7", "omoda7": "omoda 7", "o-7": "omoda 7",
-            "o9": "omoda 9", "omoda9": "omoda 9", "o-9": "omoda 9", 
+            "o9": "omoda 9", "omoda9": "omoda 9", "o-9": "omoda 9",
             "hibrido": "hev", "electrico": "bev", "gasolina": "ice"
         }
 
+        # =====================================================================
+        # 🧹 2. LIMPIEZA Y NORMALIZACIÓN DE TEXTO DE ENTRADA
+        # =====================================================================
         consulta_limpia = consulta_usuario.lower().strip()
         for orig, dest in [("í", "i"), ("ó", "o"), ("á", "a"), ("é", "e"), ("ú", "u"), ("ñ", "n")]:
             consulta_limpia = consulta_limpia.replace(orig, dest)
 
+        # Reemplazamos abreviaturas pegadas por su nombre oficial expandido
         for abrev, mod_real in abreviaturas_modelos.items():
             if abrev in consulta_limpia.split() or abrev in consulta_limpia:
                 consulta_limpia = consulta_limpia.replace(abrev, mod_real)
 
         lista_palabras_usuario = consulta_limpia.split()
 
+        # Construimos el mapeo de raíces traducidas al inglés para el cálculo de puntos
         palabras_regex = []
         for esp, eng in mapa_raices.items():
             if esp in consulta_limpia:
                 palabras_regex.extend(eng.split('|'))
 
+        # Añadimos palabras sueltas válidas tecleadas por el técnico
         for p in lista_palabras_usuario:
             if len(p) > 2 and p not in ["quiero", "para", "con", "del", "una", "uno", "el", "la", "los", "las", "este", "un", "de"]:
                 if not (p.isdigit() and len(p) == 1):
@@ -378,116 +399,124 @@ def buscador_tradicional_excel(consulta_usuario, df_contexto):
 
         palabras_regex = list(set(palabras_regex))
 
-        terminos_manuales = ["manual", "adicional", "extra", "tiempo mas", "añadir horas", "universal", "marron", "baremo no"]
-        if any(tm in lista_palabras_usuario for tm in terminos_manuales):
-            df_resultados = df_contexto[df_contexto['Operación Técnica'].astype(str).str.lower().str.contains("universal", na=False)].head(20)
-        else:
-            df_base = df_contexto.copy()
-            
-            for col in ['Modelo', 'Nombre de la Pieza', 'Operación Técnica']:
-                df_base[col] = df_base[col].astype(str).str.lower().str.strip()
-
-            if "omoda" in consulta_limpia:
-                df_base = df_base[df_base['Modelo'].str.contains("omoda", na=False)]
-            elif "jaecoo" in consulta_limpia:
-                df_base = df_base[df_base['Modelo'].str.contains("jaecoo", na=False)]
-
-            componentes_encontrados = []
-            palabras_excluidas_criba = [
-                "cambiar", "cambio", "sustituir", "sustitucion", "reemplazar", "reemplazo",
-                "desmontar", "montar", "programar", "codificar", "actualizar", "reprogramar",
-                "delantero", "delantera", "frontal", "alante", "trasero", "trasera", "posterior", "atras",
-                "izquierdo", "izquierda", "izq", "izda", "derecho", "derecha", "der", "drcha",
-                "superior", "inferior", "interno", "externo", "central", "lateral", "ajustar", "alinear", "calibrar"
-            ]
-            
-            for esp, eng in mapa_raices.items():
-                if esp in consulta_limpia and esp not in palabras_excluidas_criba:
-                    componentes_encontrados.extend(eng.split('|'))
-            
-            if componentes_encontrados:
-                regex_comp = '|'.join(set(componentes_encontrados))
-                df_base = df_base[df_base['Nombre de la Pieza'].str.contains(regex_comp, na=False) | 
-                                  df_base['Operación Técnica'].str.contains(regex_comp, na=False)]
-
-            filtros_secundarios = {
-                "wiring|harness|wire": ["cable", "cableado", "instalacion", "mazo"],
-                "sensor": ["sensor", "sonda"],
-                "bracket|salver|tray|support|pressure|rod|plate": ["soporte", "cuna", "bandeja", "tapa", "cubierta", "varilla", "placa"]
-            }
-            
-            for eng_purgar, esp_palabras in filtros_secundarios.items():
-                usuario_pide_secundario = any(w in lista_palabras_usuario for w in esp_palabras)
-                if not usuario_pide_secundario:
-                    condicion_purgar = df_base['Nombre de la Pieza'].str.contains(eng_purgar, na=False) | \
-                                       df_base['Operación Técnica'].str.contains(eng_purgar, na=False)
-                    df_base = df_base[~condicion_purgar]
-
-            df_base['score'] = 0
-            if palabras_regex:
-                regex_puntos = '|'.join(palabras_regex)
-                df_base['score'] += df_base['Modelo'].str.contains(regex_puntos, na=False).astype(int) * 5
-                df_base['score'] += df_base['Nombre de la Pieza'].str.contains(regex_puntos, na=False).astype(int) * 10
-                df_base['score'] += df_base['Operación Técnica'].str.contains(regex_puntos, na=False).astype(int) * 10
-                
-                df_resultados = df_base[df_base['score'] > 0].sort_values(by=['score', 'Modelo', 'Nombre de la Pieza'], ascending=[False, True, True]).head(80)
+        # =====================================================================
+        # 🔍 3. MOTOR DE FILTRADO EXCLUSIVO (APERTURA TOTAL LOCAL)
+        # =====================================================================
+        try:
+            terminos_manuales = ["manual", "adicional", "extra", "tiempo mas", "añadir horas", "universal", "marron", "baremo no"]
+            if any(tm in lista_palabras_usuario for tm in terminos_manuales):
+                df_resultados = df_contexto[df_contexto['Operación Técnica'].astype(str).str.lower().str.contains("universal", na=False)].head(20)
             else:
-                df_resultados = df_base.head(40)
+                # 🚨 NUEVO: CREAMOS COPIA Y PURGAMOS CELDAS VACÍAS/NULAS EN COLUMNAS CRÍTICAS DE INMEDIATO
+                df_base = df_contexto.copy()
+                
+                # Eliminamos filas donde 'Nombre de la Pieza' o 'Código de Referencia' sean NaN, None o celdas vacías
+                df_base = df_base[
+                    (df_base['Nombre de la Pieza'].notna()) & (df_base['Nombre de la Pieza'].astype(str).str.strip() != "") &
+                    (df_base['Código de Referencia'].notna()) & (df_base['Código de Referencia'].astype(str).str.strip() != "")
+                ]
+                
+                # Forzamos minúsculas internas temporales en los campos de mapeo para buscar sin conflicto
+                for col in ['Modelo', 'Nombre de la Pieza', 'Operación Técnica']:
+                    df_base[col] = df_base[col].astype(str).str.lower().str.strip()
 
-           # =============================================================
-                # 🚗 CRIBA DE MARCA Y MODELO EXACTO INTEGRAL (ANTI-MEZCLAS)
-                # =============================================================
-                # 1. Forzamos filtro estricto de marca principal
+                # 🚗 CRIBA FILTRADA DE MARCA PRINCIPAL
                 if "omoda" in consulta_limpia:
                     df_base = df_base[df_base['Modelo'].str.contains("omoda", na=False)]
                 elif "jaecoo" in consulta_limpia:
                     df_base = df_base[df_base['Modelo'].str.contains("jaecoo", na=False)]
 
-                # 2. Rompemos los empates aislando el número exacto del modelo si existe en la consulta
+                # 🛑 AISLAMIENTO ESTRICTO DE NÚMERO DE MODELO (EVITA MEZCLAR OMODA 5 CON 9, O JAECOO 5 CON 7/8)
                 modelos_numericos = ["5", "7", "8", "9"]
                 numero_detectado = None
                 
                 for num in modelos_numericos:
-                    # Comprobamos si el número está como palabra suelta (ej: "jaecoo 8") o pegada ("jaecoo8")
-                    if num in lista_palabras_usuario or any(f"jaecoo{num}" in w or f"omoda{num}" in w for w in lista_palabras_usuario) or num in consulta_limpia:
+                    if num in lista_palabras_usuario or any(f"omoda{num}" in w or f"jaecoo{num}" in w for w in lista_palabras_usuario) or num in consulta_limpia:
                         numero_detectado = num
-                        break # Nos quedamos con el primer número de modelo detectado
+                        break
                 
+                # Si el usuario especificó un coche (ej: Omoda 9), borramos de raíz los demás modelos (5, 7)
                 if numero_detectado:
-                    # Filtramos drásticamente: El modelo en el catálogo DEBE contener ese número
                     df_base = df_base[df_base['Modelo'].str.contains(numero_detectado, na=False)]
 
-                # [ ... Aquí se mantiene intacto el bucle de componentes y filtros secundarios ... ]
+                # INTERSECCIÓN OBLIGATORIA DEL COMPONENTE BASE (IGNORANDO VERBOS Y UBICACIONES)
+                componentes_encontrados = []
+                palabras_excluidas_criba = [
+                    "cambiar", "cambio", "sustituir", "sustitucion", "reemplazar", "reemplazo",
+                    "desmontar", "montar", "programar", "codificar", "actualizar", "reprogramar",
+                    "delantero", "delantera", "frontal", "alante", "trasero", "trasera", "posterior", "atras",
+                    "izquierdo", "izquierda", "izq", "izda", "derecho", "derecha", "der", "drcha",
+                    "superior", "inferior", "interno", "externo", "central", "lateral", "ajustar", "alinear", "calibrar",
+                    "pulir", "pulido", "limpiar"
+                ]
+                
+                for esp, eng in mapa_raices.items():
+                    if esp in consulta_limpia and esp not in palabras_excluidas_criba:
+                        componentes_encontrados.extend(eng.split('|'))
+                
+                if componentes_encontrados:
+                    regex_comp = '|'.join(set(componentes_encontrados))
+                    df_base = df_base[df_base['Nombre de la Pieza'].str.contains(regex_comp, na=False) | 
+                                      df_base['Operación Técnica'].str.contains(regex_comp, na=False)]
 
-                # =============================================================
-                # 📊 ALGORITMO DE PUNTUACIÓN (SCORE CORREGIDO)
-                # =============================================================
-                # Forzamos que si el usuario escribió un número de modelo, este cuente para el algoritmo
-                if numero_detectado and numero_detected not in palabras_regex:
+                # FILTROS SECUNDARIOS DE PURGA AUTOMÁTICA DE CABLES/SOPORTES/SENSORES
+                filtros_secundarios = {
+                    "wiring|harness|wire": ["cable", "cableado", "instalacion", "mazo"],
+                    "sensor": ["sensor", "sonda"],
+                    "bracket|salver|tray|support|pressure|rod|plate": ["soporte", "cuna", "bandeja", "tapa", "cubierta", "varilla", "placa"]
+                }
+                
+                for eng_purgar, esp_palabras in filtros_secundarios.items():
+                    usuario_pide_secundario = any(w in lista_palabras_usuario for w in esp_palabras)
+                    if not usuario_pide_secundario:
+                        condicion_purgar = df_base['Nombre de la Pieza'].str.contains(eng_purgar, na=False) | \
+                                           df_base['Operación Técnica'].str.contains(eng_purgar, na=False)
+                        df_base = df_base[~condicion_purgar]
+
+                # =====================================================================
+                # 📊 4. ALGORITMO DE CALCULADORA DE RELEVANCIA (SCORE REFINADO)
+                # =====================================================================
+                # Forzamos que si el usuario buscó por un número de modelo, este cuente para los puntos
+                if numero_detectado and numero_detectado not in palabras_regex:
                     palabras_regex.append(numero_detectado)
 
                 df_base['score'] = 0
                 if palabras_regex:
                     regex_puntos = '|'.join(palabras_regex)
-                    df_base['score'] += df_base['Modelo'].str.contains(regex_puntos, na=False).astype(int) * 10 # Más peso al modelo
+                    df_base['score'] += df_base['Modelo'].str.contains(regex_puntos, na=False).astype(int) * 15
                     df_base['score'] += df_base['Nombre de la Pieza'].str.contains(regex_puntos, na=False).astype(int) * 10
                     df_base['score'] += df_base['Operación Técnica'].str.contains(regex_puntos, na=False).astype(int) * 10
                     
-                    # Ordenamos con prioridad absoluta al score de relevancia más alto
+                    # Ordenamos con prioridad absoluta a la mayor coincidencia e incrementamos el head a 80 para dar variedad de motores
                     df_resultados = df_base[df_base['score'] > 0].sort_values(by=['score'], ascending=False).head(80)
                 else:
                     df_resultados = df_base.head(40)
-                    
-        if df_resultados.empty:
+
+                # Red de seguridad si se vacía por un filtro hiper-estricto
+                if df_resultados.empty:
+                    if "omoda" in consulta_limpia:
+                        df_resultados = df_contexto[df_contexto['Modelo'].astype(str).str.lower().str.contains("omoda", na=False)].head(60)
+                    elif "jaecoo" in consulta_limpia:
+                        df_resultados = df_contexto[df_contexto['Modelo'].astype(str).str.lower().str.contains("jaecoo", na=False)].head(60)
+                    else:
+                        df_resultados = df_contexto.head(40)
+
+            # =====================================================================
+            # 🔴 5. RETORNO DIRECTO DE CELDAS ORIGINALES EN INGLÉS DE CENTRAL
+            # =====================================================================
+            if df_resultados.empty:
+                return None
+
+            # Con .loc[df_resultados.index] recuperamos los textos nativos idénticos al Excel maestro
+            df_final_taller = df_contexto.loc[df_resultados.index].copy()
+            
+            # Ordenamos la salida alfabéticamente por modelo para estructurar visualmente la interfaz
+            df_final_taller = df_final_taller.sort_values(by=['Modelo', 'Nombre de la Pieza'], ascending=[True, True])
+            
+            return df_final_taller[['Modelo', 'Nombre de la Pieza', 'Código de Referencia', 'Operación Técnica', 'Tiempo Estándar (UT/Horas)']]
+
+        except Exception:
             return None
-
-        df_final_taller = df_contexto.loc[df_resultados.index].copy()
-        df_final_taller = df_final_taller.sort_values(by=['Modelo', 'Nombre de la Pieza'], ascending=[True, True])
-        
-        return df_final_taller[['Modelo', 'Nombre de la Pieza', 'Código de Referencia', 'Operación Técnica', 'Tiempo Estándar (UT/Horas)']]
-
-    except Exception as e:
-        return None
 
 # ==========================================
 # 5. SISTEMA DE SEGURIDAD CONTRASEÑA
