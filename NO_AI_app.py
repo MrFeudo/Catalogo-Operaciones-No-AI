@@ -396,7 +396,7 @@ mapa_raices = {
         }
 
         # --- DICCIONARIO DE EXPANSIÓN DE MODELOS ---
-    abreviaturas_modelos = {
+        abreviaturas_modelos = {
             "j5": "jaecoo 5", "jaecoo5": "jaecoo 5", "j-5": "jaecoo 5",
             "j7": "jaecoo 7", "jaecoo7": "jaecoo 7", "j-7": "jaecoo 7",
             "j8": "jaecoo 8", "jaecoo8": "jaecoo 8",
