@@ -1,36 +1,49 @@
-import streamlit as st
-import pandas as pd
-import datetime
 import io
-import unicodedata
+import re
+import time
+import datetime
 
-# Set page configuration
-st.set_page_config(page_title="Buscador Técnico OMODA & JAECOO", layout="wide")
+import pandas as pd
+import requests
+import streamlit as st
 
-# =========================================================================
-# 1. INICIALIZACIÓN ABSOLUTA DEL SESSION STATE
-# =========================================================================
-if "lista_solicitudes" not in st.session_state:
-    st.session_state.lista_solicitudes = []
 
-if "authenticated" not in st.session_state:
-    st.session_state.authenticated = False
-
-if "idioma" not in st.session_state:
-    st.session_state.idioma = "Español"
-
-# URL Directa (Raw) al archivo Excel en GitHub
-URL_GITHUB_EXCEL = "https://github.com/MrFeudo/Catalogo-Operaciones/raw/0d67464a70c2267e0f58aabe31f4530976f1aae8/DMS_Active_Spare_Parts.xlsx"
 
 # =========================================================================
-# 2. DICCIONARIO DE TRADUCCIÓN (Internacionalización - i18n para TFM)
+# CONFIGURACIÓN GENERAL
+# =========================================================================
+st.set_page_config(page_title="Tiempos de Taller OMODA & JAECOO", layout="wide")
+
+URL_GITHUB_EXCEL = "https://github.com/MrFeudo/Catalogo-Operaciones/raw/main/DMS_Active_Spare_Parts.xlsb"
+URL_GITHUB_VINES = "https://github.com/MrFeudo/Catalogo-Operaciones/raw/main/VINes.xlsb"
+
+
+
+# =========================================================================
+# INICIALIZACIÓN SESSION STATE
+# =========================================================================
+DEFAULT_SESSION_VALUES = {
+    "lista_solicitudes": [],
+    "authenticated": False,
+    "idioma": "Español",
+    "solicitar_marca": "OMODA",
+    "solicitar_modelo": "OMODA 5 (Gasolina)"
+}
+
+for key, value in DEFAULT_SESSION_VALUES.items():
+    if key not in st.session_state:
+        st.session_state[key] = value
+
+
+# =========================================================================
+# DICCIONARIO DE TRADUCCIÓN
 # =========================================================================
 IDIOMAS = {
     "Español": {
         "menu_titulo": "### 🗺️ Menú de Navegación",
         "menu_radio": "Selecciona una herramienta:",
         "menu_taller": "📋 Tiempos de Taller",
-        "menu_solicitar": "📝 Solicitar Operación",
+        "menu_solicitar": "📝 Operaciones no disponibles",
         "pass_titulo": "🔐 Acceso Red de Dealers",
         "pass_input": "Introduce la contraseña de acceso:",
         "pass_boton": "Entrar",
@@ -46,68 +59,61 @@ IDIOMAS = {
         "warn_taller": "⚠️ No se encontraron operaciones con los criterios seleccionados.",
         "err_taller": "Error al procesar la base de datos de tiempos: {}",
         "todos": "Todos",
-        "todas": "Todas",
-        "solicitar_titulo": "📝 Solicitud de Operaciones Adicionales de Mano de Obra",
-        "solicitar_sub": "Utilice este formulario para solicitar el alta de nuevas operaciones en el maestro de HQ.",
+        "solicitar_titulo": "📝 Operaciones no disponibles",
+        "solicitar_sub": "Usa este formulario para indicarnos una operación de taller que necesitas y no encuentras en el sistema.",
         "form_sub": "Datos de la Solicitud (Campos obligatorios *)",
         "form_marca": "Marca del vehículo *",
         "form_modelo": "INTRODUCIR MODELO *",
         "form_vin": "INTRODUCIR VIN (Bastidor) *",
         "form_vin_holder": "17 caracteres",
-        "form_dealer": "DEALER (Concesionario) *",
         "form_hq_code": "CÓDIGO DE PRODUCTO (Asignado por HQ)",
         "form_ref": "REFERENCIA DE PIEZA (Opcional)",
         "form_ref_holder": "Ej. 7365747465AA",
-        "form_op": "OPERACIÓN QUE SE SOLICITA AÑADIR *",
-        "form_op_holder": "Describa detalladamente la operación técnica o falta de precio que requiere el taller...",
+        "form_op": "OPERACIÓN QUE NO ENCUENTRAS *",
+        "form_op_holder": "Describe la operación de taller que necesitas y no encuentras en el sistema...",
         "form_btn": "Enviar Solicitud a Central",
         "err_campos": "❌ Por favor, rellene todos los campos obligatorios (*).",
-        "err_vin_corto": "❌ El VIN introducido es demasiado corto. Revíselo."
     },
     "English": {
         "menu_titulo": "### 🗺️ Navigation Menu",
         "menu_radio": "Select a tool:",
         "menu_taller": "📋 Workshop Times",
-        "menu_solicitar": "📝 Request Operation",
+        "menu_solicitar": "📝 Missing Operations",
         "pass_titulo": "🔐 Dealer Network Access",
         "pass_input": "Enter access password:",
         "pass_boton": "Login",
         "pass_error": "❌ Incorrect password",
         "taller_titulo": "🚗 Labor Operations Catalog",
-        "taller_sub": "Consult parts, models, and assigned times directly from the DMS.",
+        "taller_sub": "Consult parts, models and assigned times directly from the DMS.",
         "f_modelo": "1. Filter by Model:",
         "f_pieza": "2. Search by Part Name or Code:",
-        "f_operacion": "3. Search by operation type (e.g., Remove, Paint...):",
-        "f_mercado_taller": "Filter by Market / Organization (Workshop):",
-        "f_estado_taller": "Filter by Operation Status (Workshop):",
+        "f_operacion": "3. Search by operation type:",
+        "f_mercado_taller": "Filter by Market / Organization:",
+        "f_estado_taller": "Filter by Operation Status:",
         "res_taller": "### 📋 Results found: {} operations",
         "warn_taller": "⚠️ No operations found matching the selected criteria.",
         "err_taller": "Error processing workshop times database: {}",
         "todos": "All",
-        "todas": "All",
         "solicitar_titulo": "📝 Request for Additional Labor Operations",
-        "solicitar_sub": "Use this form to request new operations to be added to HQ master list.",
+        "solicitar_sub": "Use this form to request new operations or prices to be added to HQ master list.",
         "form_sub": "Request Details (* Required fields)",
         "form_marca": "Vehicle Brand *",
         "form_modelo": "ENTER MODEL *",
         "form_vin": "ENTER VIN (Chassis) *",
         "form_vin_holder": "17 characters",
-        "form_dealer": "DEALER *",
         "form_hq_code": "PRODUCT CODE (Assigned by HQ)",
         "form_ref": "PART REFERENCE (Optional)",
         "form_ref_holder": "e.g., 7365747465AA",
         "form_op": "OPERATION REQUESTED TO BE ADDED *",
-        "form_op_holder": "Describe in detail the technical operation required by the workshop...",
+        "form_op_holder": "Describe in detail the technical operation or missing price required by the workshop...",
         "form_btn": "Send Request to HQ",
         "err_campos": "❌ Please fill in all required fields (*).",
-        "err_vin_corto": "❌ The entered VIN is too short. Please check it."
     },
     "Chinese (中文)": {
         "menu_titulo": "### 🗺️ 导航菜单",
         "menu_radio": "选择工具:",
         "menu_taller": "📋 车间工时",
-        "menu_precios": "💰 零配件价格",
-        "menu_solicitar": "📝 请求操作",
+        "menu_solicitar": "📝 缺失操作",
         "pass_titulo": "🔐 经销商网络访问",
         "pass_input": "输入访问密码:",
         "pass_boton": "登录",
@@ -116,610 +122,412 @@ IDIOMAS = {
         "taller_sub": "直接从 DMS 查询零件、车型和分配的时间。",
         "f_modelo": "1. 按车型筛选:",
         "f_pieza": "2. 按零件名称或代码搜索:",
-        "f_operacion": "3. 按操作类型搜索 (例如: Remove, Paint...):",
-        "f_mercado_taller": "按市场 / 组织筛选 (车间):",
-        "f_estado_taller": "按操作状态筛选 (车间):",
+        "f_operacion": "3. 按操作类型搜索:",
+        "f_mercado_taller": "按市场 / 组织筛选:",
+        "f_estado_taller": "按操作状态筛选:",
         "res_taller": "### 📋 找到的结果: {} 个操作",
         "warn_taller": "⚠️ 未找到符合选择条件的工时操作。",
         "err_taller": "处理车间工时数据库时出错: {}",
         "todos": "全部",
-        "todas": "全部",
         "solicitar_titulo": "📝 申请新增工时操作",
-        "solicitar_sub": "使用此表单申请在总部(HQ)主数据中添加新工时操作。",
+        "solicitar_sub": "使用此表单申请在总部主数据中添加新工时操作或价格。",
         "form_sub": "申请信息 (* 为必填项)",
         "form_marca": "车辆品牌 *",
         "form_modelo": "输入车型 *",
         "form_vin": "输入 VIN (车架号) *",
         "form_vin_holder": "17位字符",
-        "form_dealer": "经销商 *",
         "form_hq_code": "产品代码 (由总部分配)",
         "form_ref": "零件编号 (选填)",
         "form_ref_holder": "例如: 7365747465AA",
         "form_op": "申请添加的操作内容 *",
-        "form_op_holder": "请详细描述车间所需的工时操作...",
+        "form_op_holder": "请详细描述车间所需的工时操作或缺失的价格...",
         "form_btn": "发送申请至总部",
         "err_campos": "❌ 请填写所有必填项 (*)。",
-        "err_vin_corto": "❌ 输入的 VIN 太短，请检查。"
     }
 }
 
-# ==========================================
-# 3. BARRA LATERAL: CONFIGURACIÓN E IDIOMA
-# ==========================================
-try:
-    st.sidebar.image("logo_empresa.png", use_container_width=True)
-except Exception:
-    st.sidebar.write("🏢 **OMODA & JAECOO**")
 
-st.sidebar.markdown("---")
 
-idioma_seleccionado = st.sidebar.selectbox(
-    "🌐 Language / Idioma / 语言:",
-    ["Español", "English", "Chinese (中文)"],
-    index=["Español", "English", "Chinese (中文)"].index(st.session_state.idioma),
-    key="selector_idioma_global"
-)
-st.session_state.idioma = idioma_seleccionado
-txt = IDIOMAS[st.session_state.idioma]
+# =========================================================================
+# UTILIDADES Y CARGA CORREGIDA DE VINES (COLUMNAS DEFINIDAS EXPLICITAMENTE)
+# =========================================================================
+def normalizar_texto(texto):
+    texto = str(texto)
+    return ''.join(c for c in unicodedata.normalize('NFD', texto) if unicodedata.category(c) != 'Mn').lower()
 
-st.sidebar.markdown("---")
-st.sidebar.markdown(txt["menu_titulo"])
+def normalize_text(text):
+    return normalizar_texto(text)
 
-opcion_menu = st.sidebar.radio(
-    txt["menu_radio"],
-    [txt["menu_taller"], txt["menu_solicitar"]],  
-    key="menu_navegacion_app"
-)
-
-def buscador_tradicional_excel(consulta_usuario, df_contexto):
+@st.cache_data(ttl=600)
+def load_data_vines():
     try:
-        # =====================================================================
-        # 🚗 1. DICCIONARIO DE EXPANSIÓN DE MODELOS COMERCIALES
-        # =====================================================================
-        abreviaturas_modelos = {
-            "j5": "jaecoo 5", "jaecoo5": "jaecoo 5", "j-5": "jaecoo 5",
-            "j7": "jaecoo 7", "jaecoo7": "jaecoo 7", "j-7": "jaecoo 7",
-            "j8": "jaecoo 8", "jaecoo8": "jaecoo 8",
-            "o5": "omoda 5", "omoda5": "omoda 5", "o-5": "omoda 5",
-            "o7": "omoda 7", "omoda7": "omoda 7", "o-7": "omoda 7",
-            "o9": "omoda 9", "omoda9": "omoda 9", "o-9": "omoda 9",
-            "hibrido": "hev", "electrico": "bev", "gasolina": "ice"
-        }
-
-        # =====================================================================
-        # 🎯 2. MEGA DICCIONARIO SEMÁNTICO (NÚCLEO DE TRADUCCIÓN AMPLIADO)
-        # =====================================================================
-        mapa_raices = {
-            # --- 🛠️ ACCIONES Y VERBOS ---
-            "cambiar": "remove and reinstall|replace|remove|reinstall",
-            "cambio": "remove and reinstall|replace|remove|reinstall",
-            "sustituir": "remove and reinstall|replace|remove|reinstall",
-            "sustitucion": "remove and reinstall|replace|remove|reinstall",
-            "reemplazar": "remove and reinstall|replace|remove|reinstall",
-            "desmontar": "remove", "montar": "reinstall",
-            "comprobar": "check|inspection|test|diagnostic|measurement",
-            "verificar": "check|inspection|test|diagnostic",
-            "revisar": "check|inspection|test|diagnostic",
-            "actualizar": "refresh|update|software|flash",
-            "programar": "refresh|update|software|flash|coding|program",
-            "ajustar": "adjust|adjustment|alignment|calibrate|calibration",
-            "limpiar": "clean|cleaning|wash",
-            "pulir": "polishing|polish", "pulido": "polishing|polish",
+        headers = {'User-Agent': 'Mozilla/5.0'}
+        response = requests.get(URL_GITHUB_VINES, headers=headers, timeout=15)
+        
+        if response.status_code == 200:
+            file_bytes = io.BytesIO(response.content)
+            df_vines = pd.read_excel(file_bytes, engine="pyxlsb")
+            df_vines.columns = df_vines.columns.astype(str).str.strip()
             
-            # --- 🔌 ELECTRÓNICA, MÓDULOS Y SENSORES ADAS ---
-            "ecu": "ecu|engine control unit", "mcu": "mcu|motor control unit",
-            "vcu": "vcu|vehicle control unit", "tcu": "tcu|transmission control unit",
-            "bcm": "bcm|body control module", "bdm": "bcm|bdm",
-            "centralita": "control unit|control module|ecu|bcm|mcu",
-            "modulo": "control module|module", "modulos": "module",
-            "fcm": "fcm|front camera module|forward camera", 
-            "camara": "camera|fcm|avm", "camaras": "camera",
-            "frm": "frm|front radar module|forward radar", 
-            "radar": "radar|frm|bsd", "radares": "radar",
-            "avm": "avm|around view monitor",
-            "bsd": "bsd|blind spot detection", "punto ciego": "blind spot|bsd",
-            "tpms": "tpms|tire pressure monitor", 
-            "pdc": "pdc|park distance control|parking sensor", 
-            "aparcamiento": "park|pdc|parking", 
-            "sensor": "sensor|probe|detector", "sensores": "sensor",
-            "sonda": "sensor|oxygen sensor|lambda", "lambda": "oxygen sensor|lambda",
-            "boton": "switch|button", "botones": "switch|button", "interruptor": "switch",
-
-            # --- ⚙️ MOTOR, ADMISIÓN, ESCAPE Y REFRIGERACIÓN ---
-            "motor": "engine assy|motor|engine", "motores": "engine",
-            "culata": "cylinder head", "piston": "piston", "biela": "connecting rod",
-            "cigueñal": "crankshaft", "arbol": "camshaft", "levas": "camshaft",
-            "valvula": "valve|solenoid valve", "valvulas": "valve",
-            "turbo": "turbocharger|turbo", "turbocompresor": "turbocharger",
-            "intercooler": "intercooler|charge air cooler",
-            "colector": "manifold", "admision": "intake", "escape": "exhaust",
-            "catalizador": "catalytic converter|catalyst", "fap": "dpf|particulate filter",
-            "silenciador": "muffler|exhaust silencer", "radiador": "radiator", 
-            "intercambiador": "heat exchanger", "ventilador": "fan|cooling fan", 
-            "electroventilador": "cooling fan", "termostato": "thermostat",
-            "bomba": "pump|water pump|oil pump|fuel pump", "bombas": "pump",
-            "bomba agua": "water pump", "bomba aceite": "oil pump", "bomba combustible": "fuel pump",
-            "canister": "canister|evap", "vapores": "canister|evap",
-            "bujia": "spark plug", "bujias": "spark plug", "bobina": "ignition coil", "bobinas": "ignition coil",
-
-            # --- 🚗 TRANSMISIÓN, CAJA DE CAMBIOS Y EMBRAGUE ---
-            "dct": "dct|dual clutch transmission|dht", "caja": "transmission|gearbox|dht", 
-            "caja cambios": "transmission|gearbox|dht", "transmision": "transmission|propeller shaft|drive shaft|dht",
-            "embrague": "clutch", "bimasa": "dual mass flywheel|flywheel", "volante motor": "flywheel",
-            "palier": "drive shaft|axle shaft|half shaft", "palieres": "drive shaft",
-            "diferencial": "differential", "reductora": "reducer", "selector": "selector|shifter",
-
-            # --- 🥾 CHASIS, SUSPENSIÓN, DIRECCIÓN Y FRENOS ---
-            "esp": "esp|electronic stability program", "eps": "eps|electric power steering",
-            "epb": "epb|electrical park brake", "ipb": "ipb|integrated power brake", "abs": "abs",
-            "freno": "brake|ipb|epb|abs", "frenos": "brake|abs",
-            "pastilla": "pads|brake pads", "pastillas": "pads|brake pads",
-            "disco": "disc|brake disc", "discos": "disc|brake disc",
-            "pinza": "caliper|brake caliper", "pinzas": "caliper", "latiguillo": "brake hose", 
-            "servo": "brake booster|power booster", "direccion": "steering|eps", 
-            "cremallera": "steering gear|steering rack", "mangueta": "knuckle|steering knuckle",
-            "amortiguador": "shock absorber|strut|damper", "amortiguadores": "shock absorber|strut",
-            "amortisguador": "shock absorber", "amortiguadore": "shock absorber",
-            "muelle": "spring|coil spring", "muelles": "spring", "ballesta": "leaf spring",
-            "barra": "bar|stabilizer bar", "estabilizadora": "stabilizer",
-            "trapecio": "control arm|suspension arm|wishbone", "brazo": "control arm|suspension arm",
-            "buge": "hub|wheel hub", "buje": "hub|wheel hub", "cojinete": "bearing", "rodamiento": "bearing",
-
-            # --- 📦 CARROCERÍA, COLISIÓN Y CRISTALES ---
-            "capo": "hood|engine hood", "paragolpes": "bumper", "defensa": "bumper", "parachoques": "bumper",
-            "faro": "headlamp|headlight", "faros": "headlamp", "piloto": "lamp|rear lamp|tail lamp", "pilotos": "lamp|tail lamp",
-            "antiniebla": "fog lamp|foglight", "intermitente": "turn signal|indicator",
-            "espejo": "mirror", "retrovisor": "mirror|rearview mirror",
-            "aleta": "fender|wing", "aletas": "fender", "puerta": "door", "puertas": "door", 
-            "porton": "tailgate|back door|rear door", "techo": "sunroof|roof|panoramic roof", "solar": "sunroof",
-            "cristal": "glass|window", "luna": "windshield|windscreen|glass", "parabrisas": "windshield|windscreen",
-            "elevalunas": "window regulator|window lifter", "cerradura": "door lock|lock assy", "cierre": "lock|latch",
-            "manilla": "handle|door handle", "maneta": "handle", "manecilla": "handle|door handle", "manecillas": "handle",
-            "moldura": "molding|trim", "molduras": "molding|trim",
-            "limpiaparabrisas": "wiper|wiper blade", "motor limpia": "wiper motor",
-
-            # --- 🪑 ASIENTOS, COMPONENTES INTERIORES Y GUARNECIDOS ---
-            "asiento": "seat assy|seat", "asientos": "seat", 
-            "respaldo": "backrest|seat back", "banqueta": "cushion|seat cushion",
-            "salpicadero": "dashboard|instrument panel", "consol": "console", "consola": "console",
-            "reposacabezas": "headrest|head restraint", "reposabrazos": "armrest",
-            "guarnecido": "trim|lining|panel", "tapizado": "trim|upholstery", "techo interior": "headlining|roof lining",
-            "panel puerta": "door trim|door panel", "paneles de puertas": "door trim|door trim panel",
-            "panel de puerta": "door trim|door panel", "paneles puerta": "door trim panel",
-            "alfombrilla": "mat|floor mat", "alfombra": "carpet", "guantera": "glove box",
-            "volante": "steering wheel",
-            "aireador": "air outlet|air vent|vent", "aireadores": "air outlet|vent",
-
-            # --- ⚡ BATERÍAS, CABLEADOS Y ELEMENTOS DE UNIÓN ---
-            "bateria": "battery|storage battery|bms", "vateria": "battery", "baterias": "battery",
-            "cable": "wiring|harness|wire|cable", "cableado": "wiring|harness|wire", 
-            "instalacion": "wiring|harness", "mazo": "harness|wiring|wire",
-            "fusible": "fuse", "fusibles": "fuse|box", "caja fusibles": "fuse block|fuse box",
-            "airbag": "airbag|air bag|srs|abm", "airbags": "airbag", "srs": "srs|supplemental restraint system",
-            "cinturon": "seatbelt|seat belt|belt", "cinturones": "seatbelt|seat belt",
-            "pretensor": "pretensioner", "hebilla": "buckle", "hebillas": "buckle",
-            "soporte": "bracket|support|mount|holder", "soportes": "bracket|support|mount",
-            "cuna": "subframe|cradle", "bandeja": "tray|salver",
-            "tapa": "cover|cap|lid", "cubierta": "cover|protector", "protector": "protector|shield|guard",
-            "varilla": "rod|stay", "tirante": "rod|link|stay", "placa": "plate", "panel": "panel",
-            "grapa": "clip|retainer", "tornillo": "bolt|screw", "tornillos": "bolt|screw",
-            "tuerca": "nut", "tuercas": "nut", "abrazadera": "clamp|clip",
-            "filtro": "filter", "junta": "gasket|seal", "reten": "oil seal|seal", "tubo": "pipe|hose", 
-            "manguito": "hose", "conducto": "pipe|line|duct",
-
-            # --- 🧪🧪 TOOOOODOS LOS LÍQUIDOS, FLUIDOS Y ACEITES DEL COCHE ---
-            "aceite": "oil|lubricant", "aceites": "oil",
-            "liquido": "fluid|liquid|coolant|oil", "liquidos": "fluid|liquid",
-            "refrigerante": "coolant|antifreeze", "anticongelante": "coolant|antifreeze",
-            "frenos": "brake fluid|brake liquid", "liquido frenos": "brake fluid",
-            "parabrisas": "washer fluid|washer liquid|wiper fluid", "limpiaparabrisas": "washer fluid|wiper fluid",
-            "valvulina": "gearbox oil|gear oil|transmission fluid", "transmision": "transmission fluid|gear oil",
-            "direccion": "steering fluid|power steering fluid", "hidraulico": "hydraulic fluid|hydraulic oil",
-            "climatizacion": "refrigerant|r1234yf|r134a|gas", "aire acondicionado": "refrigerant|gas",
-            "adblue": "adblue|ureas|urea", "urea": "urea|adblue",
-            "electrolito": "electrolyte",
-
-            # --- 📍 UBICACIONES, ORIENTACIÓN Y LADOS ---
-            "delantero": "fr|front", "delantera": "fr|front", "frontal": "fr|front", "alante": "fr|front",
-            "trasero": "rr|rear", "trasera": "rr|rear", "posterior": "rr|rear", "atras": "rr|rear",
-            "izquierdo": "lh|left|driver", "izquierda": "lh|left|driver", "izq": "lh|left", "izda": "lh|left",
-            "derecho": "rh|right|passenger", "derecha": "rh|right|passenger", "der": "rh|right", "drcha": "rh|right",
-            "superior": "upper", "inferior": "lower", "interno": "inner", "externo": "outer",
-            "central": "central|middle", "lateral": "side",
+            # Búsqueda explícita con tus columnas de Excel: new_name (VIN) y new_productmodel_idname (Modelo)
+            col_vin = next((c for c in df_vines.columns if c.lower() == 'new_name' or 'vin' in c.lower() or 'bastidor' in c.lower()), None)
+            col_modelo = next((c for c in df_vines.columns if c.lower() == 'new_productmodel_idname' or 'model' in c.lower()), None)
             
-            # Sinónimos de habitáculo y lados del vehículo (Piloto / Copiloto)
-            "conductor": "driver|lh|left", "piloto": "driver|lh|left",
-            "copiloto": "passenger|rh|right", "pasajero": "passenger|rh|right", "acompañante": "passenger|rh|right",
-            "acompanante": "passenger|rh|right",
-            
-            # --- 🔋 MOTORIZACIONES ---
-            "hev": "hev|hybrid", "hibrido": "hev|hybrid", "hibrida": "hev|hybrid",
-            "ev": "ev|bev|electric", "electrico": "ev|bev|electric", "electrica": "ev|bev|electric",
-            "phev": "phev|plug-in", "enchufable": "phev|plug-in",
-            "gasolina": "ice|gasoline", "termico": "ice"
-        }
-
-        # =====================================================================
-        # 🧹 3. NORMALIZACIÓN Y LIMPIEZA DE LA CONSULTA
-        # =====================================================================
-        consulta_limpia = consulta_usuario.lower().strip()
-        for orig, dest in [("í", "i"), ("ó", "o"), ("á", "a"), ("é", "e"), ("ú", "u"), ("ñ", "n")]:
-            consulta_limpia = consulta_limpia.replace(orig, dest)
-
-        # Mapeamos abreviaturas de modelos pegadas antes de trocear la frase
-        for abrev, mod_real in abreviaturas_modelos.items():
-            if abrev in consulta_limpia.split() or abrev in consulta_limpia:
-                consulta_limpia = consulta_limpia.replace(abrev, mod_real)
-
-        lista_palabras_usuario = consulta_limpia.split()
-
-        # =====================================================================
-        # 🗑️ 4. FILTRADO DE FILAS FANTASMA (CELDAS VACÍAS EN EL EXCEL)
-        # =====================================================================
-        df_base = df_contexto.copy()
-        df_base = df_base[
-            (df_base['Nombre de la Pieza'].notna()) & (df_base['Nombre de la Pieza'].astype(str).str.strip() != "") &
-            (df_base['Código de Referencia'].notna()) & (df_base['Código de Referencia'].astype(str).str.strip() != "") &
-            (df_base['Operación Técnica'].notna()) & (df_base['Operación Técnica'].astype(str).str.strip() != "")
-        ]
-
-        # Creamos la columna indexada de rastreo en minúsculas
-        df_base['search_field'] = (
-            df_base['Modelo'].astype(str).str.lower() + " " + 
-            df_base['Nombre de la Pieza'].astype(str).str.lower() + " " + 
-            df_base['Operación Técnica'].astype(str).str.lower()
-        )
-
-        # =====================================================================
-        # ⚔️ 5. FILTRADO BOOLEANO ESTRICTO (PALABRA A PALABRA)
-        # =====================================================================
-        for palabra in lista_palabras_usuario:
-            # Ignoramos conectores inservibles
-            if palabra in ["quiero", "para", "con", "del", "una", "uno", "el", "la", "los", "las", "este", "un", "de"]:
-                continue
-            
-            # Si la palabra está en nuestro mapa, preparamos la regex exacta con sus traducciones
-            if palabra in mapa_raices:
-                traducciones = mapa_raices[palabra].split('|')
-                # Forzamos fronteras de palabra exacta (\b) en inglés
-                regex_palabra = '|'.join([rf'\b{t}\b' for t in traducciones])
-                # Mantener el español original exacto por seguridad
-                regex_palabra += rf'|\b{palabra}\b'
+            if col_vin and col_modelo:
+                df_clean = df_vines[[col_vin, col_modelo]].dropna().copy()
+                df_clean.columns = ['VIN', 'Modelo_Excel']
+                
+                # Saneamiento del VIN
+                df_clean['VIN'] = df_clean['VIN'].astype(str).str.replace(r'\.0$', '', regex=True).str.strip().str.upper()
+                df_clean['Modelo_Excel'] = df_clean['Modelo_Excel'].astype(str).str.strip()
+                return df_clean
             else:
-                # Si es una referencia, código numérico o palabra libre, buscamos match exacto
-                regex_palabra = rf'\b{palabra}\b'
-            
-            # Reducimos drásticamente el DataFrame: la fila DEBE cumplir la condición técnica
-            df_base = df_base[df_base['search_field'].str.contains(regex_palabra, regex=True, na=False)]
+                st.sidebar.error(f"⚠️ Columnas esperadas no encontradas. Columnas en Excel: {list(df_vines.columns)}")
+        else:
+            st.sidebar.error(f"⚠️ Error HTTP {response.status_code} descargando VINes.xlsb")
+    except Exception as exc:
+        st.sidebar.error(f"⚠️ Excepción al leer VINes.xlsb: {exc}")
+    
+    return pd.DataFrame(columns=['VIN', 'Modelo_Excel'])
 
-        # =====================================================================
-        # 🔴 6. RETORNO ORDENADO DE DATOS FINALES
-        # =====================================================================
-        if df_base.empty:
-            return None
 
-        # Acotamos a un máximo de 60 resultados útiles para el frontend
-        df_final = df_base.head(60)
-        
-        # Sincronizamos los índices con los textos originales limpios en inglés técnico
-        df_output = df_contexto.loc[df_final.index].copy()
-        df_output = df_output.sort_values(by=['Modelo', 'Nombre de la Pieza'], ascending=[True, True])
-        
-        return df_output[['Modelo', 'Nombre de la Pieza', 'Código de Referencia', 'Operación Técnica', 'Tiempo Estándar (UT/Horas)']]
 
+
+# =========================================================================
+# AUTENTICACIÓN Y SIDEBAR
+# =========================================================================
+def render_sidebar_and_get_option():
+    try:
+        st.sidebar.image("logo_empresa.png", use_container_width=True)
     except Exception:
-        return None
-# ==========================================
-# 5. SISTEMA DE SEGURIDAD CONTRASEÑA
-# ==========================================
-def check_password():
+        st.sidebar.write("🏢 **OMODA & JAECOO**")
+
+    st.sidebar.markdown("---")
+
+    idioma_seleccionado = st.sidebar.selectbox(
+        "🌐 Language / Idioma / 语言:", ["Español", "English", "Chinese (中文)"],
+        index=["Español", "English", "Chinese (中文)"].index(st.session_state.idioma),
+        key="selector_idioma_global"
+    )
+    st.session_state.idioma = idioma_seleccionado
+    txt_local = IDIOMAS[st.session_state.idioma]
+
+    st.sidebar.markdown("---")
+    st.sidebar.markdown(txt_local["menu_titulo"])
+
+    opciones = [txt_local["menu_taller"], txt_local["menu_solicitar"]]
+    opcion = st.sidebar.radio(txt_local["menu_radio"], opciones, key="menu_navegacion_app")
+
+
+    return txt_local, opcion
+
+def check_password(txt_local):
     if not st.session_state.authenticated:
-        st.title(txt["pass_titulo"])
-        password = st.text_input(txt["pass_input"], type="password", key="pass_input_unico")
-        if st.button(txt["pass_boton"], key="pass_btn_unico"):
+        st.title(txt_local["pass_titulo"])
+        password = st.text_input(txt_local["pass_input"], type="password", key="pass_input_unico")
+        if st.button(txt_local["pass_boton"], key="pass_btn_unico"):
             if password == "DealersOJ2026":
                 st.session_state.authenticated = True
                 st.rerun()
             else:
-                st.error(txt.get("pass_error", "❌ Contraseña incorrecta"))
+                st.error(txt_local["pass_error"])
         return False
     return True
 
-if check_password():
-    
-    # =========================================================================
-    # PANTALLA 1: TIEMPOS DE TALLER (CON MOTOR DE TRADUCCIÓN LOCAL)
-    # =========================================================================
-    if opcion_menu == txt["menu_taller"]:
-        
-        @st.cache_data
-        def load_data_tiempos_v3():
-            df = pd.read_excel(URL_GITHUB_EXCEL, sheet_name="new_srv_workhours")
-            df.columns = df.columns.astype(str).str.strip()
-            
-            df = df.rename(columns={
-                'new_productmodel_idname': 'Modelo',
-                'new_product_idname': 'Nombre de la Pieza',
-                'new_code': 'Código de Referencia',
-                'new_name': 'Operación Técnica',
-                'new_standardhour': 'Tiempo Estándar (UT/Horas)',
-                'new_remark': 'Notas / Exclusiones',
-                'Organization': 'Mercado / Organización',
-                'statecodename': 'Estado'
-            })
-            
-            columnas_finales = [
-                'Modelo', 'Nombre de la Pieza', 'Código de Referencia', 
-                'Operación Técnica', 'Tiempo Estándar (UT/Horas)', 'Notas / Exclusiones',
-                'Mercado / Organización', 'Estado'
-            ]
-            
-            df = df.fillna("")
-            df = df.replace("nan", "")
-            
-            columnas_presentes = [col for col in columnas_finales if col in df.columns]
-            return df[columnas_presentes].reset_index(drop=True)
 
-        try:
-            data = load_data_tiempos_v3()
-            
-            st.title(txt["taller_titulo"])
-            st.write(txt["taller_sub"])
-            st.markdown("---")
+# =========================================================================
+# PANTALLA 1 - TIEMPOS DE TALLER
+# =========================================================================
+@st.cache_data
+def load_data_tiempos_v3():
+    df = pd.read_excel(URL_GITHUB_EXCEL, sheet_name="new_srv_workhours")
+    df.columns = df.columns.astype(str).str.strip()
 
-            if "resultado_tradicional_excel" not in st.session_state:
-                st.session_state.resultado_tradicional_excel = None
+    mapeo_columnas = {
+        "new_productmodel_idname": "Modelo", "new_product_idname": "Nombre de la Pieza",
+        "new_code": "Código de Referencia", "new_name": "Operación Técnica",
+        "new_standardhour": "Tiempo Estándar (UT/Horas)", "new_remark": "Notas / Exclusiones",
+        "Organization": "Mercado / Organización", "statecodename": "Estado",
+    }
 
-            # =================================================================
-            # 🤖 SECCIÓN A: ASISTENTE TRADICIONAL DE BÚSQUEDA BILINGÜE
-            # =================================================================
-            st.subheader("🤖 Buscar operación")
-            st.write("Escribe tu consulta en español (ej: cambiar airbag delantero jaecoo 7). El sistema traducirá los términos y buscará en inglés.")
-            
-            consulta_rapida = st.text_input(
-                "¿Qué operación, pieza o modelo necesitas localizar?",
-                placeholder="Ejemplo: cambiar pastillas de freno delanteras del omoda 5 / desmontar paragolpes jaecoo 7...",
-                key="campo_consulta_tradicional_excel"
-            )
+    cols_existentes = [col for col in mapeo_columnas if col in df.columns]
+    df_limpio = df[cols_existentes].copy().rename(columns=mapeo_columnas)
+    df_limpio = df_limpio.replace(to_replace=r"^0x.*$", value="", regex=True).fillna("").replace(["nan", "None", "NaN"], "")
 
-            st.warning("""
-            ⚠️ **RECORDATORIO** Antes de tramitar cualquier reclamación, verifique obligatoriamente que **la pieza a reclamar coincide con el pedido exacto realizado a Recambios** para esta reparación. 
-            """)
+    columnas_finales = ["Modelo", "Nombre de la Pieza", "Código de Referencia", "Operación Técnica", "Tiempo Estándar (UT/Horas)", "Notas / Exclusiones", "Mercado / Organización", "Estado"]
+    columnas_presentes = [col for col in columnas_finales if col in df_limpio.columns]
+    return df_limpio[columnas_presentes].reset_index(drop=True)
 
-            if st.button("Buscar operación", type="primary"):
-                if not consulta_rapida.strip():
-                    st.warning("⚠️ Introduce una descripción o término para realizar la búsqueda.")
-                else:
-                    with st.spinner("🔍 Traduciendo y escaneando el catálogo de operaciones..."):
-                        st.session_state.resultado_tradicional_excel = buscador_tradicional_excel(consulta_rapida, data)
+def render_tiempos_taller(txt_local):
+    try:
+        data = load_data_tiempos_v3()
+        df_vines_db = load_data_vines()
 
-            # RENDERIZADO DEL RESULTADO TRADICIONAL EN DATAFRAME INTERACTIVO
-            if st.session_state.resultado_tradicional_excel is not None:
-                st.markdown("#### 🎯 Operaciones encontradas en el catálogo oficial:")
-                
-                # Pintamos los resultados de forma limpia e interactiva
-                st.dataframe(
-                    st.session_state.resultado_tradicional_excel,
-                    use_container_width=True,
-                    hide_index=True
-                )
-                
-                if st.button("🗑️ Limpiar búsqueda", key="btn_limpiar_tradicional"):
-                    st.session_state.resultado_tradicional_excel = None
-                    st.rerun()
-
-            st.markdown("---")
-
-            # =================================================================
-            # 📊 SECCIÓN B: FILTROS Y TABLA TRADICIONAL (BÚSQUEDA MANUAL)
-            # =================================================================
-            st.subheader("📊 Catálogo Completo (Filtros Manuales)")
-            
-            col1, col2, col3 = st.columns([1, 1.5, 1.5])
-            with col1:
-                modelos_disponibles = [txt["todos"]] + list(data['Modelo'].dropna().unique())
-                modelo_seleccionado = st.selectbox(txt["f_modelo"], modelos_disponibles)
-            with col2:
-                buscar_pieza = st.text_input(txt["f_pieza"], "").strip()
-            with col3:
-                buscar_operacion = st.text_input(txt["f_operacion"], "").strip()
-
-            col_m, col_e = st.columns([2, 2])
-            
-            with col_m:
-                if 'Mercado / Organización' in data.columns:
-                    mercados_disponibles = [txt["todos"]] + [str(m).strip() for m in data['Mercado / Organización'].unique() if str(m).strip() != ""]
-                    indice_defecto = 0
-                    for idx, m in enumerate(mercados_disponibles):
-                        if "spain" in m.lower() or "oj spain" in m.lower():
-                            indice_defecto = idx
-                            break
-                    mercado_seleccionado = st.selectbox(txt["f_mercado_taller"], mercados_disponibles, index=indice_defecto)
-                else:
-                    mercado_seleccionado = txt["todos"]
-                    
-            with col_e:
-                if 'Estado' in data.columns:
-                    estados_disponibles = [txt["todos"]] + [str(e).strip() for e in data['Estado'].unique() if str(e).strip() != ""]
-                    indice_est_defecto = estados_disponibles.index("Active") if "Active" in estados_disponibles else 0
-                    estado_seleccionado = st.selectbox(txt["f_estado_taller"], estados_disponibles, index=indice_est_defecto)
-                else:
-                    estado_seleccionado = txt["todos"]
-
-            df_filtrado = data.copy()
-            
-            if modelo_seleccionado != txt["todos"]:
-                df_filtrado = df_filtrado[df_filtrado['Modelo'] == modelo_seleccionado]
-                
-            if mercado_seleccionado != txt["todos"] and 'Mercado / Organización' in df_filtrado.columns:
-                df_filtrado = df_filtrado[df_filtrado['Mercado / Organización'].astype(str).str.strip() == mercado_seleccionado]
-                
-            if estado_seleccionado != txt["todos"] and 'Estado' in df_filtrado.columns:
-                df_filtrado = df_filtrado[df_filtrado['Estado'].astype(str).str.strip() == estado_seleccionado]
-
-            if buscar_pieza:
-                df_filtrado = df_filtrado[
-                    df_filtrado['Nombre de la Pieza'].astype(str).str.contains(buscar_pieza, case=False, na=False) |
-                    df_filtrado['Código de Referencia'].astype(str).str.contains(buscar_pieza, case=False, na=False)
-                ]
-                
-            if buscar_operacion:
-                df_filtrado = df_filtrado[df_filtrado['Operación Técnica'].astype(str).str.contains(buscar_operacion, case=False, na=False)]
-
-            st.markdown(txt["res_taller"].format(len(df_filtrado)))
-            if not df_filtrado.empty:
-                st.dataframe(df_filtrado, width='stretch', hide_index=True)
-            else:
-                st.warning(txt["warn_taller"])
-                
-        except Exception as e:
-            st.error(txt["err_taller"].format(e))
-
-    # =========================================================================
-    # PANTALLA 2: SOLICITUD DE OPERACIONES ADICIONALES (CONEXIÓN GOOGLE SHEETS)
-    # =========================================================================
-    elif opcion_menu == txt["menu_solicitar"]:
-        st.title(txt["solicitar_titulo"])
-        st.write(txt["solicitar_sub"])
+        st.title(txt_local["taller_titulo"])
+        st.write(txt_local["taller_sub"])
         st.markdown("---")
 
-        LISTA_DEALERS = sorted([
-            "ACAI MOTOR MÁLAGA", "ALIFAVISA BILBAO", "ALIMOTOR ELCHE", "ANFERPA SEGOVIA", 
-            "AUTO YALDE LOGROÑO", "AUTOCAM MOTOR VILAFRANCA", "AUTOCYL PALENCIA", "AUTOCYL VALLADOLID", 
-            "AUTOTERMINAL", "AUTOVIDAL PALMA DE MALLORCA", "AXIS MOTORS", "BLENDIO LAREDO", 
-            "BLENDIO LUGO", "BLENDIO OURENSE", "BLENDIO SANTANDER", "BLENDIO TORRELAVEGA", 
-            "BORJAMOTOR ALICANTE", "CERVERA AVILA", "CERVERA SALAMANCA", "CHINARES GUADALAJARA", 
-            "DUMOSA BENAVENTE", "ESLAUTO LEON", "GRUP BASOLS IGUALADA", "GRUPO JULIAN BURGOS", 
-            "GRUPO NIETO MÁLAGA", "GRUPO NIETO MARBELLA", "HIMASA SEDAVÍ", "JEMOYA SORIA", 
-            "LASACAR MIRANDA DE EBRO", "LASACAR VITORIA", "M TECNIK ALCALÁ DE HENARES", 
-            "M TECNIK BARCELONA MAQUINIST", "M TECNIK CASTELLÓN", "M TECNIK GERONA", 
-            "M TECNIK MATARÓ", "M TECNIK VINAROZ", "MARTIN LIZAGA", "MARTIN LIZAGA TERUEL", 
-            "MAS AUTO LEGANÉS", "MAVEN BADAJOZ", "MAVEN CÁCERES", "MOLL MOTOR DENIA", 
-            "MOLL MOTOR GANDIA", "MONECAR AUTOMOCION", "MONECAR CUENCA", "MOTOR NACIENTE", 
-            "MOVINSUR GRANADA", "MOVINSUR JAÉN", "MOVINSUR MOTRIL", "MY CARS CÓRDOBA", 
-            "NOATUM", "NOVACAR BCN SANT BOI", "PALAUSA ZAMORA", "PRUNA CAR GO GRANOLLERS", 
-            "PROCHERY ALBACETE", "PROCHERY CARTAGENA", "PROCHERY MURCIA", "RAFAEL AFONSO AGUIMES", 
-            "RAFAEL AFONSO LANZAROTE", "RAFAEL AFONSO LAS PALMAS", "RAFAEL AFONSO TENERIFE", 
-            "RESNOVA MOTOR CORUÑA", "RESNOVA MOTOR GIJÓN", "RESNOVA MOTOR NARÓN", 
-            "RESNOVA MOTOR OVIEDO", "RESNOVA MOTOR SANTIAGO", "RESNOVA MOTOR VIGO", 
-            "SEGRE MOTORS LERIDA", "SERTECAUTO PONFERRADA", "SYRSA ALGECIRAS", 
-            "SYRSA ALMERIA", "SYRSA EJIDO", "SYRSA HUELVA", "SYRSA SEVILLA", 
-            "TALAUTO CAZALEGAS", "TALAUTO TOLEDO", "TALLERES CHINARES", "TECNOTARRACO TARRAGONA", 
-            "TERRY MOBILITY JERÉZ", "TRADECAR GAMBOA ALCORCÓN", "TRADECAR GAMBOA MADRID", 
-            "TRADECAR GAMBOA MAJADAHON", "TRADECAR GAMBOA RIVAS", "TUMASA HUESCA", 
-            "TUMASA MONZÓN", "UNIONE ALCAZAR DE SAN JUAN", "UNIONE CIUDAD REAL", 
-            "VALLESCAR SABADELL", "VALLESCAR TERRASSA", "VIAN AUTOMOBILE VILLALBA", 
-            "ZEN MOTOR OLABERRIA", "ZEN MOTOR PAMPLONA", "ZEN MOTOR SAN SEBASTIÁN", 
-            "ZEN MOTOR ZARAGOZA"
-        ])
-        
-        MAPEO_MODELOS = {
-            "OMODA 5 (Gasolina)": "T19C", "OMODA 5 HEV (Híbrido)": "T19C HEV", "OMODA 5 EV (Eléctrico)": "T19C EV",
-            "OMODA 7 PHEV": "T1GC PHEV", "OMODA 9 PHEV": "T22 PHEV", "JAECOO 5 (Gasolina)": "T13J",
-            "JAECOO 5 HEV": "T13J HEV", "JAECOO 5 BEV": "T13J BEV", "JAECOO 7 (Gasolina)": "T1EJ",
-            "JAECOO 7 HEV": "T1EJ HEV", "JAECOO 7 PHEV": "T1EJ PHEV", "JAECOO 8 PHEV": "T26", "LEPAS L8 PHEV": "T1G PHEV"
-        }
-        
-        st.subheader(txt["form_sub"])
-        col1, col2 = st.columns(2)
-        with col1:
-            marca = st.selectbox(txt["form_marca"], ["OMODA", "JAECOO", "LEPAS"])
-            modelos_filtrados = [mod for mod in MAPEO_MODELOS.keys() if mod.upper().startswith(marca.upper())]
-            modelo_comercial = st.selectbox(txt["form_modelo"], modelos_filtrados)
-        with col2:
-            dealer = st.selectbox(txt["form_dealer"], LISTA_DEALERS)
-            codigo_producto_auto = MAPEO_MODELOS[modelo_comercial]
-            st.text_input(txt["form_hq_code"], value=codigo_producto_auto, disabled=True)
-        
-        with st.form("hq_operation_form", clear_on_submit=True):
-            c1, c2 = st.columns(2)
-            with c1:
-                vin = st.text_input(txt["form_vin"], max_chars=17, placeholder=txt["form_vin_holder"]).strip().upper()
-            with c2:
-                referencia = st.text_input(txt["form_ref"], placeholder=txt["form_ref_holder"]).strip().upper()
-            
-            operacion_solicitada = st.text_area(txt["form_op"], placeholder=txt["form_op_holder"]).strip()
-            boton_enviar = st.form_submit_button(txt["form_btn"])
-            
-            if boton_enviar:
-                if not vin or not operacion_solicitada:
-                    st.error(txt["err_campos"])
-                elif len(vin) != 17:
-                    st.error("❌ Error: El número de bastidor (VIN) debe tener exactamente 17 caracteres.")
+        st.subheader("📊 Catálogo de operaciones")
+        st.markdown("---")
+        st.subheader("📊 Catálogo Completo (Filtros Manuales y Detección por VIN)")
+
+        modelos_raw = [str(m).strip() for m in data["Modelo"].dropna().unique()] if "Modelo" in data.columns else []
+        modelos_filtrados = [m for m in modelos_raw if any(marca in m.upper() for marca in ["OMODA", "JAECOO", "LEPAS"])]
+        modelos_disponibles = [txt_local["todos"]] + sorted(list(set(modelos_filtrados)))
+
+        col_vin, col1, col2, col3 = st.columns([1.5, 1.2, 1.5, 1.5])
+
+        with col_vin:
+            vin_busqueda = st.text_input(
+                "🔎 Buscar por VIN (Bastidor):", 
+                max_chars=17, 
+                placeholder="17 caracteres...",
+                key="vin_taller_input"
+            ).strip().upper()
+
+        # EVALUACIÓN DIRECTA DEL VIN EN CADA RENDER
+        modelo_detectado_por_vin = None
+        if len(vin_busqueda) == 17:
+            if not df_vines_db.empty:
+                coincidencia = df_vines_db[df_vines_db['VIN'] == vin_busqueda]
+                if not coincidencia.empty:
+                    modelo_raw = str(coincidencia.iloc[0]['Modelo_Excel']).upper().strip()
+                    for mod in modelos_disponibles:
+                        if mod != txt_local["todos"] and (mod.upper() in modelo_raw or modelo_raw in mod.upper()):
+                            modelo_detectado_por_vin = mod
+                            break
+                    
+                    if modelo_detectado_por_vin:
+                        st.info(f"🚘 **VIN Detectado:** {vin_busqueda} ➔ **Modelo:** {modelo_detectado_por_vin}")
+                    else:
+                        st.warning(f"⚠️ Bastidor localizado ({modelo_raw}), pero no coincide con ningún modelo del desplegable.")
                 else:
-                    ahora = datetime.datetime.now()
-                    columnas_orden = [
-                        "SN", "Submitted on", "Respondents", "Fecha del día", 
-                        "Marca del vehículo", "INTRODUCIR MODELO", "INTRODUCIR VIN", 
-                        "Mercado", "CÓDIGO DE PRODUCTO", "REFERENCIA DE PIEZA", 
-                        "OPERACIÓN QUE SE SOLICITA AÑADIR", "DEALER"
-                    ]
-                    
-                    subida_exitosa = False
-                    
-                    try:
-                        from streamlit_gsheets import GSheetsConnection
-                        conn = st.connection("gsheets", type=GSheetsConnection)
-                        
-                        if "connections" in st.secrets and "gsheets" in st.secrets["connections"]:
-                            spreadsheet_url = st.secrets["connections"]["gsheets"]["spreadsheet"]
-                        elif "gsheets" in st.secrets and "spreadsheet" in st.secrets["gsheets"]:
-                            spreadsheet_url = st.secrets["gsheets"]["spreadsheet"]
-                        else:
-                            spreadsheet_url = st.secrets.get("spreadsheet", "")
+                    st.error("❌ Bastidor VIN no encontrado en la base de datos VINes.xlsb.")
+            else:
+                st.error("❌ BBDD de VINes vacía o no se pudo cargar desde GitHub.")
 
-                        df_cloud = conn.read(spreadsheet=spreadsheet_url)
-                        
-                        if df_cloud.empty or len(df_cloud.columns) < 2:
-                            df_cloud = pd.DataFrame(columns=columnas_orden)
-                        else:
-                            df_cloud = df_cloud.dropna(how='all').loc[:, ~df_cloud.columns.str.contains('^Unnamed')]
-                        
-                        nuevo_sn = len(df_cloud) + 1
-                    except Exception:
-                        nuevo_sn = len(st.session_state.lista_solicitudes) + 1
-                        df_cloud = pd.DataFrame(columns=columnas_orden)
-                        spreadsheet_url = ""
-                    
-                    nueva_solicitud = {
-                        "SN": int(nuevo_sn),
-                        "Submitted on": str(ahora.strftime("%Y-%m-%d %H:%M:%S")),
-                        "Respondents": str(f"Dealer App ({dealer})"),
-                        "Fecha del día": str(ahora.strftime("%Y-%m-%d")),
-                        "Marca del vehículo": str(marca),
-                        "INTRODUCIR MODELO": str(modelo_comercial),
-                        "INTRODUCIR VIN": str(vin),
-                        "Mercado": "Spain OJ",
-                        "CÓDIGO DE PRODUCTO": str(codigo_producto_auto),
-                        "REFERENCIA DE PIEZA": str(referencia) if referencia else "NaN",
-                        "OPERACIÓN QUE SE SOLICITA AÑADIR": str(operacion_solicitada),
-                        "DEALER": str(dealer)
-                    }
-                    
-                    try:
-                        df_nuevo = pd.DataFrame([nueva_solicitud])
-                        df_nuevo = df_nuevo.reindex(columns=columnas_orden)
-                        df_cloud = df_cloud.reindex(columns=columnas_orden)
-                        
-                        df_actualizado = pd.concat([df_cloud, df_nuevo], ignore_index=True)
-                        
-                        if spreadsheet_url:
-                            conn.update(
-                                spreadsheet=spreadsheet_url,
-                                data=df_actualizado
-                            )
-                            st.session_state.lista_solicitudes.append(nueva_solicitud)
-                            subida_exitosa = True
-                        else:
-                            raise ValueError("No se encontró la URL de Sheets.")
-                            
-                    except Exception as e:
-                        st.error(f"❌ Error de conexión con Google Sheets: {e}")
-                        st.info("💡 Solicitud guardada temporalmente en caché local.")
-                        st.session_state.lista_solicitudes.append(nueva_solicitud)
+        with col1:
+            default_index = 0
+            if modelo_detectado_por_vin and modelo_detectado_por_vin in modelos_disponibles:
+                default_index = modelos_disponibles.index(modelo_detectado_por_vin)
 
-                    if subida_exitosa:
-                        st.success("✅ **Operación registrada con éxito.** Transmitida al departamento de Garantías de Central.")
-                        import time
-                        time.sleep(1.5)
+            modelo_seleccionado = st.selectbox(
+                txt_local["f_modelo"], 
+                modelos_disponibles, 
+                index=default_index,
+                key="sb_modelo_taller_select"
+            )
+
+        with col2:
+            buscar_pieza = st.text_input(txt_local["f_pieza"], "").strip()
+
+        with col3:
+            buscar_operacion = st.text_input(txt_local["f_operacion"], "").strip()
+
+        col_m, col_e = st.columns([2, 2])
+
+        with col_m:
+            if "Mercado / Organización" in data.columns:
+                mercados_disponibles = [txt_local["todos"]] + [str(m).strip() for m in data["Mercado / Organización"].unique() if str(m).strip() != ""]
+                indice_defecto = next((idx for idx, m in enumerate(mercados_disponibles) if "spain" in m.lower() or "oj spain" in m.lower()), 0)
+                mercado_seleccionado = st.selectbox(txt_local["f_mercado_taller"], mercados_disponibles, index=indice_defecto)
+            else:
+                mercado_seleccionado = txt_local["todos"]
+
+        with col_e:
+            if "Estado" in data.columns:
+                estados_disponibles = [txt_local["todos"]] + [str(e).strip() for e in data["Estado"].unique() if str(e).strip() != ""]
+                indice_est_defecto = estados_disponibles.index("Active") if "Active" in estados_disponibles else 0
+                estado_seleccionado = st.selectbox(txt_local["f_estado_taller"], estados_disponibles, index=indice_est_defecto)
+            else:
+                estado_seleccionado = txt_local["todos"]
+
+        df_filtrado = data.copy()
+
+        if modelo_seleccionado != txt_local["todos"] and "Modelo" in df_filtrado.columns:
+            df_filtrado = df_filtrado[df_filtrado["Modelo"] == modelo_seleccionado]
+
+        if mercado_seleccionado != txt_local["todos"] and "Mercado / Organización" in df_filtrado.columns:
+            df_filtrado = df_filtrado[df_filtrado["Mercado / Organización"].astype(str).str.strip() == mercado_seleccionado]
+
+        if estado_seleccionado != txt_local["todos"] and "Estado" in df_filtrado.columns:
+            df_filtrado = df_filtrado[df_filtrado["Estado"].astype(str).str.strip() == estado_seleccionado]
+
+        if buscar_pieza and {"Nombre de la Pieza", "Código de Referencia"}.issubset(df_filtrado.columns):
+            df_filtrado = df_filtrado[
+                df_filtrado["Nombre de la Pieza"].astype(str).str.contains(buscar_pieza, case=False, na=False) |
+                df_filtrado["Código de Referencia"].astype(str).str.contains(buscar_pieza, case=False, na=False)
+            ]
+
+        if buscar_operacion and "Operación Técnica" in df_filtrado.columns:
+            df_filtrado = df_filtrado[df_filtrado["Operación Técnica"].astype(str).str.contains(buscar_operacion, case=False, na=False)]
+
+        st.markdown(txt_local["res_taller"].format(len(df_filtrado)))
+        if not df_filtrado.empty:
+            st.dataframe(df_filtrado, use_container_width=True, hide_index=True)
+        else:
+            st.warning(txt_local["warn_taller"])
+
+    except Exception as exc:
+        st.error(txt_local["err_taller"].format(exc))
+
+
+
+
+# =========================================================================
+# PANTALLA 3 - SOLICITAR OPERACIÓN (CON DETECCIÓN POR VIN FUNCIONAL)
+# =========================================================================
+def render_solicitar_operacion(txt_local):
+    st.title(txt_local["solicitar_titulo"])
+    st.write(txt_local["solicitar_sub"])
+    st.markdown("---")
+
+    MAPEO_MODELOS = {
+        "OMODA 5 (Gasolina)": "T19C", "OMODA 5 HEV (Híbrido)": "T19C HEV", "OMODA 5 EV (Eléctrico)": "T19C EV",
+        "OMODA 7 PHEV": "T1GC PHEV", "OMODA 9 PHEV": "T22 PHEV", "JAECOO 5 (Gasolina)": "T13J",
+        "JAECOO 5 HEV": "T13J HEV", "JAECOO 5 BEV": "T13J BEV", "JAECOO 7 (Gasolina)": "T1EJ",
+        "JAECOO 7 HEV": "T1EJ HEV", "JAECOO 7 PHEV": "T1EJ PHEV", "JAECOO 8 PHEV": "T26 PHEV",
+        "LEPAS L8 PHEV": "T1G PHEV",
+    }
+
+    df_vines_db = load_data_vines()
+
+    # Campo VIN fuera del form para actualizar los desplegables en vivo
+    vin = st.text_input(
+        txt_local["form_vin"], 
+        max_chars=17, 
+        placeholder=txt_local["form_vin_holder"],
+        key="vin_solicitar_input",
+        help="Al escribir los 17 caracteres, se detectará la marca y modelo automáticamente."
+    ).strip().upper()
+
+    # Detección por VIN
+    if len(vin) == 17 and not df_vines_db.empty:
+        coincidencia = df_vines_db[df_vines_db['VIN'] == vin]
+        if not coincidencia.empty:
+            modelo_detectado_raw = str(coincidencia.iloc[0]['Modelo_Excel']).upper().strip()
+            for mod_comercial in MAPEO_MODELOS.keys():
+                if mod_comercial.upper() in modelo_detectado_raw or modelo_detectado_raw in mod_comercial.upper():
+                    nueva_marca = "OMODA" if mod_comercial.startswith("OMODA") else ("JAECOO" if mod_comercial.startswith("JAECOO") else "LEPAS")
+                    
+                    if st.session_state.solicitar_modelo != mod_comercial:
+                        st.session_state.solicitar_marca = nueva_marca
+                        st.session_state.solicitar_modelo = mod_comercial
+                        st.toast(f"✅ Bastidor detectado: {mod_comercial}", icon="🚘")
                         st.rerun()
+                    break
+
+    st.subheader(txt_local["form_sub"])
+
+    col1, col2 = st.columns(2)
+    with col1:
+        marcas = ["OMODA", "JAECOO", "LEPAS"]
+        idx_m = marcas.index(st.session_state.solicitar_marca) if st.session_state.solicitar_marca in marcas else 0
+        marca = st.selectbox(txt_local["form_marca"], marcas, index=idx_m, key="sb_marca_solicitar")
+        st.session_state.solicitar_marca = marca
+
+        modelos_filtrados = [mod for mod in MAPEO_MODELOS if mod.upper().startswith(marca.upper())]
+        idx_mod = modelos_filtrados.index(st.session_state.solicitar_modelo) if st.session_state.solicitar_modelo in modelos_filtrados else 0
+        modelo_comercial = st.selectbox(txt_local["form_modelo"], modelos_filtrados, index=idx_mod, key="sb_modelo_solicitar")
+        st.session_state.solicitar_modelo = modelo_comercial
+
+    with col2:
+        codigo_producto_auto = MAPEO_MODELOS[modelo_comercial]
+        st.text_input(txt_local["form_hq_code"], value=codigo_producto_auto, disabled=True)
+
+    with st.form("hq_operation_form", clear_on_submit=True):
+        numero_garantia = st.text_input("Nº de Garantía:", placeholder="Ej: CO202607290001", help="Formato: COYYYYMMDDXXXX").strip().upper()
+        referencia = st.text_input(txt_local["form_ref"], placeholder=txt_local["form_ref_holder"]).strip().upper()
+        operacion_solicitada = st.text_area(txt_local["form_op"], placeholder=txt_local["form_op_holder"]).strip()
+
+        boton_enviar = st.form_submit_button(txt_local["form_btn"])
+
+        if boton_enviar:
+            patron_garantia = r"^CO\d{8}[A-Z0-9]{4}$"
+
+            if not numero_garantia or not vin or not operacion_solicitada:
+                st.error(txt_local["err_campos"])
+            elif not re.match(patron_garantia, numero_garantia):
+                st.error("❌ **Error en el Número de Garantía:** Debe cumplir el patrón **COYYYYMMDDXXXX**.")
+            elif len(vin) != 17:
+                st.error("❌ **Error en el VIN:** El número de bastidor debe tener exactamente 17 caracteres.")
+            else:
+                ahora = datetime.datetime.now()
+                columnas_orden = [
+                    "SN", "Submitted on", "Respondents", "Fecha del día",
+                    "Marca del vehículo", "INTRODUCIR MODELO", "INTRODUCIR VIN",
+                    "Mercado", "CÓDIGO DE PRODUCTO", "REFERENCIA DE PIEZA",
+                    "OPERACIÓN QUE SE SOLICITA AÑADIR", "DEALER"
+                ]
+
+                nueva_solicitud = {
+                    "SN": len(st.session_state.lista_solicitudes) + 1,
+                    "Submitted on": ahora.strftime("%Y-%m-%d %H:%M:%S"),
+                    "Respondents": f"Garantía: {numero_garantia}",
+                    "Fecha del día": ahora.strftime("%Y-%m-%d"),
+                    "Marca del vehículo": marca, "INTRODUCIR MODELO": modelo_comercial,
+                    "INTRODUCIR VIN": vin, "Mercado": "Spain OJ",
+                    "CÓDIGO DE PRODUCTO": codigo_producto_auto,
+                    "REFERENCIA DE PIEZA": referencia if referencia else "NaN",
+                    "OPERACIÓN QUE SE SOLICITA AÑADIR": operacion_solicitada,
+                    "DEALER": numero_garantia,
+                }
+
+                subida_exitosa = False
+                try:
+                    from streamlit_gsheets import GSheetsConnection
+                    conn = st.connection("gsheets", type=GSheetsConnection)
+
+                    if "connections" in st.secrets and "gsheets" in st.secrets["connections"]:
+                        spreadsheet_url = st.secrets["connections"]["gsheets"]["spreadsheet"]
+                    elif "gsheets" in st.secrets and "spreadsheet" in st.secrets["gsheets"]:
+                        spreadsheet_url = st.secrets["gsheets"]["spreadsheet"]
+                    else:
+                        spreadsheet_url = st.secrets.get("spreadsheet", "")
+
+                    df_cloud = conn.read(spreadsheet=spreadsheet_url) if spreadsheet_url else pd.DataFrame(columns=columnas_orden)
+                    if df_cloud.empty or len(df_cloud.columns) < 2:
+                        df_cloud = pd.DataFrame(columns=columnas_orden)
+                    else:
+                        df_cloud = df_cloud.dropna(how="all").loc[:, ~df_cloud.columns.str.contains("^Unnamed")]
+
+                    nueva_solicitud["SN"] = len(df_cloud) + 1
+                    df_nuevo = pd.DataFrame([nueva_solicitud]).reindex(columns=columnas_orden)
+                    df_cloud = df_cloud.reindex(columns=columnas_orden)
+                    df_actualizado = pd.concat([df_cloud, df_nuevo], ignore_index=True)
+
+                    if spreadsheet_url:
+                        conn.update(spreadsheet=spreadsheet_url, data=df_actualizado)
+                        subida_exitosa = True
+                    else:
+                        raise ValueError("No se encontró la URL del archivo de Sheets en st.secrets.")
+
+                except Exception as exc:
+                    st.error(f"❌ Error de conexión con Google Sheets: {exc}")
+                    st.info("💡 Por seguridad, hemos guardado esta línea en la caché local.")
+
+                st.session_state.lista_solicitudes.append(nueva_solicitud)
+
+                if subida_exitosa:
+                    st.success("✅ **Operación registrada con éxito.** La solicitud ha sido transmitida a Central.")
+                    time.sleep(1.5)
+                    st.rerun()
+
+    if st.session_state.lista_solicitudes:
+        st.markdown("---")
+        st.subheader("📌 Solicitudes registradas en esta sesión")
+        st.dataframe(pd.DataFrame(st.session_state.lista_solicitudes), use_container_width=True, hide_index=True)
+
+
+
+# =========================================================================
+# MAIN
+# =========================================================================
+txt, opcion_menu = render_sidebar_and_get_option()
+
+if check_password(txt):
+    if opcion_menu == txt["menu_taller"]:
+        render_tiempos_taller(txt)
+    elif opcion_menu == txt["menu_solicitar"]:
+        render_solicitar_operacion(txt)
+
