@@ -404,28 +404,86 @@ def render_buzon_sugerencias(txt_local):
     st.markdown("---")
 
     if st.session_state.idioma == "Español":
-        categorias = ["Mejora de la aplicación", "Mejora del proceso", "Error o problema encontrado", "Idea / sugerencia", "Otro"]
-        areas = ["Tiempos de taller", "Operaciones no disponibles", "DMS", "Garantías", "Otro"]
+        categorias = [
+            "Mejora de la aplicación",
+            "Mejora del proceso",
+            "Error o problema encontrado",
+            "Idea / sugerencia",
+            "Otro",
+        ]
+        areas = [
+            "Tiempos de taller",
+            "Operaciones no disponibles",
+            "DMS",
+            "Garantías",
+            "Otro",
+        ]
+
     elif st.session_state.idioma == "English":
-        categorias = ["Application improvement", "Process improvement", "Error / issue found", "Idea / suggestion", "Other"]
-        areas = ["Workshop Times", "Missing Operations", "DMS", "Warranty", "Other"]
+        categorias = [
+            "Application improvement",
+            "Process improvement",
+            "Error / issue found",
+            "Idea / suggestion",
+            "Other",
+        ]
+        areas = [
+            "Workshop Times",
+            "Missing Operations",
+            "DMS",
+            "Warranty",
+            "Other",
+        ]
+
     else:
-        categorias = ["应用改进", "流程改进", "发现错误 / 问题", "想法 / 建议", "其他"]
-        areas = ["车间工时", "缺失操作", "DMS", "保修", "其他"]
+        categorias = [
+            "应用改进",
+            "流程改进",
+            "发现错误 / 问题",
+            "想法 / 建议",
+            "其他",
+        ]
+        areas = [
+            "车间工时",
+            "缺失操作",
+            "DMS",
+            "保修",
+            "其他",
+        ]
 
     with st.form("form_sugerencias", clear_on_submit=True):
-        categoria = st.selectbox(txt_local["buzon_categoria"], categorias)
-        area = st.selectbox(txt_local["buzon_area"], areas)
-        comentario = st.text_area(txt_local["buzon_comentario"], placeholder=txt_local["buzon_placeholder"], height=170)
-        enviar = st.form_submit_button(txt_local["buzon_enviar"], use_container_width=True)
+
+        categoria = st.selectbox(
+            txt_local["buzon_categoria"],
+            categorias,
+        )
+
+        area = st.selectbox(
+            txt_local["buzon_area"],
+            areas,
+        )
+
+        comentario = st.text_area(
+            txt_local["buzon_comentario"],
+            placeholder=txt_local["buzon_placeholder"],
+            height=170,
+        )
+
+        enviar = st.form_submit_button(
+            txt_local["buzon_enviar"],
+            use_container_width=True,
+        )
 
         if enviar:
+
             if not comentario.strip():
                 st.error(txt_local["buzon_error_vacio"])
                 return
 
             nueva_sugerencia = {
-                "Fecha": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "Fecha": datetime.datetime.now().strftime(
+                    "%Y-%m-%d %H:%M:%S"
+                ),
                 "Categoría": categoria,
                 "Área": area,
                 "Comentario": comentario.strip(),
@@ -434,43 +492,120 @@ def render_buzon_sugerencias(txt_local):
             try:
                 from streamlit_gsheets import GSheetsConnection
 
-                spreadsheet_url = obtener_url_google_sheets()
-                if not spreadsheet_url:
-                    raise ValueError("No se encontró la URL del Google Sheets en st.secrets.")
+                # ---------------------------------------------------------
+                # SEGUNDA CONEXIÓN GOOGLE SHEETS
+                # ---------------------------------------------------------
+                # Esta conexión apunta exclusivamente al spreadsheet
+                # "Buzón de sugerencias".
+                conn = st.connection(
+                    "gsheets_suggestions",
+                    type=GSheetsConnection,
+                )
 
-                conn = st.connection("gsheets", type=GSheetsConnection)
-                columnas = ["Fecha", "Categoría", "Área", "Comentario"]
+                columnas = [
+                    "Fecha",
+                    "Categoría",
+                    "Área",
+                    "Comentario",
+                ]
 
+                # ---------------------------------------------------------
+                # LEER SUGERENCIAS EXISTENTES
+                # ---------------------------------------------------------
                 try:
-                    df_actual = conn.read(spreadsheet=spreadsheet_url, worksheet=SUGGESTIONS_WORKSHEET)
-                except Exception:
-                    df_actual = pd.DataFrame(columns=columnas)
+                    df_actual = conn.read(
+                        worksheet=SUGGESTIONS_WORKSHEET,
+                        ttl=0,
+                    )
 
-                if df_actual.empty:
-                    df_actual = pd.DataFrame(columns=columnas)
+                except Exception:
+                    df_actual = pd.DataFrame(
+                        columns=columnas
+                    )
+
+                # ---------------------------------------------------------
+                # LIMPIAR / NORMALIZAR DATAFRAME
+                # ---------------------------------------------------------
+                if df_actual is None or df_actual.empty:
+
+                    df_actual = pd.DataFrame(
+                        columns=columnas
+                    )
+
                 else:
-                    df_actual = df_actual.dropna(how="all").loc[:, ~df_actual.columns.astype(str).str.contains("^Unnamed")]
+
+                    df_actual = (
+                        df_actual
+                        .dropna(how="all")
+                        .loc[
+                            :,
+                            ~df_actual.columns
+                            .astype(str)
+                            .str.contains("^Unnamed")
+                        ]
+                    )
+
                     for columna in columnas:
                         if columna not in df_actual.columns:
                             df_actual[columna] = ""
+
                     df_actual = df_actual[columnas]
 
-                df_nuevo = pd.DataFrame([nueva_sugerencia])
-                df_actualizado = pd.concat([df_actual, df_nuevo], ignore_index=True)
-                conn.update(spreadsheet=spreadsheet_url, worksheet=SUGGESTIONS_WORKSHEET, data=df_actualizado)
-                st.success(txt_local["buzon_ok"])
+                # ---------------------------------------------------------
+                # AÑADIR NUEVA SUGERENCIA
+                # ---------------------------------------------------------
+                df_nuevo = pd.DataFrame(
+                    [nueva_sugerencia]
+                )
+
+                df_actualizado = pd.concat(
+                    [
+                        df_actual,
+                        df_nuevo,
+                    ],
+                    ignore_index=True,
+                )
+
+                # ---------------------------------------------------------
+                # GUARDAR EN EL SEGUNDO SPREADSHEET
+                # ---------------------------------------------------------
+                conn.update(
+                    worksheet=SUGGESTIONS_WORKSHEET,
+                    data=df_actualizado,
+                )
+
+                st.success(
+                    txt_local["buzon_ok"]
+                )
 
             except Exception as exc:
-                st.error(f"❌ No se ha podido enviar la sugerencia: {exc}")
-                st.info(f"💡 Comprueba que exista una pestaña llamada `{SUGGESTIONS_WORKSHEET}` en el Google Sheets.")
+
+                st.error(
+                    "❌ No se ha podido enviar la sugerencia: "
+                    f"{exc}"
+                )
+
+                st.info(
+                    "💡 Comprueba que:\n\n"
+                    f"- exista una pestaña llamada "
+                    f"`{SUGGESTIONS_WORKSHEET}`\n"
+                    "- el segundo Google Sheets esté compartido "
+                    "con la cuenta de servicio\n"
+                    "- exista la conexión "
+                    "`[connections.gsheets_suggestions]` "
+                    "en Streamlit Secrets"
+                )
 
 
 txt, opcion_menu = render_sidebar_and_get_option()
 
 if check_password(txt):
+
     if opcion_menu == txt["menu_taller"]:
         render_tiempos_taller(txt)
+
     elif opcion_menu == txt["menu_solicitar"]:
         render_operaciones_no_disponibles(txt)
+
     elif opcion_menu == txt["menu_buzon"]:
         render_buzon_sugerencias(txt)
