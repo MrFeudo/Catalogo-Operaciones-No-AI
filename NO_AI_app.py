@@ -493,12 +493,11 @@ def render_buzon_sugerencias(txt_local):
                 from streamlit_gsheets import GSheetsConnection
 
                 # ---------------------------------------------------------
-                # SEGUNDA CONEXIÓN GOOGLE SHEETS
+                # CONEXIÓN GOOGLE SHEETS
                 # ---------------------------------------------------------
-                # Esta conexión apunta exclusivamente al spreadsheet
-                # "Buzón de sugerencias".
+                # Usa la conexión autenticada definida en [connections.gsheets].
                 conn = st.connection(
-                    "gsheets_suggestions",
+                    "gsheets",
                     type=GSheetsConnection,
                 )
 
@@ -589,10 +588,10 @@ def render_buzon_sugerencias(txt_local):
                     "💡 Comprueba que:\n\n"
                     f"- exista una pestaña llamada "
                     f"`{SUGGESTIONS_WORKSHEET}`\n"
-                    "- el segundo Google Sheets esté compartido "
+                    "- el Google Sheets esté compartido "
                     "con la cuenta de servicio\n"
                     "- exista la conexión "
-                    "`[connections.gsheets_suggestions]` "
+                    "`[connections.gsheets]` "
                     "en Streamlit Secrets"
                 )
 
