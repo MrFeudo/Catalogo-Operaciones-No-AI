@@ -10,7 +10,7 @@ import streamlit as st
 
 st.set_page_config(page_title="Tiempos de Taller OMODA & JAECOO", layout="wide")
 
-URL_GITHUB_EXCEL = "https://github.com/MrFeudo/Catalogo-Operaciones/raw/main/DMS_Active_Spare_Parts.xlsb"
+URL_GITHUB_EXCEL = "https://github.com/MrFeudo/Catalogo-Operaciones/raw/main/DMS_Active_Spare_Parts_v2.xlsb"
 URL_GITHUB_VINES = "https://github.com/MrFeudo/Catalogo-Operaciones/raw/main/VINes.xlsb"
 URL_FORMULARIO_LARK = "https://omodaeurope.jp.larksuite.com/share/base/form/shrjpjuwHJs8xglcJAIQ0v2Mnvf"
 QR_FORMULARIO = "QR_FORMULARIO_OPS_GARANTIA.png"
