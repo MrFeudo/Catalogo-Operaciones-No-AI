@@ -265,7 +265,6 @@ def load_data_tiempos_v3():
         sheet_name="new_srv_workhours",
         engine="pyxlsb"
     )
-
     df.columns = df.columns.astype(str).str.strip()
 
     mapeo_columnas = {
@@ -320,37 +319,6 @@ def render_tiempos_taller(txt_local):
     try:
         data = load_data_tiempos_v3()
         df_vines_db = load_data_vines()
-
-        # DEBUG TEMPORAL: comprobar exactamente qué datos está leyendo la app
-        st.write("DEBUG filas totales:", len(data))
-        st.write("DEBUG columnas:", list(data.columns))
-
-        if "Modelo" in data.columns:
-            debug_modelo = data[
-                data["Modelo"].astype(str).str.strip() == "JAECOO 8 PHEV"
-            ]
-            st.write("DEBUG JAECOO 8 PHEV TOTAL:", len(debug_modelo))
-
-            if "Mercado / Organización" in data.columns:
-                debug_spain = debug_modelo[
-                    debug_modelo["Mercado / Organización"].astype(str).str.strip() == "Spain OJ"
-                ]
-                st.write("DEBUG JAECOO 8 PHEV + Spain OJ:", len(debug_spain))
-
-                if "Estado" in data.columns:
-                    debug_active = debug_spain[
-                        debug_spain["Estado"].astype(str).str.strip() == "Active"
-                    ]
-                    st.write(
-                        "DEBUG JAECOO 8 PHEV + Spain OJ + Active:",
-                        len(debug_active)
-                    )
-                else:
-                    st.warning("DEBUG: La columna Estado no existe.")
-            else:
-                st.warning("DEBUG: La columna Mercado / Organización no existe.")
-        else:
-            st.warning("DEBUG: La columna Modelo no existe.")
         st.title(txt_local["taller_titulo"])
         st.write(txt_local["taller_sub"])
         st.markdown("---")
