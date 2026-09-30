@@ -318,6 +318,18 @@ def load_data_tiempos_v3():
 def render_tiempos_taller(txt_local):
     try:
         data = load_data_tiempos_v3()
+
+        # Solo se muestran operaciones de los mercados válidos para esta app.
+        # Se excluyen registros sin organización y cualquier mercado distinto
+        # de Spain OJ / Spain Lepas.
+        if "Mercado / Organización" in data.columns:
+            data = data[
+                data["Mercado / Organización"]
+                .astype(str)
+                .str.strip()
+                .isin(["Spain OJ", "Spain Lepas"])
+            ].copy()
+
         df_vines_db = load_data_vines()
         st.title(txt_local["taller_titulo"])
         st.write(txt_local["taller_sub"])
