@@ -260,6 +260,15 @@ def check_password(txt_local):
 
 @st.cache_data(ttl=600)
 def load_data_tiempos_v3():
+    st.write("DEBUG filas totales:", len(data))
+
+debug = data[
+    (data["Modelo"] == "JAECOO 8 PHEV")
+    & (data["Mercado / Organización"] == "Spain OJ")
+    & (data["Estado"] == "Active")
+]
+
+st.write("DEBUG JAECOO 8 PHEV / Spain OJ / Active:", len(debug))
     df = pd.read_excel(URL_GITHUB_EXCEL, sheet_name="new_srv_workhours", engine="pyxlsb")
     df.columns = df.columns.astype(str).str.strip()
     mapeo_columnas = {
