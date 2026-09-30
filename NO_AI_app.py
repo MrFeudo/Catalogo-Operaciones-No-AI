@@ -260,6 +260,26 @@ def check_password(txt_local):
 
 @st.cache_data(ttl=600)
 def load_data_tiempos_v3():
+    debug_modelo = data[
+    data["Modelo"].astype(str).str.strip() == "JAECOO 8 PHEV"
+]
+
+st.write("JAECOO 8 PHEV TOTAL:", len(debug_modelo))
+
+debug_spain = debug_modelo[
+    debug_modelo["Mercado / Organización"].astype(str).str.strip() == "Spain OJ"
+]
+
+st.write("JAECOO 8 PHEV + Spain OJ:", len(debug_spain))
+
+if "Estado" in data.columns:
+    debug_active = debug_spain[
+        debug_spain["Estado"].astype(str).str.strip() == "Active"
+    ]
+
+    st.write("JAECOO 8 PHEV + Spain OJ + Active:", len(debug_active))
+else:
+    st.error("⚠️ La columna Estado NO existe en los datos cargados")
     df = pd.read_excel(URL_GITHUB_EXCEL, sheet_name="new_srv_workhours", engine="pyxlsb")
     df.columns = df.columns.astype(str).str.strip()
     mapeo_columnas = {
