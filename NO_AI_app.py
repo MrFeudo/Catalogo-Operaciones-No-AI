@@ -258,7 +258,7 @@ def check_password(txt_local):
     return True
 
 
-@st.cache_data
+@st.cache_data(ttl=600)
 def load_data_tiempos_v3():
     df = pd.read_excel(URL_GITHUB_EXCEL, sheet_name="new_srv_workhours", engine="pyxlsb")
     df.columns = df.columns.astype(str).str.strip()
